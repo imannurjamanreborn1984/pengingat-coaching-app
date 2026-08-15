@@ -11,7 +11,7 @@ export async function POST(req) {
     }
 
     // Menggunakan model Gemini 1.5 Flash yang cepat & akurat untuk membaca teks dari gambar
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const prompt = 
       "Ekstrak semua teks pertanyaan, instruksi, dan evaluasi dari gambar ini secara jelas dan terstruktur. " +
