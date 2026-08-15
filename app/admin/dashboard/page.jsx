@@ -247,7 +247,7 @@ export default function AdminDashboard() {
 
           <div>
             <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-              <LinkIcon className="w-4 h-4 text-emerald-400" /> Link Referensi External (YouTube / Web)
+            Link Eksternal (Opsional)
             </label>
             <input
               type="url"
