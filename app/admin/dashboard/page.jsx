@@ -123,12 +123,15 @@ export default function AdminDashboard() {
         imageUrl = publicUrlData.publicUrl;
       }
 
+      // Format link: Jika kosong atau hanya spasi, simpan sebagai null
+      const formattedLink = externalLink && externalLink.trim() !== "" ? externalLink.trim() : null;
+
       const payload = {
         title,
         image_url: imageUrl,
         ocr_extracted_text: ocrText,
         group_chat_text: groupChatText,
-        external_link: externalLink,
+        external_link: formattedLink, // Null diizinkan jika kosong
       };
 
       if (editingId) {
@@ -247,11 +250,12 @@ export default function AdminDashboard() {
 
           <div>
             <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-            Link Eksternal (Opsional)
+              <LinkIcon className="w-4 h-4 text-emerald-400" /> Link Eksternal (Opsional)
             </label>
+            {/* Diubah type="text" agar tidak memicu validasi URL bawaan browser saat kosong */}
             <input
-              type="url"
-              placeholder="https://youtube.com/watch?v=... (Opsional)"
+              type="text"
+              placeholder="https://youtube.com/watch?v=... (Boleh dikosongkan)"
               value={externalLink}
               onChange={(e) => setExternalLink(e.target.value)}
               className="w-full p-2.5 border border-slate-800 rounded-lg focus:ring-1 focus:ring-sky-500 outline-none text-xs text-white bg-slate-950"
