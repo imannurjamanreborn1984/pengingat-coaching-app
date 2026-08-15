@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle2, Circle, ExternalLink, Send, BookOpen } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
 export default function ParticipantDashboard() {
+  const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState({});
@@ -33,6 +35,11 @@ export default function ParticipantDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Rahasia: Double Click di Judul Header untuk Masuk ke Halaman Login Admin
+  const handleSecretAdminAccess = () => {
+    router.push("/admin/login");
   };
 
   const handleNameChange = (e) => {
@@ -75,7 +82,12 @@ export default function ParticipantDashboard() {
         {/* Header */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            {/* Ketuk 2x (Double Click) di Judul Ini Untuk Akses Admin */}
+            <h1 
+              onDoubleClick={handleSecretAdminAccess}
+              className="text-2xl font-bold text-white flex items-center gap-2 cursor-pointer select-none active:opacity-80"
+              title="Ketuk 2x untuk akses khusus"
+            >
               <BookOpen className="w-6 h-6 text-sky-400" /> Jurnal & To-Do Harian
             </h1>
             <p className="text-xs text-slate-400 mt-1">Persiapan Event 22 Agustus 2026</p>
