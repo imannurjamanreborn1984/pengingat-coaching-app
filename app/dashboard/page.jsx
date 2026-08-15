@@ -39,7 +39,7 @@ export default function ParticipantDashboard() {
 
   // Rahasia: Double Click di Judul Header untuk Masuk ke Halaman Login Admin
   const handleSecretAdminAccess = () => {
-    router.push("/admin/login");
+    router.push("/admin/dashboard");
   };
 
   const handleNameChange = (e) => {
