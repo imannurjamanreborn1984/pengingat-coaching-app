@@ -10,8 +10,8 @@ export async function POST(req) {
       return Response.json({ success: false, error: "Gambar tidak ditemukan" }, { status: 400 });
     }
 
-    // Menggunakan model Gemini 1.5 Flash yang cepat & akurat untuk membaca teks dari gambar
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    // Menggunakan model gemini-2.5-flash yang cepat & akurat untuk membaca teks dari gambar
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = 
       "Ekstrak semua teks pertanyaan, instruksi, dan evaluasi dari gambar ini secara jelas dan terstruktur. " +
