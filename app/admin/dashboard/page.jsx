@@ -38,12 +38,6 @@ export default function AdminDashboard() {
     setImage(file);
     setPreview(URL.createObjectURL(file));
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const base64Data = reader.result.split(",")[1];
-      runOcr(base64Data, file.type);
-    };
   };
 
   const runOcr = async (base64Data, mimeType) => {
