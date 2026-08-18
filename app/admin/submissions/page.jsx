@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, BookOpen, Clock } from "lucide-react";
+import { Users, BookOpen, Clock, FileDown } from "lucide-react";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
+import { saveAs } from "file-saver";
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminSubmissions() {
-  const [submissions, setSubmissions] = useState([]);
+  const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +25,23 @@ export default function AdminSubmissions() {
           user_name,
           answer_text,
           created_at,
-          assignments ( title )
+          assignments ( id, title )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
+
+      // Grouping data berdasarkan judul tugas/assignment
+      const grouped = (data || []).reduce((acc, item) => {
+        const title = item.assignments?.title || "Tugas Tanpa Judul";
+        if (!acc[title]) {
+          acc[title] = [];
+        }
+        acc[title].push(item);
+        return acc;
+      }, {});
+
+      setGroupedSubmissions(grouped);
     } catch (err) {
       console.error("Gagal mengambil data submissions:", err.message);
     } finally {
@@ -36,51 +49,133 @@ export default function AdminSubmissions() {
     }
   };
 
+  // Fungsi untuk Export kelompok jawaban ke File Word (.docx)
+  const exportToWord = async (title, items) => {
+    const docChildren = [
+      new Paragraph({
+        text: `Rekap Jawaban: ${title}`,
+        heading: HeadingLevel.HEADING_1,
+        spaceAfter: { after: 300 },
+      }),
+      new Paragraph({
+        text: `Total Respon: ${items.length} | Di-export pada: ${new Date().toLocaleDateString("id-ID")}`,
+        spaceAfter: { after: 400 },
+      }),
+    ];
+
+    items.forEach((item, index) => {
+      // Nama Peserta & Waktu
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${index + 1}. ${item.user_name || "Peserta Anonymous"} `,
+              bold: true,
+              size: 24,
+            }),
+            new TextRun({
+              text: `(${new Date(item.created_at).toLocaleString("id-ID")})`,
+              italics: true,
+              size: 20,
+              color: "666666",
+            }),
+          ],
+          spaceBefore: { before: 200 },
+        })
+      );
+
+      // Teks Jawaban
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: item.answer_text || "-",
+              size: 22,
+            }),
+          ],
+          spaceAfter: { after: 200 },
+        })
+      );
+    });
+
+    const doc = new Document({
+      sections: [{ properties: {}, children: docChildren }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, "_");
+    saveAs(blob, `Rekap_${sanitizedTitle}.docx`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Header */}
         <div className="border-b border-slate-800 pb-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Users className="w-6 h-6 text-sky-400" /> Rekap Jawaban Peserta
             </h1>
-            <p className="text-sm text-slate-400 mt-1">Pantau respon dan hasil refleksi harian peserta</p>
+            <p className="text-sm text-slate-400 mt-1">
+              Jawaban otomatis dikelompokkan berdasarkan klaster pertanyaan
+            </p>
           </div>
-          <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs px-3 py-1 rounded-full">
-            Total Masuk: {submissions.length}
-          </span>
         </div>
 
         {loading ? (
           <p className="text-xs text-slate-500 animate-pulse">Memuat rekap jawaban...</p>
-        ) : submissions.length === 0 ? (
+        ) : Object.keys(groupedSubmissions).length === 0 ? (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
             Belum ada peserta yang mengirimkan jawaban.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {submissions.map((sub) => (
-              <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white text-sm">{sub.user_name || "Peserta Anonymous"}</span>
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
-                      <BookOpen className="w-3 h-3 inline mr-1" />
-                      {sub.assignments?.title || "Tugas Tanpa Judul"}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {new Date(sub.created_at).toLocaleString("id-ID")}
+          /* Mapping Berdasarkan Kelompok Pertanyaan/Tugas */
+          Object.entries(groupedSubmissions).map(([title, items]) => (
+            <div key={title} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+              
+              {/* Header Partisi / Klaster */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-sky-400" />
+                    {title}
+                  </h2>
+                  <span className="text-xs text-slate-400">
+                    Total Respon: <strong className="text-sky-400">{items.length}</strong>
                   </span>
                 </div>
 
-                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 whitespace-pre-line leading-relaxed">
-                  {sub.answer_text}
-                </div>
+                {/* Tombol Export ke Word per Pertanyaan */}
+                <button
+                  onClick={() => exportToWord(title, items)}
+                  className="bg-sky-600 hover:bg-sky-500 text-white text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition-all w-fit"
+                >
+                  <FileDown className="w-4 h-4" /> Export Word (.docx)
+                </button>
               </div>
-            ))}
-          </div>
+
+              {/* Daftar Jawaban dalam Klaster Ini */}
+              <div className="grid grid-cols-1 gap-3">
+                {items.map((sub) => (
+                  <div key={sub.id} className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+                    <div className="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800/60 pb-2">
+                      <span className="font-semibold text-slate-200">
+                        {sub.user_name || "Peserta Anonymous"}
+                      </span>
+                      <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(sub.created_at).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-300 whitespace-pre-line leading-relaxed pt-1">
+                      {sub.answer_text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          ))
         )}
       </div>
     </div>
