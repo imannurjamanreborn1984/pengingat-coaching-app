@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, BookOpen, Clock, FileDown } from "lucide-react";
+import { Users, BookOpen, Clock, FileDown, ArrowLeft, RefreshCw } from "lucide-react";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { saveAs } from "file-saver";
 
@@ -116,14 +117,40 @@ export default function AdminSubmissions() {
     <div className="min-h-screen bg-slate-950 p-6 text-slate-100">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <div className="border-b border-slate-800 pb-4 flex justify-between items-center">
+        <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Link
+                href="/admin/dashboard"
+                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
+                <span>Dashboard Admin</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-800 transition"
+              >
+                Tampilan Peserta
+              </Link>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <Users className="w-6 h-6 text-sky-400" /> Rekap Jawaban Peserta
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               Jawaban otomatis dikelompokkan berdasarkan klaster pertanyaan
             </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={fetchSubmissions}
+              disabled={loading}
+              className="p-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg transition flex items-center gap-1.5"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-sky-400" : ""}`} />
+              <span className="hidden sm:inline">Refresh Data</span>
+            </button>
           </div>
         </div>
 

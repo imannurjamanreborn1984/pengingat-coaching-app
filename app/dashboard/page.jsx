@@ -1,20 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { ExternalLink, Send, BookOpen, ZoomIn, X } from "lucide-react";
+import { ExternalLink, Send, BookOpen, ZoomIn, X, Shield, RefreshCw } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default function ParticipantDashboard() {
-  const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState({});
   const [submittingId, setSubmittingId] = useState(null);
   const [userName, setUserName] = useState("");
-  const [zoomImage, setZoomImage] = useState(null); // Menyimpan objek gambar yang sedang di-zoom
+  const [zoomImage, setZoomImage] = useState(null); // State modal zoom gambar
 
   useEffect(() => {
     fetchTasks();
@@ -32,6 +31,7 @@ export default function ParticipantDashboard() {
   }, []);
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("assignments")
@@ -45,11 +45,6 @@ export default function ParticipantDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Rahasia: Double Click di Judul Header untuk Masuk ke Halaman Login Admin
-  const handleSecretAdminAccess = () => {
-    router.push("/admin/dashboard");
   };
 
   const handleNameChange = (e) => {
@@ -89,34 +84,66 @@ export default function ParticipantDashboard() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
+        
+        {/* Navigation Bar / Header */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            {/* Ketuk 2x (Double Click) di Judul Ini Untuk Akses Admin */}
-            <h1
-              onDoubleClick={handleSecretAdminAccess}
-              className="text-2xl font-bold text-white flex items-center gap-2 cursor-pointer select-none active:opacity-80"
-              title="Ketuk 2x untuk akses khusus"
-            >
-              <BookOpen className="w-6 h-6 text-sky-400" /> Jurnal & To-Do Harian
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-sky-400" /> Jurnal & To-Do Harian
+              </h1>
+            </div>
             <p className="text-xs text-slate-400 mt-1">Persiapan Event 22 Agustus 2026</p>
           </div>
-          <div className="w-full sm:w-64">
-            <label className="block text-[10px] text-slate-400 mb-1">Nama Peserta:</label>
-            <input
-              type="text"
-              placeholder="Masukkan Nama Anda..."
-              value={userName}
-              onChange={handleNameChange}
-              className="w-full p-2 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-sky-500"
-            />
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={fetchTasks}
+              disabled={loading}
+              className="p-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg transition flex items-center gap-1.5"
+              title="Muat Ulang Tugas"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-sky-400" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <Link
+              href="/admin/dashboard"
+              className="px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition flex items-center gap-1.5"
+              title="Akses Halaman Admin"
+            >
+              <Shield className="w-3.5 h-3.5 text-sky-400" />
+              <span>Menu Admin</span>
+            </Link>
           </div>
+        </div>
+
+        {/* Input Nama Peserta */}
+        <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <label htmlFor="participant-name" className="block text-xs font-semibold text-slate-200">
+              Identitas Peserta:
+            </label>
+            <p className="text-[11px] text-slate-400">
+              Nama ini akan disertakan saat mengirim jawaban/refleksi.
+            </p>
+          </div>
+          <input
+            id="participant-name"
+            type="text"
+            placeholder="Masukkan Nama Lengkap Anda..."
+            value={userName}
+            onChange={handleNameChange}
+            className="w-full sm:w-72 p-2.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+          />
         </div>
 
         {/* List Tugas */}
         {loading ? (
-          <p className="text-center text-xs text-slate-500 py-10 animate-pulse">Memuat tugas harian...</p>
+          <div className="text-center py-16 space-y-3">
+            <div className="w-8 h-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-400">Memuat materi & tugas harian...</p>
+          </div>
         ) : tasks.length === 0 ? (
           <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800">
             <p className="text-sm text-slate-400">Belum ada tugas rilis untuk hari ini.</p>
@@ -124,7 +151,7 @@ export default function ParticipantDashboard() {
         ) : (
           <div className="space-y-6">
             {tasks.map((task) => (
-              <div key={task.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+              <div key={task.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
                 <div className="flex justify-between items-start border-b border-slate-800 pb-3">
                   <h2 className="font-semibold text-sky-400 text-base">{task.title}</h2>
                   <span className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
@@ -140,21 +167,24 @@ export default function ParticipantDashboard() {
                   </div>
                 )}
 
-                {/* Gambar Materi (Dapat diklik untuk Zoom) */}
+                {/* Gambar Materi (Bisa Diklik Langsung untuk Zoom) */}
                 {task.image_url && (
-                  <div
-                    onClick={() => setZoomImage({ url: task.image_url, title: task.title })}
-                    className="relative group rounded-lg overflow-hidden border border-slate-800 max-h-80 cursor-zoom-in bg-slate-950"
-                  >
-                    <img
-                      src={task.image_url}
-                      alt={task.title || "Materi"}
-                      className="w-full object-contain max-h-80 transition-transform duration-200 group-hover:scale-[1.02]"
-                    />
-                    {/* Badge Overlay Petunjuk Klik */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-xs font-semibold text-white pointer-events-none">
-                      <ZoomIn className="w-5 h-5 text-sky-400" />
-                      <span>Klik untuk memperbesar</span>
+                  <div className="space-y-1.5">
+                    <div
+                      onClick={() => setZoomImage({ url: task.image_url, title: task.title })}
+                      className="relative group rounded-lg overflow-hidden border border-slate-800 max-h-80 cursor-pointer bg-slate-950"
+                    >
+                      <img
+                        src={task.image_url}
+                        alt={task.title || "Materi"}
+                        className="w-full object-contain max-h-80 transition-transform duration-200 group-hover:scale-[1.01]"
+                      />
+                      
+                      {/* Tombol Perbesar Gambar yang Selalu Terlihat & Jelas */}
+                      <div className="absolute bottom-3 right-3 bg-slate-950/90 hover:bg-slate-900 text-sky-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-sm transition pointer-events-none group-hover:bg-sky-600 group-hover:text-white">
+                        <ZoomIn className="w-4 h-4" />
+                        <span>Klik untuk Perbesar</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -203,26 +233,26 @@ export default function ParticipantDashboard() {
         )}
       </div>
 
-      {/* Modal Lightbox Zoom Gambar */}
+      {/* Modal Lightbox Zoom Gambar (Fullscreen) */}
       {zoomImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
           onClick={() => setZoomImage(null)}
         >
-          {/* Tombol Tutup / Kembali */}
+          {/* Tombol Tutup / Kembali di Pojok Atas */}
           <button
             onClick={() => setZoomImage(null)}
-            className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-white text-xs font-medium rounded-full shadow-lg transition"
-            title="Tutup (Tekan ESC)"
+            className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold rounded-full shadow-2xl transition cursor-pointer hover:border-rose-500 hover:text-rose-400"
+            title="Tutup Preview (ESC)"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 text-rose-400" />
             <span>Tutup Preview (ESC)</span>
           </button>
 
           {/* Kontainer Gambar Zoom */}
           <div
-            className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center justify-center p-2"
-            onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam gambar menutup modal
+            className="relative max-w-5xl max-h-[85vh] w-full flex flex-col items-center justify-center p-2"
+            onClick={(e) => e.stopPropagation()} // Mencegah klik pada gambar menutup modal
           >
             <img
               src={zoomImage.url}
@@ -230,7 +260,7 @@ export default function ParticipantDashboard() {
               className="max-h-[80vh] max-w-full object-contain rounded-xl shadow-2xl border border-slate-800"
             />
             {zoomImage.title && (
-              <p className="mt-3 text-xs text-slate-400 text-center font-medium bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-800">
+              <p className="mt-3 text-xs text-slate-300 text-center font-medium bg-slate-900/90 px-4 py-2 rounded-full border border-slate-700 shadow-md">
                 {zoomImage.title}
               </p>
             )}

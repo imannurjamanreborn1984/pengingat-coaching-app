@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Sparkles, Send, Link as LinkIcon, FileText, Trash2, Edit3, X } from "lucide-react";
+import { Sparkles, Send, Link as LinkIcon, FileText, Trash2, Edit3, X, ArrowLeft, Users, FileCheck2, ZoomIn } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -161,22 +162,36 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Dashboard Admin - Buat To-Do Harian</h1>
-            <p className="text-sm text-slate-400">Persiapan Event 22 Agustus 2026</p>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
+                title="Keluar / Kembali ke Halaman Peserta"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
+                <span>Halaman Peserta</span>
+              </Link>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
+              Dashboard Admin - Buat To-Do Harian
+            </h1>
+            <p className="text-xs text-slate-400 mt-0.5">Persiapan Event 22 Agustus 2026</p>
           </div>
-          <div className="flex gap-2">
-            <a
+          <div className="flex flex-wrap gap-2">
+            <Link
               href="/admin/submissions"
-              className="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1"
+              className="text-xs bg-slate-900 hover:bg-slate-800 text-sky-400 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
             >
-              📋 Lihat Jawaban Peserta
-            </a>
-            <a
+              <FileCheck2 className="w-4 h-4" />
+              <span>Jawaban Peserta</span>
+            </Link>
+            <Link
               href="/admin/members"
-              className="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1"
+              className="text-xs bg-slate-900 hover:bg-slate-800 text-sky-400 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
             >
-              👥 Kelola Members
-            </a>
+              <Users className="w-4 h-4" />
+              <span>Kelola Members</span>
+            </Link>
           </div>
         </div>
 

@@ -127,19 +127,28 @@ export default function MembersAdmin() {
         {/* Header Section */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Link
+                href="/admin/dashboard"
+                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
+                <span>Dashboard Admin</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-800 transition"
+              >
+                Tampilan Peserta
+              </Link>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <Users className="w-6 h-6 text-sky-400" /> Daftar Teman & Nomor WA
             </h1>
             <p className="text-sm text-slate-400 mt-1">
               Penerima Reminder Persiapan Event 22 Agustus 2026
             </p>
           </div>
-          <Link
-            href="/admin/dashboard"
-            className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Dashboard
-          </Link>
         </div>
 
         {/* Form Tambah Teman */}
