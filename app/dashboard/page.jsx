@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { CheckCircle2, Circle, ExternalLink, Send, BookOpen } from "lucide-react";
+import { ExternalLink, Send, BookOpen, ZoomIn, X } from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function ParticipantDashboard() {
   const router = useRouter();
@@ -14,11 +14,21 @@ export default function ParticipantDashboard() {
   const [answers, setAnswers] = useState({});
   const [submittingId, setSubmittingId] = useState(null);
   const [userName, setUserName] = useState("");
+  const [zoomImage, setZoomImage] = useState(null); // Menyimpan objek gambar yang sedang di-zoom
 
   useEffect(() => {
     fetchTasks();
     const savedName = localStorage.getItem("participant_name") || "";
     setUserName(savedName);
+
+    // Event listener untuk tombol ESC menutup modal zoom
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setZoomImage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const fetchTasks = async () => {
@@ -83,7 +93,7 @@ export default function ParticipantDashboard() {
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             {/* Ketuk 2x (Double Click) di Judul Ini Untuk Akses Admin */}
-            <h1 
+            <h1
               onDoubleClick={handleSecretAdminAccess}
               className="text-2xl font-bold text-white flex items-center gap-2 cursor-pointer select-none active:opacity-80"
               title="Ketuk 2x untuk akses khusus"
@@ -130,10 +140,22 @@ export default function ParticipantDashboard() {
                   </div>
                 )}
 
-                {/* Gambar Materi */}
+                {/* Gambar Materi (Dapat diklik untuk Zoom) */}
                 {task.image_url && (
-                  <div className="rounded-lg overflow-hidden border border-slate-800 max-h-80">
-                    <img src={task.image_url} alt="Materi" className="w-full object-contain bg-slate-950" />
+                  <div
+                    onClick={() => setZoomImage({ url: task.image_url, title: task.title })}
+                    className="relative group rounded-lg overflow-hidden border border-slate-800 max-h-80 cursor-zoom-in bg-slate-950"
+                  >
+                    <img
+                      src={task.image_url}
+                      alt={task.title || "Materi"}
+                      className="w-full object-contain max-h-80 transition-transform duration-200 group-hover:scale-[1.02]"
+                    />
+                    {/* Badge Overlay Petunjuk Klik */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-xs font-semibold text-white pointer-events-none">
+                      <ZoomIn className="w-5 h-5 text-sky-400" />
+                      <span>Klik untuk memperbesar</span>
+                    </div>
                   </div>
                 )}
 
@@ -180,6 +202,41 @@ export default function ParticipantDashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Lightbox Zoom Gambar */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setZoomImage(null)}
+        >
+          {/* Tombol Tutup / Kembali */}
+          <button
+            onClick={() => setZoomImage(null)}
+            className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-white text-xs font-medium rounded-full shadow-lg transition"
+            title="Tutup (Tekan ESC)"
+          >
+            <X className="w-4 h-4" />
+            <span>Tutup Preview (ESC)</span>
+          </button>
+
+          {/* Kontainer Gambar Zoom */}
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center justify-center p-2"
+            onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam gambar menutup modal
+          >
+            <img
+              src={zoomImage.url}
+              alt={zoomImage.title || "Preview Materi"}
+              className="max-h-[80vh] max-w-full object-contain rounded-xl shadow-2xl border border-slate-800"
+            />
+            {zoomImage.title && (
+              <p className="mt-3 text-xs text-slate-400 text-center font-medium bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-800">
+                {zoomImage.title}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

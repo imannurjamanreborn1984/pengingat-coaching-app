@@ -38,6 +38,13 @@ export default function AdminDashboard() {
     setImage(file);
     setPreview(URL.createObjectURL(file));
 
+    // Ekstrak teks via OCR otomatis menggunakan Gemini API
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result;
+      runOcr(base64Data, file.type);
+    };
+    reader.readAsDataURL(file);
   };
 
   const runOcr = async (base64Data, mimeType) => {

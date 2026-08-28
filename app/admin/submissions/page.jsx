@@ -51,60 +51,65 @@ export default function AdminSubmissions() {
 
   // Fungsi untuk Export kelompok jawaban ke File Word (.docx)
   const exportToWord = async (title, items) => {
-    const docChildren = [
-      new Paragraph({
-        text: `Rekap Jawaban: ${title}`,
-        heading: HeadingLevel.HEADING_1,
-        spaceAfter: { after: 300 },
-      }),
-      new Paragraph({
-        text: `Total Respon: ${items.length} | Di-export pada: ${new Date().toLocaleDateString("id-ID")}`,
-        spaceAfter: { after: 400 },
-      }),
-    ];
-
-    items.forEach((item, index) => {
-      // Nama Peserta & Waktu
-      docChildren.push(
+    try {
+      const docChildren = [
         new Paragraph({
-          children: [
-            new TextRun({
-              text: `${index + 1}. ${item.user_name || "Peserta Anonymous"} `,
-              bold: true,
-              size: 24,
-            }),
-            new TextRun({
-              text: `(${new Date(item.created_at).toLocaleString("id-ID")})`,
-              italics: true,
-              size: 20,
-              color: "666666",
-            }),
-          ],
-          spaceBefore: { before: 200 },
-        })
-      );
-
-      // Teks Jawaban
-      docChildren.push(
+          text: `Rekap Jawaban: ${title}`,
+          heading: HeadingLevel.HEADING_1,
+          spacing: { after: 300 },
+        }),
         new Paragraph({
-          children: [
-            new TextRun({
-              text: item.answer_text || "-",
-              size: 22,
-            }),
-          ],
-          spaceAfter: { after: 200 },
-        })
-      );
-    });
+          text: `Total Respon: ${items.length} | Di-export pada: ${new Date().toLocaleDateString("id-ID")}`,
+          spacing: { after: 400 },
+        }),
+      ];
 
-    const doc = new Document({
-      sections: [{ properties: {}, children: docChildren }],
-    });
+      items.forEach((item, index) => {
+        // Nama Peserta & Waktu
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${index + 1}. ${item.user_name || "Peserta Anonymous"} `,
+                bold: true,
+                size: 24,
+              }),
+              new TextRun({
+                text: `(${new Date(item.created_at).toLocaleString("id-ID")})`,
+                italics: true,
+                size: 20,
+                color: "666666",
+              }),
+            ],
+            spacing: { before: 200 },
+          })
+        );
 
-    const blob = await Packer.toBlob(doc);
-    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, "_");
-    saveAs(blob, `Rekap_${sanitizedTitle}.docx`);
+        // Teks Jawaban
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: item.answer_text || "-",
+                size: 22,
+              }),
+            ],
+            spacing: { after: 200 },
+          })
+        );
+      });
+
+      const doc = new Document({
+        sections: [{ properties: {}, children: docChildren }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const sanitizedTitle = (title || "Tugas").replace(/[^a-zA-Z0-9_-]/g, "_");
+      saveAs(blob, `Rekap_${sanitizedTitle}.docx`);
+    } catch (err) {
+      console.error("Gagal export Word:", err);
+      alert("Gagal mengunduh file Word: " + err.message);
+    }
   };
 
   return (
