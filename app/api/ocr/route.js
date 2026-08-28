@@ -24,7 +24,6 @@ export async function POST(req) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Hapus header data URI jika ada (misal 'data:image/jpeg;base64,')
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -39,11 +38,38 @@ export async function POST(req) {
       },
     };
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    const text = response.text();
+    // Daftar model yang dicoba secara bertahap (fallback)
+    const candidateModels = [
+      process.env.GEMINI_MODEL,
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash",
+      "gemini-1.5-pro-latest",
+      "gemini-1.5-pro",
+    ].filter(Boolean);
 
-    return NextResponse.json({ success: true, text });
+    let lastError = null;
+    let extractedText = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        extractedText = response.text();
+        if (extractedText) break;
+      } catch (err) {
+        console.warn(`Percobaan model ${modelName} gagal:`, err.message);
+        lastError = err;
+      }
+    }
+
+    if (!extractedText) {
+      throw lastError || new Error("Tidak dapat membaca gambar dengan model Gemini yang tersedia.");
+    }
+
+    return NextResponse.json({ success: true, text: extractedText });
   } catch (err) {
     console.error("Error OCR Gemini:", err);
     return NextResponse.json(
