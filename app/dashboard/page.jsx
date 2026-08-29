@@ -89,8 +89,8 @@ export default function ParticipantDashboard() {
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-6 h-6 text-sky-400" /> Jurnal & To-Do Harian
+              <h1 className="text-2xl font-bold text-white flex items-center gap-2 tracking-wide">
+                <BookOpen className="w-6 h-6 text-sky-400" /> REMINDER NPT
               </h1>
             </div>
             <p className="text-xs text-slate-400 mt-1">Persiapan Event 22 Agustus 2026</p>

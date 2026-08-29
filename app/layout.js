@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Coaching Reminder - NPT",
-  description: "Aplikasi Pengingat & Agenda Persiapan Training NPT 2026",
+  title: "REMINDER NPT",
+  description: "Aplikasi Reminder NPT & Agenda Persiapan Training NPT 2026",
   manifest: "/manifest.json",
 };
 

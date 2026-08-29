@@ -221,7 +221,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
-              Dashboard Admin - Buat reminder
+              Dashboard Admin - Reminder NPT
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">Persiapan Event 22 Agustus 2026</p>
           </div>
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
         <form onSubmit={handleSubmit} className="space-y-6 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm">
           <div className="flex justify-between items-center border-b border-slate-800 pb-2">
             <h2 className="text-sm font-semibold text-sky-400">
-              {editingId ? "✏️ Edit Tugas Harian" : "➕ Buat Tugas Baru"}
+              {editingId ? "✏️ Edit Reminder NPT" : "➕ Buat Reminder NPT Baru"}
             </h2>
             {editingId && (
               <button
@@ -331,14 +331,14 @@ export default function AdminDashboard() {
             disabled={isSubmitting}
             className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition disabled:opacity-50"
           >
-            <Send className="w-4 h-4" /> {isSubmitting ? "Memproses..." : editingId ? "Update Tugas" : "Publish To-Do Hari Ini"}
+            <Send className="w-4 h-4" /> {isSubmitting ? "Memproses..." : editingId ? "Update Reminder NPT" : "Publish Reminder NPT Hari Ini"}
           </button>
         </form>
 
         {/* List Tugas yang Sudah Rilis */}
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 space-y-4">
           <h3 className="font-semibold text-slate-200 text-sm border-b border-slate-800 pb-2">
-            Daftar Tugas yang Sudah Dipublikasikan ({tasks.length})
+            Daftar Reminder NPT yang Sudah Dipublikasikan ({tasks.length})
           </h3>
           <div className="divide-y divide-slate-800">
             {tasks.map((task, index) => (

@@ -84,7 +84,7 @@ export default function MembersAdmin() {
     const participantName = member.full_name || "Sahabat";
     const appDashboardUrl = `${window.location.origin}/dashboard`;
 
-    const textMessage = `Halo Kak ${participantName}! 👋\n\nJangan lupa cek To-Do & Refleksi Harian kamu untuk persiapan Event 22 Agustus 2026 ya.\n\nSilakan isi refleksimu di tautan berikut:\n👉 ${appDashboardUrl}\n\nSemangat berproses! 🔥`;
+    const textMessage = `Halo Kak ${participantName}! 👋\n\nJangan lupa cek Reminder NPT kamu untuk persiapan Event 22 Agustus 2026 ya.\n\nSilakan isi refleksimu di tautan berikut:\n👉 ${appDashboardUrl}\n\nSemangat berproses! 🔥`;
 
     const encodedText = encodeURIComponent(textMessage);
     const waUrl = `https://wa.me/${member.phone_number}?text=${encodedText}`;
@@ -99,7 +99,7 @@ export default function MembersAdmin() {
 
     setIsBroadcasting(true);
     const appDashboardUrl = `${window.location.origin}/dashboard`;
-    const defaultMessage = `Halo Sahabat! 👋\n\nTo-Do & Refleksi Harian persiapan Event 22 Agustus 2026 sudah terbit.\n\nSilakan isi di tautan berikut:\n👉 ${appDashboardUrl}\n\nSemangat berproses! 🔥`;
+    const defaultMessage = `Halo Sahabat! 👋\n\nReminder NPT persiapan Event 22 Agustus 2026 sudah terbit.\n\nSilakan isi di tautan berikut:\n👉 ${appDashboardUrl}\n\nSemangat berproses! 🔥`;
 
     try {
       const res = await fetch("/api/broadcast", {
