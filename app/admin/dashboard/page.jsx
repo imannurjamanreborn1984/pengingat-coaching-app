@@ -173,7 +173,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
-              Dashboard Admin - Buat To-Do Harian
+              Dashboard Admin - Buat reminder
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">Persiapan Event 22 Agustus 2026</p>
           </div>
@@ -249,17 +249,17 @@ export default function AdminDashboard() {
 
           <div>
             <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-              <Sparkles className="w-4 h-4 text-amber-400" /> Hasil OCR Otomatis (Pertanyaan/Evaluasi)
+              <Sparkles className="w-4 h-4 text-amber-400" /> Hasil Full OCR Otomatis (Seluruh Isi Teks Gambar)
             </label>
             {isProcessingOcr ? (
-              <p className="text-xs text-amber-400 animate-pulse">Sedang membaca teks dari gambar...</p>
+              <p className="text-xs text-amber-400 animate-pulse">Sedang melakukan Full OCR seluruh teks dari gambar...</p>
             ) : (
               <textarea
-                rows={5}
+                rows={6}
                 value={ocrText}
                 onChange={(e) => setOcrText(e.target.value)}
-                placeholder="Hasil teks dari gambar akan muncul otomatis di sini (dapat Anda edit kembali)..."
-                className="w-full p-2.5 border border-slate-800 rounded-lg text-xs focus:ring-1 focus:ring-sky-500 outline-none text-slate-200 bg-slate-950"
+                placeholder="Seluruh teks lengkap dari gambar materi akan diekstrak otomatis di sini (dapat Anda edit/sesuaikan kembali)..."
+                className="w-full p-2.5 border border-slate-800 rounded-lg text-xs focus:ring-1 focus:ring-sky-500 outline-none text-slate-200 bg-slate-950 font-mono leading-relaxed"
               />
             )}
           </div>

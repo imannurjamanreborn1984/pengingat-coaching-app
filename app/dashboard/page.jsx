@@ -192,7 +192,7 @@ export default function ParticipantDashboard() {
                 {/* Pertanyaan / OCR Text */}
                 {task.ocr_extracted_text && (
                   <div className="bg-sky-950/20 border border-sky-800/30 p-3 rounded-lg text-xs space-y-1">
-                    <p className="font-semibold text-sky-300">Soal / Refleksi Diri:</p>
+                    <p className="font-semibold text-sky-300">Teks Materi & Poin Refleksi:</p>
                     <p className="text-slate-200 whitespace-pre-line leading-relaxed">{task.ocr_extracted_text}</p>
                   </div>
                 )}

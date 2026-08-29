@@ -28,8 +28,15 @@ export async function POST(req) {
     // Hapus header data URI jika ada (misal 'data:image/jpeg;base64,')
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-    const prompt =
-      "Ekstrak semua teks pertanyaan, instruksi latihan, atau poin-poin refleksi dari gambar materi ini dengan rapi dan terstruktur dalam Bahasa Indonesia. Tampilkan hanya teks yang relevan untuk dijawab peserta.";
+    // Prompt FULL OCR Sempurna: Menangkap seluruh isi teks tanpa peringkasan atau filter
+    const prompt = `Anda adalah mesin Full OCR (Optical Character Recognition) berpresisi tinggi.
+Tugas Anda adalah menyalin dan mentranskripsikan SELURUH teks yang terdapat di dalam gambar ini secara lengkap, utuh, dan 100% sempurna:
+
+Instruksi Wajib:
+1. Ekstrak SEMUA tulisan yang ada pada gambar tanpa terkecuali: judul utama, subjudul, badan teks/paragraf, poin-poin/list nomor, kutipan, catatan kaki, instruksi, rumus, maupun pertanyaan.
+2. JANGAN memotong, meringkas, atau menyaring isi gambar. Salin seluruh kalimat kata per kata sebagaimana tertulis pada gambar.
+3. Pertahankan tata letak dan struktur aslinya (baris baru, paragraf, penomoran 1, 2, 3 atau bullet points).
+4. Berikan HANYA hasil teks salinan murni dari gambar, tanpa menambahkan kata pengantar atau penutup dari Anda.`;
 
     const imagePart = {
       inlineData: {
@@ -69,7 +76,7 @@ export async function POST(req) {
       throw lastError || new Error("Tidak dapat membaca gambar dengan model Gemini yang tersedia.");
     }
 
-    return NextResponse.json({ success: true, text: extractedText });
+    return NextResponse.json({ success: true, text: extractedText.trim() });
   } catch (err) {
     console.error("Error OCR Gemini:", err);
     return NextResponse.json(
