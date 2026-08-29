@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Sparkles, Send, Link as LinkIcon, FileText, Trash2, Edit3, X, ArrowLeft, Users, FileCheck2, ZoomIn } from "lucide-react";
+import { Sparkles, Send, Link as LinkIcon, FileText, Trash2, Edit3, X, ArrowLeft, Users, FileCheck2, ZoomIn, ArrowUp, ArrowDown } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [ocrText, setOcrText] = useState("");
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [movingId, setMovingId] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -30,6 +31,53 @@ export default function AdminDashboard() {
       .select("*")
       .order("created_at", { ascending: false });
     setTasks(data || []);
+  };
+
+  // Fungsi memindahkan urutan tugas ke atas atau ke bawah
+  const handleMoveTask = async (index, direction) => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= tasks.length) return;
+
+    const currentTask = tasks[index];
+    const targetTask = tasks[targetIndex];
+
+    // Update state secara optimistik untuk responsivitas instan
+    const updatedTasks = [...tasks];
+    updatedTasks[index] = targetTask;
+    updatedTasks[targetIndex] = currentTask;
+    setTasks(updatedTasks);
+    setMovingId(currentTask.id);
+
+    try {
+      let currentCreatedAt = new Date(currentTask.created_at).getTime();
+      let targetCreatedAt = new Date(targetTask.created_at).getTime();
+
+      // Pastikan ada selisih waktu agar urutan strictly sorted
+      if (currentCreatedAt === targetCreatedAt) {
+        if (direction === "up") {
+          targetCreatedAt = currentCreatedAt - 1000;
+        } else {
+          targetCreatedAt = currentCreatedAt + 1000;
+        }
+      }
+
+      const newCurrentDate = new Date(targetCreatedAt).toISOString();
+      const newTargetDate = new Date(currentCreatedAt).toISOString();
+
+      const [res1, res2] = await Promise.all([
+        supabase.from("assignments").update({ created_at: newCurrentDate }).eq("id", currentTask.id),
+        supabase.from("assignments").update({ created_at: newTargetDate }).eq("id", targetTask.id),
+      ]);
+
+      if (res1.error) throw res1.error;
+      if (res2.error) throw res2.error;
+    } catch (err) {
+      console.error("Gagal memindahkan urutan tugas:", err.message);
+      alert("Gagal mengubah urutan: " + err.message);
+      fetchTasks(); // Kembalikan ke urutan semula jika gagal
+    } finally {
+      setMovingId(null);
+    }
   };
 
   const handleImageChange = async (e) => {
@@ -293,23 +341,59 @@ export default function AdminDashboard() {
             Daftar Tugas yang Sudah Dipublikasikan ({tasks.length})
           </h3>
           <div className="divide-y divide-slate-800">
-            {tasks.map((task) => (
+            {tasks.map((task, index) => (
               <div key={task.id} className="py-3 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold text-sky-400">{task.title}</p>
-                  <p className="text-[10px] text-slate-500">Tanggal: {task.publish_date}</p>
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-md bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-center font-bold">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-sky-400">{task.title}</p>
+                    <p className="text-[10px] text-slate-500">Tanggal: {task.publish_date}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-1">
+                  {/* Tombol Pindah Urutan Ke Atas */}
                   <button
+                    type="button"
+                    onClick={() => handleMoveTask(index, "up")}
+                    disabled={index === 0 || movingId !== null}
+                    className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition disabled:opacity-20 disabled:cursor-not-allowed"
+                    title={index === 0 ? "Sudah di posisi paling atas" : "Pindah ke Atas"}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+
+                  {/* Tombol Pindah Urutan Ke Bawah */}
+                  <button
+                    type="button"
+                    onClick={() => handleMoveTask(index, "down")}
+                    disabled={index === tasks.length - 1 || movingId !== null}
+                    className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition disabled:opacity-20 disabled:cursor-not-allowed"
+                    title={index === tasks.length - 1 ? "Sudah di posisi paling bawah" : "Pindah ke Bawah"}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+
+                  {/* Garis Pemisah */}
+                  <span className="w-px h-4 bg-slate-800 mx-1" />
+
+                  {/* Tombol Edit */}
+                  <button
+                    type="button"
                     onClick={() => handleEditInit(task)}
-                    className="p-1.5 text-slate-400 hover:text-sky-400 transition"
+                    className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded transition"
                     title="Edit Tugas"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
+
+                  {/* Tombol Hapus */}
                   <button
+                    type="button"
                     onClick={() => handleDeleteTask(task.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 transition"
+                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded transition"
                     title="Hapus Tugas"
                   >
                     <Trash2 className="w-4 h-4" />
