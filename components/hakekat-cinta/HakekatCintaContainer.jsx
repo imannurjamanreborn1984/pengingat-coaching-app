@@ -33,7 +33,7 @@ const PLAYLIST_IDS = {
   hikam: 'PLdu5HXhJxO4r1irMN1OsomtJs3AxntFca',
   malam_jumat: 'PLdu5HXhJxO4rfSConDrw2OKIh-Lb0Gofu',
   npt: 'PLdu5HXhJxO4oBGrdypO65UbIoAkqGUfL3',
-  super_eksklusif: 'PLdu5HXhJxO4oBGrdypO65UbIoAkqGUfL3' // Placeholder untuk playlist baru
+  super_eksklusif: 'PLaDesrFJAdbc'
 };
 
 const INFO_KATEGORI = {
