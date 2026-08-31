@@ -226,6 +226,14 @@ export default function BukuSakuContainer() {
 
           {/* Right Action Links */}
           <div className="flex items-center gap-2">
+            <Link
+              href="/hakekat-cinta"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors"
+              title="Kajian Hakikat Cinta & Rekaman Live"
+            >
+              <span>🎬 Hakikat Cinta</span>
+            </Link>
+
             {/* Link back to Reminder Dashboard */}
             <Link
               href="/dashboard"

@@ -98,6 +98,14 @@ export default function ParticipantDashboard() {
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <Link
+              href="/hakekat-cinta"
+              className="px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 hover:text-rose-300 font-semibold rounded-lg transition flex items-center gap-1.5"
+              title="Kajian Hakikat Cinta & Rekaman Live"
+            >
+              <span>🎬 Hakikat Cinta</span>
+            </Link>
+
+            <Link
               href="/buku-saku"
               className="px-3 py-2 text-xs bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold rounded-lg shadow-sm shadow-rose-600/30 transition flex items-center gap-1.5"
               title="Buka Buku Saku 14 Akar Spiritual"
