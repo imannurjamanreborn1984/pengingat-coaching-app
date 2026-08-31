@@ -146,8 +146,10 @@ export default function HakekatCintaContainer() {
     }
   };
 
-  // Login Email Mandiri (Auto Admin)
-  const handleEmailLogin = (e) => {
+  // Login Email Mandiri & Cek Status Approval di Database Supabase
+  const [approvalStatus, setApprovalStatus] = useState(null); // null | 'approved' | 'pending' | 'checking'
+
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
     const cleanEmail = inputEmail.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -155,20 +157,72 @@ export default function HakekatCintaContainer() {
       return;
     }
 
+    const cleanName = inputName.trim() || cleanEmail.split('@')[0];
     const isAdmin = SUPER_ADMIN_EMAILS.includes(cleanEmail);
-    const userData = {
-      email: cleanEmail,
-      name: inputName.trim() || cleanEmail.split('@')[0],
-      role: isAdmin ? 'super_admin' : 'member',
-      loggedInAt: new Date().toISOString()
-    };
-
-    setCurrentUser(userData);
-    localStorage.setItem('npt_user_auth', JSON.stringify(userData));
-    localStorage.setItem('participant_name', userData.name);
 
     if (isAdmin) {
-      alert(`👑 Selamat datang Admin NPT (${cleanEmail})! Akses Super Admin & VIP telah aktif.`);
+      const userData = {
+        email: cleanEmail,
+        name: cleanName,
+        role: 'super_admin',
+        status: 'approved',
+        loggedInAt: new Date().toISOString()
+      };
+      setCurrentUser(userData);
+      localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+      localStorage.setItem('participant_name', cleanName);
+      alert(`👑 Selamat datang Admin Utama NPT (${cleanEmail})! Akses Super Admin & VIP telah aktif.`);
+      return;
+    }
+
+    // Untuk peserta umum, cek ke database Supabase
+    setApprovalStatus('checking');
+    try {
+      const { data: existingProfile, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (existingProfile) {
+        if (existingProfile.status === 'approved') {
+          const userData = {
+            id: existingProfile.id,
+            email: cleanEmail,
+            name: existingProfile.full_name || cleanName,
+            role: 'member',
+            status: 'approved'
+          };
+          setCurrentUser(userData);
+          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+          localStorage.setItem('participant_name', userData.name);
+          setApprovalStatus('approved');
+        } else {
+          setApprovalStatus('pending');
+        }
+      } else {
+        // Daftarkan permohonan baru dengan status 'pending'
+        await supabase.from('profiles').insert([
+          {
+            full_name: cleanName,
+            email: cleanEmail,
+            role: 'member',
+            status: 'pending'
+          }
+        ]);
+        setApprovalStatus('pending');
+      }
+    } catch (err) {
+      console.error('Error checking approval:', err);
+      // Fallback: izinkan jika offline/gagal koneksi
+      const userData = {
+        email: cleanEmail,
+        name: cleanName,
+        role: 'member',
+        status: 'approved'
+      };
+      setCurrentUser(userData);
+      localStorage.setItem('npt_user_auth', JSON.stringify(userData));
     }
   };
 
@@ -493,47 +547,69 @@ export default function HakekatCintaContainer() {
               </p>
             </div>
 
-            {/* Form Input Email Langsung */}
-            <form onSubmit={handleEmailLogin} className="space-y-3 text-left">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Nama Lengkap Anda:
-                </label>
-                <input
-                  type="text"
-                  placeholder="Masukkan nama lengkap Anda..."
-                  value={inputName}
-                  onChange={(e) => setInputName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  required
-                />
+            {/* Tampilan Jika Menunggu Persetujuan Admin */}
+            {approvalStatus === 'pending' ? (
+              <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3 animate-in fade-in">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                  <Clock className="w-6 h-6 animate-pulse" />
+                </div>
+                <h3 className="text-sm font-bold text-amber-500">
+                  Permintaan Akses Sedang Ditinjau
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+                  Email Anda <strong>{inputEmail}</strong> sudah terkirim ke <em>Ruang Persetujuan Admin NPT</em>. Silakan hubungi Admin atau coba masuk kembali setelah disetujui.
+                </p>
+                <button
+                  onClick={() => setApprovalStatus(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                >
+                  Coba Email Lain
+                </button>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Alamat Email Gmail:
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            ) : (
+              /* Form Input Email Langsung */
+              <form onSubmit={handleEmailLogin} className="space-y-3 text-left">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Lengkap Anda:
+                  </label>
                   <input
-                    type="email"
-                    placeholder="contoh: nama@gmail.com"
-                    value={inputEmail}
-                    onChange={(e) => setInputEmail(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    type="text"
+                    placeholder="Masukkan nama lengkap Anda..."
+                    value={inputName}
+                    onChange={(e) => setInputName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
                     required
                   />
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>Masuk & Buka Portal Rekaman</span>
-              </button>
-            </form>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Alamat Email Gmail:
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      placeholder="contoh: nama@gmail.com"
+                      value={inputEmail}
+                      onChange={(e) => setInputEmail(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={approvalStatus === 'checking'}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  <span>{approvalStatus === 'checking' ? 'Memeriksa Izin...' : 'Masuk & Buka Portal Rekaman'}</span>
+                </button>
+              </form>
+            )}
 
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
               💡 <em>Email admin resmi otomatis mendapatkan hak Super Admin.</em>
