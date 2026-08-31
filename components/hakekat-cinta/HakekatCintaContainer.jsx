@@ -23,11 +23,21 @@ import {
   LogOut,
   ShieldCheck,
   Crown,
-  Key
+  Key,
+  Mail,
+  Shield,
+  UserCheck
 } from 'lucide-react';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+
+// 👑 DAFTAR EMAIL SUPER ADMIN OTOMATIS
+export const SUPER_ADMIN_EMAILS = [
+  'lautanmahabbah@gmail.com',
+  'imannurjamanreborn@gmail.com',
+  'imannnurjanan84@gmail.com'
+];
 
 const PLAYLIST_IDS = {
   hikam: 'PLdu5HXhJxO4r1irMN1OsomtJs3AxntFca',
@@ -67,6 +77,8 @@ export default function HakekatCintaContainer() {
   // Auth state
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [inputEmail, setInputEmail] = useState('');
+  const [inputName, setInputName] = useState('');
 
   // Video State
   const [semuaVideo, setSemuaVideo] = useState([]);
@@ -82,26 +94,38 @@ export default function HakekatCintaContainer() {
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
 
-  // Cek Sesi Auth Supabase
+  // Cek Sesi Tersimpan (Local & Supabase Auth)
   useEffect(() => {
-    const checkSession = async () => {
+    const initAuth = async () => {
       try {
+        // Cek LocalStorage dulu untuk fast-load
+        const savedAuth = localStorage.getItem('npt_user_auth');
+        if (savedAuth) {
+          setCurrentUser(JSON.parse(savedAuth));
+        }
+
+        // Cek Supabase Auth jika ada
         const { data: { session } } = await supabase.auth.getSession();
-        setCurrentUser(session?.user || null);
+        if (session?.user) {
+          const userEmail = session.user.email?.toLowerCase();
+          const isAdmin = SUPER_ADMIN_EMAILS.includes(userEmail);
+          const userData = {
+            email: userEmail,
+            name: session.user.user_metadata?.full_name || userEmail,
+            role: isAdmin ? 'super_admin' : 'member',
+            avatar: session.user.user_metadata?.avatar_url
+          };
+          setCurrentUser(userData);
+          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+        }
       } catch (err) {
-        console.error('Error fetching session:', err);
+        console.error('Error init auth:', err);
       } finally {
         setIsAuthLoading(false);
       }
     };
 
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -122,6 +146,32 @@ export default function HakekatCintaContainer() {
     }
   };
 
+  // Login Email Mandiri (Auto Admin)
+  const handleEmailLogin = (e) => {
+    e.preventDefault();
+    const cleanEmail = inputEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      alert('Masukkan alamat email Gmail yang valid!');
+      return;
+    }
+
+    const isAdmin = SUPER_ADMIN_EMAILS.includes(cleanEmail);
+    const userData = {
+      email: cleanEmail,
+      name: inputName.trim() || cleanEmail.split('@')[0],
+      role: isAdmin ? 'super_admin' : 'member',
+      loggedInAt: new Date().toISOString()
+    };
+
+    setCurrentUser(userData);
+    localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+    localStorage.setItem('participant_name', userData.name);
+
+    if (isAdmin) {
+      alert(`👑 Selamat datang Admin NPT (${cleanEmail})! Akses Super Admin & VIP telah aktif.`);
+    }
+  };
+
   // Google OAuth Login
   const handleGoogleLogin = async () => {
     try {
@@ -131,19 +181,37 @@ export default function HakekatCintaContainer() {
           redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/hakekat-cinta` : undefined,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Fallback jika provider belum ON di dashboard supabase
+        console.warn("Supabase Google Provider not active, using email prompt fallback.");
+        const emailPrompt = prompt("Masukkan alamat Gmail Anda:");
+        if (emailPrompt && emailPrompt.includes('@')) {
+          const cleanEmail = emailPrompt.trim().toLowerCase();
+          const isAdmin = SUPER_ADMIN_EMAILS.includes(cleanEmail);
+          const userData = {
+            email: cleanEmail,
+            name: cleanEmail.split('@')[0],
+            role: isAdmin ? 'super_admin' : 'member'
+          };
+          setCurrentUser(userData);
+          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+        }
+      }
     } catch (err) {
-      alert(`Gagal login dengan Google: ${err.message}`);
+      console.log('Google login error, using direct email fallback:', err.message);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    localStorage.removeItem('npt_user_auth');
     setCurrentUser(null);
   };
 
   const ambilDataPlaylistYouTube = async (tokenHalaman = '') => {
-    if (!currentUser) return; // Hanya ambil video jika sudah login
+    if (!currentUser) return;
 
     try {
       if (tokenHalaman === '') setLoading(true);
@@ -320,6 +388,7 @@ export default function HakekatCintaContainer() {
   });
 
   const totalDrafBab = Object.keys(koleksiBuku).length;
+  const isSuperAdmin = currentUser?.role === 'super_admin';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
@@ -352,6 +421,17 @@ export default function HakekatCintaContainer() {
 
           {/* User Auth Info & Navigation Links */}
           <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Link
+                href="/admin/dashboard"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shadow-xs"
+                title="Akses Menu Admin NPT"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span>Panel Admin</span>
+              </Link>
+            )}
+
             <Link
               href="/dashboard"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors"
@@ -372,13 +452,13 @@ export default function HakekatCintaContainer() {
 
             {currentUser && (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-300 hidden md:inline truncate max-w-[120px]">
-                  {currentUser.user_metadata?.full_name || currentUser.email}
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 hidden md:inline truncate max-w-[130px]" title={currentUser.email}>
+                  {isSuperAdmin ? '👑 ' : ''}{currentUser.name || currentUser.email}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                  title="Keluar / Logout Akun Google"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                  title="Keluar / Ganti Akun"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -396,59 +476,68 @@ export default function HakekatCintaContainer() {
             <p className="text-xs text-slate-400">Memeriksa hak akses anggota...</p>
           </div>
         ) : !currentUser ? (
-          /* AUTH GATE / GEMBOK LOGIN GOOGLE */
-          <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-xl space-y-6 relative overflow-hidden">
+          /* AUTH GATE / GEMBOK LOGIN GMAIL & AUTO ADMIN */
+          <div className="max-w-md mx-auto my-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-bl from-rose-500/10 via-amber-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-            <div className="w-16 h-16 rounded-3xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner">
-              <Lock className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner">
+              <Lock className="w-7 h-7" />
             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            <div className="space-y-1.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Akses Eksklusif Rekaman Live NPT
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Kajian siaran ulang Hakikat Cinta & Olah Nafas hanya diperuntukkan bagi peserta yang berkomitmen menyimak materi secara mendalam.
+                Kajian siaran ulang Hakikat Cinta & Olah Nafas hanya diperuntukkan bagi peserta dan admin NPT terdaftar.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-left space-y-2 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
-                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Manfaat Masuk dengan Akun Google:</span>
+            {/* Form Input Email Langsung */}
+            <form onSubmit={handleEmailLogin} className="space-y-3 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Lengkap Anda:
+                </label>
+                <input
+                  type="text"
+                  placeholder="Masukkan nama lengkap Anda..."
+                  value={inputName}
+                  onChange={(e) => setInputName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  required
+                />
               </div>
-              <ul className="space-y-1.5 text-[11px] pl-6 list-disc text-slate-500 dark:text-slate-400">
-                <li>Membuka seluruh video playlist unlisted YouTube.</li>
-                <li>Menyimpan draf buku hasil rangkuman AI secara personal.</li>
-                <li>Akses playlist pendalaman khusus (Super VIP).</li>
-              </ul>
-            </div>
 
-            <button
-              onClick={handleGoogleLogin}
-              className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-95"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Lanjutkan Masuk dengan Google (Gmail)</span>
-            </button>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Alamat Email Gmail:
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    placeholder="contoh: nama@gmail.com"
+                    value={inputEmail}
+                    onChange={(e) => setInputEmail(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Masuk & Buka Portal Rekaman</span>
+              </button>
+            </form>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
+              💡 <em>Email admin resmi otomatis mendapatkan hak Super Admin.</em>
+            </div>
           </div>
         ) : (
           /* KONTEN VIDEO AKTIF SETELAH LOGIN */
