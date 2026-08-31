@@ -20,8 +20,8 @@ import {
   FileText
 } from 'lucide-react';
 
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 'AIzaSyBRVIaGEzz25JYcuuw2VM-fu5goNEFlhgw';
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AIzaSyDbVubxN3B0vNY4L0Nx6c9O3uIkD847KCQ';
+const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
 const PLAYLIST_IDS = {
   hikam: 'PLdu5HXhJxO4r1irMN1OsomtJs3AxntFca',
