@@ -227,6 +227,12 @@ export default function AdminDashboard() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/buku-saku"
+              className="text-xs bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold px-3 py-2 rounded-lg shadow-xs transition flex items-center gap-1.5"
+            >
+              <span>📖 Buku Saku 14 Akar</span>
+            </Link>
+            <Link
               href="/admin/submissions"
               className="text-xs bg-slate-900 hover:bg-slate-800 text-sky-400 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
             >

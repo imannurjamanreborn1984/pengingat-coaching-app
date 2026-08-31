@@ -97,6 +97,15 @@ export default function ParticipantDashboard() {
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Link
+              href="/buku-saku"
+              className="px-3 py-2 text-xs bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold rounded-lg shadow-sm shadow-rose-600/30 transition flex items-center gap-1.5"
+              title="Buka Buku Saku 14 Akar Spiritual"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Buku Saku 14 Akar</span>
+            </Link>
+
             <button
               onClick={fetchTasks}
               disabled={loading}
