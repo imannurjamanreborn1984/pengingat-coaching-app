@@ -11,6 +11,7 @@ import { QuickAddModal } from './QuickAddModal';
 import { DataManagementModal } from './DataManagementModal';
 import { AssessmentPreview } from './AssessmentPreview';
 import { DataService } from '../../lib/services/dataService';
+import { GURU_PREFACE } from '../../lib/data/rootsData';
 import { 
   BookOpen, 
   Compass, 
@@ -25,22 +26,33 @@ import {
   Timer, 
   Plus, 
   ArrowLeft,
-  Bell
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  ShieldCheck,
+  HeartHandshake
 } from 'lucide-react';
 
 const ELEMENTS = [
-  { id: 'ALL', label: 'Semua Elemen' },
+  { id: 'ALL', label: 'Semua (14 Akar)' },
+  { id: 'Suara / Eter', label: '🔊 Suara' },
+  { id: 'Langit / Udara', label: '☁️ Langit' },
+  { id: 'Bumi / Tanah', label: '🌱 Bumi' },
+  { id: 'Kayu / Hayat Hijau', label: '🌳 Kayu' },
   { id: 'Api', label: '🔥 Api' },
+  { id: 'Logam', label: '⚔️ Logam' },
   { id: 'Air', label: '💧 Air' },
-  { id: 'Tanah', label: '🌱 Tanah' },
-  { id: 'Udara', label: '💨 Udara' },
-  { id: 'Cahaya', label: '✨ Cahaya' },
-  { id: 'Eter', label: '🌌 Eter' },
-  { id: 'Kesadaran', label: '👁️ Kesadaran' },
-  { id: 'Kosmik', label: '🪐 Kosmik' },
+  { id: '9 Elemen Bersatu', label: '🌌 9 Elemen' },
+  { id: '5 Elemen (Panca Driya)', label: '⚖️ 5 Elemen' },
+  { id: 'Dualitas (Yin-Yang / Jalal-Jamal)', label: '☯️ Ganda' },
+  { id: 'Darah / Genetik Leluhur', label: '🩸 Garis Darah' },
+  { id: 'Kekosongan (Void / Suwung)', label: '⭕ Void / Suwung' },
+  { id: 'Chaos / Turbulensi', label: '🌪️ Chaos' },
+  { id: 'Es Mistik / Kristal Beku', label: '❄️ Es Mistik' },
 ];
 
 export default function BukuSakuContainer() {
+  const [showPreface, setShowPreface] = useState(false);
   const [roots, setRoots] = useState([]);
   const [selectedRoot, setSelectedRoot] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
@@ -294,6 +306,77 @@ export default function BukuSakuContainer() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Pengantar & Petunjuk Guru NPT (Expandable) */}
+            <div className="bg-gradient-to-br from-amber-500/5 via-white to-amber-500/10 dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div 
+                onClick={() => setShowPreface(!showPreface)}
+                className="flex items-center justify-between cursor-pointer group select-none"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">
+                    📜
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                      <span>{GURU_PREFACE.title}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-semibold">
+                        313 Jalur Sylendra
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                      {GURU_PREFACE.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                <button className="p-2 rounded-xl text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200">
+                  {showPreface ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+              </div>
+
+              {showPreface && (
+                <div className="pt-4 border-t border-amber-500/20 space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed animate-in fade-in duration-200">
+                  <p className="italic bg-amber-50/60 dark:bg-amber-950/40 p-3.5 rounded-2xl border-l-3 border-amber-500 text-amber-900 dark:text-amber-200 font-serif">
+                    "{GURU_PREFACE.heritageContext}"
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        🌱 Manfaat Merawat Akar Spiritual:
+                      </h4>
+                      <ul className="space-y-1.5 text-xs">
+                        {GURU_PREFACE.benefits.map((b, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-amber-500 font-bold">•</span>
+                            <span><strong>{b.title}:</strong> {b.desc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        🧘 Cara Merawat & Latihan Rutin:
+                      </h4>
+                      <ul className="space-y-1.5 text-xs">
+                        {GURU_PREFACE.maintenancePractices.map((p, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-emerald-500 font-bold">✓</span>
+                            <span><strong>{p.title}:</strong> {p.desc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    💡 <em>{GURU_PREFACE.treeIllustration}</em>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Search & Element Filters */}
