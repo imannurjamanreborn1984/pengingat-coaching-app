@@ -1,11 +1,17 @@
 {
-  "name": "Coaching Reminder App",
-  "short_name": "CoachingApp",
-  "description": "Aplikasi Pengingat & Agenda Persiapan Training NPT",
+  "id": "https://pengingat-coaching-app.vercel.app/",
+  "name": "Buku Saku & Reminder NPT",
+  "short_name": "Portal NPT",
+  "description": "Portal Resmi 14 Akar Spiritual & Pengingat Latihan Training NPT",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
   "background_color": "#020617",
   "theme_color": "#0284c7",
+  "categories": ["lifestyle", "education", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon.ico",
@@ -16,13 +22,25 @@
       "src": "/iconnpt-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/iconnpt-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/iconnpt-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/iconnpt-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
