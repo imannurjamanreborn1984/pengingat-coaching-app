@@ -61,20 +61,46 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-5 scrollbar-thin">
           {/* User Profile Card */}
-          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-400 font-bold flex items-center justify-center text-xs border border-rose-500/20">
-                {currentUser?.name?.charAt(0) || 'N'}
+          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-400 font-bold flex items-center justify-center text-xs border border-rose-500/20 shrink-0">
+                  {currentUser?.name?.charAt(0) || 'N'}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-xs font-bold text-slate-100 truncate">
+                    {currentUser?.name || currentUser?.email || 'Sahabat NPT'}
+                  </p>
+                  <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
+                    {isSuperAdmin ? '👑 Super Admin VIP' : '⭐ Member NPT'}
+                  </span>
+                </div>
               </div>
-              <div className="overflow-hidden">
-                <p className="text-xs font-bold text-slate-100 truncate">
-                  {currentUser?.name || currentUser?.email || 'Sahabat NPT'}
-                </p>
-                <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
-                  {isSuperAdmin ? '👑 Super Admin VIP' : '⭐ Member NPT'}
-                </span>
-              </div>
+
+              {/* Tombol Logout Cepat */}
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('npt_user_auth');
+                    localStorage.removeItem('participant_name');
+                  } catch (e) {}
+                  window.location.href = '/';
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 transition cursor-pointer"
+                title="Keluar / Logout Akun"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
+
+            {/* Tombol Kembali ke Gerbang Utama Logo */}
+            <Link
+              href="/"
+              onClick={onClose}
+              className="w-full py-1.5 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-[11px] font-semibold text-rose-300 flex items-center justify-center gap-1.5 border border-slate-800/80 transition"
+            >
+              <span>🏛️ Kembali ke Gerbang Awal</span>
+            </Link>
           </div>
 
           {/* Navigasi Utama */}
@@ -215,13 +241,17 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Hakikat
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2.5 select-none">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-rose-600 via-red-500 to-rose-700 flex items-center justify-center text-white shadow-sm shadow-rose-600/30">
+          <Link 
+            href="/"
+            className="flex items-center gap-2.5 select-none group cursor-pointer"
+            title="Kembali ke Gerbang Awal"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-rose-600 via-red-500 to-rose-700 flex items-center justify-center text-white shadow-sm shadow-rose-600/30 group-hover:scale-105 transition-transform">
               <Film className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-white text-sm sm:text-base tracking-tight leading-none">
+                <span className="font-extrabold text-white text-sm sm:text-base tracking-tight leading-none group-hover:text-rose-400 transition-colors">
                   {activeTitle}
                 </span>
                 <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-rose-500/10 text-rose-400 rounded-md border border-rose-500/20">
@@ -232,7 +262,7 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Hakikat
                 NPT Centre • Portal Terpadu
               </p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Right Action Buttons */}
