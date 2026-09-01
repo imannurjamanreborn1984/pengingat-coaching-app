@@ -119,49 +119,89 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
               {/* Sub-menu Tree NPT 1 s/d NPT 6 */}
               <div className="space-y-1.5 pl-1">
                 {/* NPT 1 */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950/40 border border-slate-800/60">
+                <Link
+                  href="/npt/1"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activePath === '/npt/1'
+                      ? 'bg-rose-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
+                  }`}
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">1</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">1</span>
                     <span>NPT Level 1</span>
                   </div>
-                  <span className="text-[9px] text-amber-400/80 italic font-medium">Segera Diupload</span>
-                </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
 
                 {/* NPT 2 */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950/40 border border-slate-800/60">
+                <Link
+                  href="/npt/2"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activePath === '/npt/2'
+                      ? 'bg-rose-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
+                  }`}
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">2</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">2</span>
                     <span>NPT Level 2</span>
                   </div>
-                  <span className="text-[9px] text-amber-400/80 italic font-medium">Segera Diupload</span>
-                </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
 
                 {/* NPT 3 */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950/40 border border-slate-800/60">
+                <Link
+                  href="/npt/3"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activePath === '/npt/3'
+                      ? 'bg-rose-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
+                  }`}
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">3</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">3</span>
                     <span>NPT Level 3</span>
                   </div>
-                  <span className="text-[9px] text-amber-400/80 italic font-medium">Segera Diupload</span>
-                </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
 
                 {/* NPT 4 */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950/40 border border-slate-800/60">
+                <Link
+                  href="/npt/4"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activePath === '/npt/4'
+                      ? 'bg-rose-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
+                  }`}
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">4</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">4</span>
                     <span>NPT Level 4</span>
                   </div>
-                  <span className="text-[9px] text-amber-400/80 italic font-medium">Segera Diupload</span>
-                </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
 
                 {/* NPT 5 */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950/40 border border-slate-800/60">
+                <Link
+                  href="/npt/5"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activePath === '/npt/5'
+                      ? 'bg-rose-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
+                  }`}
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">5</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">5</span>
                     <span>NPT Level 5</span>
                   </div>
-                  <span className="text-[9px] text-amber-400/80 italic font-medium">Segera Diupload</span>
-                </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </Link>
 
                 {/* NPT 6: ROAD TO LEVEL 6 (14 AKAR SPIRITUAL & TUGAS) */}
                 <div className="p-2.5 rounded-2xl bg-rose-950/30 border border-rose-500/30 space-y-1.5">
@@ -311,6 +351,20 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                 <div className="flex items-center gap-3">
                   <Users className="w-4 h-4 text-sky-400" />
                   <span>Rekap Jawaban Peserta</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+
+              <Link
+                href="/admin/materials"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
+                  activePath === '/admin/materials' ? 'bg-slate-800 text-white ring-1 ring-rose-500' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-4 h-4 text-rose-400" />
+                  <span>Upload Materi NPT (1 – 6)</span>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 opacity-60" />
               </Link>
