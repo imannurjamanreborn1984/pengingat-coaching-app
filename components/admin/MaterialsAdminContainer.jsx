@@ -20,7 +20,11 @@ import {
   Save,
   X,
   File,
-  Film
+  Film,
+  Image as ImageIcon,
+  Copy,
+  Check,
+  ZoomIn
 } from "lucide-react";
 
 export default function MaterialsAdminContainer() {
@@ -42,8 +46,16 @@ export default function MaterialsAdminContainer() {
     file_url: "",
     file_name: "",
     file_type: "pdf", // 'pdf' | 'ppt' | 'docx' | 'gdrive'
+    image_url: "",
+    ocr_extracted_text: "",
     is_published: true
   });
+
+  // State Gambar & OCR
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+  const [copiedOcr, setCopiedOcr] = useState(false);
 
   useEffect(() => {
     try {
@@ -89,6 +101,9 @@ export default function MaterialsAdminContainer() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setCopiedOcr(false);
     setFormData({
       level: selectedLevel,
       title: "",
@@ -98,6 +113,8 @@ export default function MaterialsAdminContainer() {
       file_url: "",
       file_name: "",
       file_type: "pdf",
+      image_url: "",
+      ocr_extracted_text: "",
       is_published: true
     });
     setIsModalOpen(true);
@@ -105,6 +122,9 @@ export default function MaterialsAdminContainer() {
 
   const handleOpenEdit = (item) => {
     setEditingId(item.id);
+    setImageFile(null);
+    setImagePreview(item.image_url || null);
+    setCopiedOcr(false);
     setFormData({
       level: item.level || selectedLevel,
       title: item.title || "",
@@ -114,15 +134,102 @@ export default function MaterialsAdminContainer() {
       file_url: item.file_url || "",
       file_name: item.file_name || "",
       file_type: item.file_type || "pdf",
+      image_url: item.image_url || "",
+      ocr_extracted_text: item.ocr_extracted_text || "",
       is_published: item.is_published !== false
     });
     setIsModalOpen(true);
+  };
+
+  // Handle Gambar & Jalankan OCR
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+
+    // Ekstrak teks via OCR otomatis menggunakan Gemini API /api/ocr
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result;
+      runOcr(base64Data, file.type);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const runOcr = async (base64Data, mimeType) => {
+    setIsProcessingOcr(true);
+    try {
+      const res = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64Data, mimeType }),
+      });
+      const data = await res.json();
+      if (data.success && data.text) {
+        setFormData((prev) => ({
+          ...prev,
+          ocr_extracted_text: data.text,
+          // Jika isi materi masih kosong, otomatis isikan teks OCR
+          content: prev.content ? prev.content : data.text
+        }));
+      } else {
+        alert("Gagal mengekstrak teks dari gambar: " + (data.error || "Gagal OCR"));
+      }
+    } catch (err) {
+      console.error("OCR Error:", err);
+    } finally {
+      setIsProcessingOcr(false);
+    }
+  };
+
+  const handleCopyOcrToContent = () => {
+    if (!formData.ocr_extracted_text) return;
+    setFormData((prev) => ({
+      ...prev,
+      content: prev.content
+        ? `${prev.content}\n\n${prev.ocr_extracted_text}`
+        : prev.ocr_extracted_text
+    }));
+    setCopiedOcr(true);
+    setTimeout(() => setCopiedOcr(false), 2000);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData((prev) => ({ ...prev, image_url: "" }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return alert("Judul materi wajib diisi!");
     setIsLoading(true);
+
+    let finalImageUrl = formData.image_url || imagePreview;
+
+    // 1. Upload Gambar ke Supabase Storage bucket 'materi-images' jika ada file baru
+    if (imageFile) {
+      try {
+        if (supabase) {
+          const fileExt = imageFile.name.split(".").pop();
+          const fileName = `material_${Date.now()}.${fileExt}`;
+          const { error: uploadErr } = await supabase.storage
+            .from("materi-images")
+            .upload(fileName, imageFile);
+
+          if (!uploadErr) {
+            const { data: publicUrlData } = supabase.storage
+              .from("materi-images")
+              .getPublicUrl(fileName);
+            finalImageUrl = publicUrlData.publicUrl;
+          }
+        }
+      } catch (err) {
+        console.warn("Storage upload warn:", err.message);
+      }
+    }
 
     const payload = {
       level: Number(formData.level),
@@ -133,13 +240,15 @@ export default function MaterialsAdminContainer() {
       file_url: formData.file_url.trim(),
       file_name: formData.file_name.trim() || (formData.file_url ? "Dokumen Materi" : ""),
       file_type: formData.file_type,
+      image_url: finalImageUrl || null,
+      ocr_extracted_text: formData.ocr_extracted_text || null,
       is_published: formData.is_published,
       updated_at: new Date().toISOString()
     };
 
     let saved = false;
 
-    // 1. Simpan ke Supabase
+    // 2. Simpan ke Supabase DB
     try {
       if (supabase) {
         if (editingId) {
@@ -159,7 +268,7 @@ export default function MaterialsAdminContainer() {
       console.warn("Supabase save error, fallback to local:", err.message);
     }
 
-    // 2. Simpan ke LocalStorage agar selalu instan
+    // 3. Simpan ke LocalStorage agar selalu instan
     try {
       const localKey = `npt_materials_level_${formData.level}`;
       const existing = JSON.parse(localStorage.getItem(localKey) || "[]");
@@ -246,7 +355,7 @@ export default function MaterialsAdminContainer() {
               </h1>
             </div>
             <p className="text-xs text-slate-400">
-              Kelola bahan belajar peserta: Teks Modul, File <strong>PDF, PPT, Word (DOCX)</strong>, dan Video YouTube.
+              Kelola bahan belajar peserta: <strong>Gambar/Infografis + AI OCR</strong>, Teks Modul, File <strong>PDF, PPT, Word (DOCX)</strong>, dan Video YouTube.
             </p>
           </div>
 
@@ -314,13 +423,13 @@ export default function MaterialsAdminContainer() {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {materials.map((mat, idx) => (
                 <div
                   key={mat.id || idx}
-                  className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex flex-col md:flex-row items-start justify-between gap-4"
                 >
-                  <div className="space-y-1.5 max-w-2xl">
+                  <div className="space-y-2.5 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-sm text-slate-100">
                         {mat.title}
@@ -328,6 +437,11 @@ export default function MaterialsAdminContainer() {
                       {mat.subtitle && (
                         <span className="text-xs text-amber-400 font-medium">
                           • {mat.subtitle}
+                        </span>
+                      )}
+                      {mat.image_url && (
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" /> Gambar / OCR
                         </span>
                       )}
                       {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
@@ -338,8 +452,19 @@ export default function MaterialsAdminContainer() {
                       )}
                     </div>
 
+                    {/* Thumbnail Gambar jika ada */}
+                    {mat.image_url && (
+                      <div className="relative w-40 h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+                        <img
+                          src={mat.image_url}
+                          alt={mat.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
                     {mat.content && (
-                      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed whitespace-pre-line">
                         {mat.content}
                       </p>
                     )}
@@ -358,17 +483,17 @@ export default function MaterialsAdminContainer() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
                     <button
                       onClick={() => handleOpenEdit(mat)}
-                      className="p-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition cursor-pointer"
+                      className="p-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition cursor-pointer"
                       title="Edit Materi"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(mat.id)}
-                      className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer"
+                      className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer"
                       title="Hapus Materi"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -382,7 +507,7 @@ export default function MaterialsAdminContainer() {
 
       </main>
 
-      {/* MODAL INPUT / EDIT MATERI */}
+      {/* MODAL INPUT / EDIT MATERI LENGKAP DENGAN UPLOAD GAMBAR & OCR */}
       {isModalOpen && (
         <div
           onClick={() => setIsModalOpen(false)}
@@ -390,7 +515,7 @@ export default function MaterialsAdminContainer() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg bg-slate-900 border border-rose-500/30 rounded-3xl p-6 shadow-2xl space-y-4 text-left my-8"
+            className="w-full max-w-xl bg-slate-900 border border-rose-500/30 rounded-3xl p-6 shadow-2xl space-y-4 text-left my-8 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
@@ -398,7 +523,7 @@ export default function MaterialsAdminContainer() {
                   {editingId ? "Edit Materi NPT" : "Tambah Materi NPT Baru"}
                 </h3>
                 <p className="text-[10px] text-slate-400">
-                  Untuk NPT Level {formData.level} (Mendukung PDF, PPT, Word, Video)
+                  Untuk NPT Level {formData.level} (Mendukung Gambar + OCR, PDF, PPT, Word, Video)
                 </p>
               </div>
               <button
@@ -409,7 +534,7 @@ export default function MaterialsAdminContainer() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3.5">
+            <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -454,20 +579,86 @@ export default function MaterialsAdminContainer() {
                 />
               </div>
 
+              {/* SECTION 1: UNGGAH GAMBAR & AUTO FULL OCR */}
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4" /> Unggah Gambar Materi (Poster / Slide / Catatan)
+                  </label>
+                  {imagePreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="text-[10px] text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" /> Hapus Gambar
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer"
+                />
+
+                {imagePreview && (
+                  <div className="flex items-start gap-3 pt-1">
+                    <div className="relative w-28 h-28 rounded-xl border border-slate-800 overflow-hidden bg-slate-900 shrink-0">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" /> Hasil Full OCR Otomatis:
+                        </span>
+                        {formData.ocr_extracted_text && (
+                          <button
+                            type="button"
+                            onClick={handleCopyOcrToContent}
+                            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-400 flex items-center gap-1 transition cursor-pointer"
+                          >
+                            {copiedOcr ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedOcr ? "Disalin!" : "Salin ke Isi Materi"}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {isProcessingOcr ? (
+                        <p className="text-xs text-amber-400 animate-pulse font-mono py-2">
+                          Sedang membaca seluruh teks dari gambar via OCR Gemini AI...
+                        </p>
+                      ) : (
+                        <textarea
+                          rows={3}
+                          value={formData.ocr_extracted_text || ""}
+                          onChange={(e) => setFormData({ ...formData, ocr_extracted_text: e.target.value })}
+                          placeholder="Teks dari gambar yang terbaca OCR..."
+                          className="w-full p-2 rounded-xl border border-slate-800 text-[11px] focus:outline-hidden text-slate-300 bg-slate-900 font-mono leading-relaxed"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 2: ISI MATERI / PENJELASAN PANDUAN */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Isi Materi / Penjelasan Panduan
+                  Isi Materi / Penjelasan Panduan Lengkap
                 </label>
                 <textarea
                   rows={4}
                   placeholder="Tuliskan intisari materi, langkah latihan, atau penjelasan panduan di sini..."
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500 font-sans leading-relaxed"
                 />
               </div>
 
-              {/* Lampiran Dokumen (PDF, PPT, Word) */}
+              {/* SECTION 3: LAMPIRAN FILE DOKUMEN (PDF, PPT, WORD) */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
                 <span className="text-xs font-bold text-amber-300 block">
                   📁 Lampiran File Dokumen (PDF / PPT / Word)
@@ -511,7 +702,7 @@ export default function MaterialsAdminContainer() {
                 </div>
               </div>
 
-              {/* Link Video YouTube */}
+              {/* SECTION 4: LINK VIDEO YOUTUBE */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
                   Link Video YouTube Pembelajaran (Opsional)
@@ -535,8 +726,8 @@ export default function MaterialsAdminContainer() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-xs font-bold text-white shadow-md shadow-rose-600/30 transition cursor-pointer"
+                  disabled={isLoading || isProcessingOcr}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-xs font-bold text-white shadow-md shadow-rose-600/30 transition cursor-pointer disabled:opacity-50"
                 >
                   {isLoading ? "Menyimpan..." : "Simpan & Publikasikan"}
                 </button>

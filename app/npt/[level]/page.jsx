@@ -260,8 +260,20 @@ export default function NPTLevelDetailPage() {
 
                 {/* MEMBER LOCK VS FULL ACCESS */}
                 {isApproved ? (
-                  /* MEMBER APPROVED: FULL VIDEO & FILE DOWNLOAD ACCESS */
+                  /* MEMBER APPROVED: FULL VIDEO, IMAGE & FILE DOWNLOAD ACCESS */
                   <div className="space-y-4 pt-2">
+                    {mat.image_url && (
+                      <div className="space-y-2">
+                        <div className="relative w-full max-h-96 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center">
+                          <img
+                            src={mat.image_url}
+                            alt={mat.title}
+                            className="w-full h-auto max-h-96 object-contain rounded-2xl"
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     {mat.youtube_url && (
                       <div className="space-y-2">
                         <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
