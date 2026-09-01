@@ -59,6 +59,9 @@ export default function MaterialsAdminContainer() {
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
   const [copiedOcr, setCopiedOcr] = useState(false);
 
+  const [isTableMissing, setIsTableMissing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   useEffect(() => {
     try {
       const authStr = localStorage.getItem("npt_user_auth");
@@ -71,6 +74,9 @@ export default function MaterialsAdminContainer() {
 
   const fetchMaterials = async () => {
     setIsLoading(true);
+    let cloudData = null;
+    let tableMissingErr = false;
+
     try {
       if (supabase) {
         const { data, error } = await supabase
@@ -79,26 +85,79 @@ export default function MaterialsAdminContainer() {
           .eq("level", selectedLevel)
           .order("order_index", { ascending: true });
 
-        if (!error && data) {
-          setMaterials(data);
-          setIsLoading(false);
-          return;
+        if (error) {
+          if (error.message?.includes("npt_materials") || error.code === "PGRST205") {
+            tableMissingErr = true;
+          }
+        } else if (data) {
+          cloudData = data;
+          setIsTableMissing(false);
         }
       }
     } catch (err) {
       console.warn("Supabase fetch info:", err.message);
     }
 
-    // Fallback dari localStorage jika tabel Supabase belum dibuat
+    setIsTableMissing(tableMissingErr);
+
+    // Ambil data lokal
+    let localData = [];
     try {
-      const localData = localStorage.getItem(`npt_materials_level_${selectedLevel}`);
-      if (localData) {
-        setMaterials(JSON.parse(localData));
-      } else {
-        setMaterials([]);
-      }
+      const raw = localStorage.getItem(`npt_materials_level_${selectedLevel}`);
+      if (raw) localData = JSON.parse(raw);
     } catch (e) {}
+
+    // Jika cloud ada data, prioritaskan cloud
+    if (cloudData && cloudData.length > 0) {
+      setMaterials(cloudData);
+    } else if (localData.length > 0) {
+      setMaterials(localData);
+    } else if (cloudData) {
+      setMaterials(cloudData);
+    } else {
+      setMaterials([]);
+    }
+
     setIsLoading(false);
+  };
+
+  const handleSyncToCloud = async () => {
+    setIsSyncing(true);
+    try {
+      let localData = [];
+      try {
+        const raw = localStorage.getItem(`npt_materials_level_${selectedLevel}`);
+        if (raw) localData = JSON.parse(raw);
+      } catch (e) {}
+
+      if (localData.length === 0) {
+        alert("Tidak ada data materi lokal di laptop untuk disinkronkan.");
+        setIsSyncing(false);
+        return;
+      }
+
+      if (!supabase) throw new Error("Supabase client belum siap.");
+
+      let successCount = 0;
+      for (const item of localData) {
+        const { id, ...cleanPayload } = item;
+        const { error } = await supabase.from("npt_materials").insert([
+          {
+            ...cleanPayload,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ]);
+        if (!error) successCount++;
+      }
+
+      alert(`✅ Berhasil menyinkronkan ${successCount} materi dari laptop ke Cloud Supabase! Sekarang HP dan Member sudah bisa melihatnya.`);
+      fetchMaterials();
+    } catch (err) {
+      alert("Gagal sinkron: " + err.message);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -361,14 +420,41 @@ export default function MaterialsAdminContainer() {
             </p>
           </div>
 
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 flex items-center gap-2 self-start sm:self-auto cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Tambah Materi NPT Level {selectedLevel}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {materials.length > 0 && (
+              <button
+                onClick={handleSyncToCloud}
+                disabled={isSyncing}
+                className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold border border-sky-500/30 flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                title="Sinkronkan materi tersimpan di laptop ini ke cloud database Supabase agar muncul di HP & semua member"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isSyncing ? "Menyinkronkan..." : "⚡ Sinkronkan ke Cloud (HP)"}</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Tambah Materi NPT Level {selectedLevel}</span>
+            </button>
+          </div>
         </div>
+
+        {/* Banner Peringatan jika tabel Supabase belum dibuat */}
+        {isTableMissing && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+              <span>⚠️ Perhatian: Tabel Database Cloud Supabase (npt_materials) Belum Dibuat</span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+              Materi yang Anda simpan saat ini tersimpan sementara di memori browser Laptop Anda (sehingga di HP belum muncul).
+              Agar materi otomatis tersinkronisasi ke <strong>HP dan seluruh akun Member</strong>, silakan buat tabel di Supabase SQL Editor sekali saja.
+            </p>
+          </div>
+        )}
 
         {/* Level Tabs Selector (1 s/d 6) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
