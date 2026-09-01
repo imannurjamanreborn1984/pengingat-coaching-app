@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import { ExternalLink, Send, BookOpen, ZoomIn, X, Shield, RefreshCw } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default function ParticipantDashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState({});
@@ -82,57 +84,39 @@ export default function ParticipantDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
-        
-        {/* Navigation Bar / Header */}
-        <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* Top Navbar & Sidebar Drawer */}
+      <AppNavbar 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        currentUser={{ name: userName || "Sahabat NPT", role: "member" }}
+        activeTitle="Reminder Penugasan"
+      />
+      <AppSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentUser={{ name: userName || "Sahabat NPT", role: "member" }}
+        activePath="/dashboard"
+      />
+
+      <div className="flex-1 max-w-3xl w-full mx-auto p-4 md:p-6 space-y-6">
+        {/* Subheader with Refresh */}
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white flex items-center gap-2 tracking-wide">
-                <BookOpen className="w-6 h-6 text-sky-400" /> REMINDER NPT
-              </h1>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Persiapan Event 22 Agustus 2026</p>
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-sky-400" /> Agenda & Penugasan NPT
+            </h1>
+            <p className="text-xs text-slate-400 mt-0.5">Pantau tugas dan kumpulkan refleksi latihan</p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Link
-              href="/hakekat-cinta"
-              className="px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 hover:text-rose-300 font-semibold rounded-lg transition flex items-center gap-1.5"
-              title="Kajian Hakikat Cinta & Rekaman Live"
-            >
-              <span>🎬 Hakikat Cinta</span>
-            </Link>
-
-            <Link
-              href="/buku-saku"
-              className="px-3 py-2 text-xs bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold rounded-lg shadow-sm shadow-rose-600/30 transition flex items-center gap-1.5"
-              title="Buka Buku Saku 14 Akar Spiritual"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Buku Saku 14 Akar</span>
-            </Link>
-
-            <button
-              onClick={fetchTasks}
-              disabled={loading}
-              className="p-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg transition flex items-center gap-1.5"
-              title="Muat Ulang Tugas"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-sky-400" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-
-            <Link
-              href="/admin/dashboard"
-              className="px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition flex items-center gap-1.5"
-              title="Akses Halaman Admin"
-            >
-              <Shield className="w-3.5 h-3.5 text-sky-400" />
-              <span>Menu Admin</span>
-            </Link>
-          </div>
+          <button
+            onClick={fetchTasks}
+            disabled={loading}
+            className="p-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+            title="Muat Ulang Tugas"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-sky-400" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
         </div>
 
         {/* Input Nama Peserta */}

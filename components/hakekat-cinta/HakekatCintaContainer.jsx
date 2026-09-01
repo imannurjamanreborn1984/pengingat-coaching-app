@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
 import { 
   Play, 
   BookOpen, 
@@ -89,6 +90,8 @@ export default function HakekatCintaContainer() {
   const [nextPageToken, setNextPageToken] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sedangMerangkum, setSedangMerangkum] = useState(false);
+  // UI state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('video'); // 'video' | 'draft_buku'
 
   // Draft Buku
@@ -446,81 +449,18 @@ export default function HakekatCintaContainer() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/85 dark:bg-slate-950/85 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link 
-              href="/hakekat-cinta"
-              className="flex items-center gap-2.5 group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
-                <Film className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base tracking-tight leading-none">
-                    Hakikat Cinta & Rekaman Live
-                  </span>
-                  <span className="px-1.5 py-0.2 text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-full border border-rose-500/20">
-                    VIP NPT
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-                  Arsip Siaran Ulang Eksklusif & AI Naskah Buku
-                </p>
-              </div>
-            </Link>
-          </div>
-
-          {/* User Auth Info & Navigation Links */}
-          <div className="flex items-center gap-2">
-            {isSuperAdmin && (
-              <Link
-                href="/admin/dashboard"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shadow-xs"
-                title="Akses Menu Admin NPT"
-              >
-                <Crown className="w-3.5 h-3.5 text-amber-500" />
-                <span>Panel Admin</span>
-              </Link>
-            )}
-
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors"
-              title="Dashboard Reminder"
-            >
-              <Bell className="w-3.5 h-3.5 text-amber-500" />
-              <span className="hidden sm:inline">Reminder Tugas</span>
-            </Link>
-
-            <Link
-              href="/buku-saku"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white shadow-xs transition-all"
-              title="Buka Buku Saku 14 Akar Spiritual"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Buku Saku 14 Akar</span>
-            </Link>
-
-            {currentUser && (
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 hidden md:inline truncate max-w-[130px]" title={currentUser.email}>
-                  {isSuperAdmin ? '👑 ' : ''}{currentUser.name || currentUser.email}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
-                  title="Keluar / Ganti Akun"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      {/* Top Navbar & Sidebar Drawer */}
+      <AppNavbar 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        currentUser={currentUser}
+        activeTitle="Hakikat Cinta & Rekaman Live"
+      />
+      <AppSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentUser={currentUser}
+        activePath="/hakekat-cinta"
+      />
 
       {/* Main Content */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-20 md:pb-8 space-y-6">

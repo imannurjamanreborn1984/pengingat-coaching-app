@@ -12,6 +12,7 @@ import { DataManagementModal } from './DataManagementModal';
 import { AssessmentPreview } from './AssessmentPreview';
 import { DataService } from '../../lib/services/dataService';
 import { GURU_PREFACE } from '../../lib/data/rootsData';
+import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
 import { 
   BookOpen, 
   Compass, 
@@ -70,7 +71,8 @@ export default function BukuSakuContainer() {
   const [selectedElement, setSelectedElement] = useState('ALL');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
 
-  // Modals
+  // Modals & UI
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddRootId, setQuickAddRootId] = useState(undefined);
   const [quickAddCategory, setQuickAddCategory] = useState('sains');
@@ -162,106 +164,71 @@ export default function BukuSakuContainer() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/85 dark:bg-slate-950/85 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div 
-              onClick={() => { setSelectedRoot(null); setActiveTab('roots'); }}
-              className="flex items-center gap-2.5 cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base tracking-tight leading-none">
-                    Buku Saku Akar Spiritual
-                  </span>
-                  <span className="px-1.5 py-0.2 text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-full border border-rose-500/20">
-                    NPT
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-                  Sains • Kitab • Pop Culture • Jurnal Latihan
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Top Navbar & Sidebar Drawer */}
+      <AppNavbar 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        activeTitle="Buku Saku 14 Akar"
+      />
+      <AppSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activePath="/buku-saku"
+      />
 
-          {/* Center Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800">
+      {/* Subnav Action Bar */}
+      <div className="bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-800 py-2.5 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+          <nav className="flex items-center gap-1">
             <button
               onClick={() => { setSelectedRoot(null); setActiveTab('roots'); }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 activeTab === 'roots' && !selectedRoot
-                  ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              14 Akar Spiritual
+              14 Akar
             </button>
             <button
               onClick={() => { setSelectedRoot(null); setActiveTab('journal'); }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 activeTab === 'journal'
-                  ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              Jurnal & Meditasi ({journals.length})
+              Jurnal ({journals.length})
             </button>
             <button
               onClick={() => { setSelectedRoot(null); setActiveTab('assessment'); }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 activeTab === 'assessment'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              Pemetaan Diri
+              Pemetaan
             </button>
           </nav>
 
-          {/* Right Action Links */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/hakekat-cinta"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors"
-              title="Kajian Hakikat Cinta & Rekaman Live"
-            >
-              <span>🎬 Hakikat Cinta</span>
-            </Link>
-
-            {/* Link back to Reminder Dashboard */}
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors"
-              title="Buka Dashboard Reminder & Tugas NPT"
-            >
-              <Bell className="w-3.5 h-3.5 text-amber-500" />
-              <span className="hidden sm:inline">Reminder Tugas</span>
-            </Link>
-
             <button
               onClick={() => handleOpenQuickAdd()}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Input Bahan</span>
+              <span className="hidden sm:inline">Tambah Bahan</span>
             </button>
-
             <button
               onClick={() => setIsDataModalOpen(true)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
-              title="Backup Data JSON"
+              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 cursor-pointer"
+              title="Backup & Sinkronisasi JSON"
             >
               <Download className="w-4 h-4" />
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-20 md:pb-8">
