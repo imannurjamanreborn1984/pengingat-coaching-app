@@ -124,34 +124,40 @@ export default function MaterialsAdminContainer() {
   const handleSyncToCloud = async () => {
     setIsSyncing(true);
     try {
-      let localData = [];
-      try {
-        const raw = localStorage.getItem(`npt_materials_level_${selectedLevel}`);
-        if (raw) localData = JSON.parse(raw);
-      } catch (e) {}
-
-      if (localData.length === 0) {
-        alert("Tidak ada data materi lokal di laptop untuk disinkronkan.");
-        setIsSyncing(false);
-        return;
-      }
-
       if (!supabase) throw new Error("Supabase client belum siap.");
 
-      let successCount = 0;
-      for (const item of localData) {
-        const { id, ...cleanPayload } = item;
-        const { error } = await supabase.from("npt_materials").insert([
-          {
-            ...cleanPayload,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+      let totalSynced = 0;
+      const allLevels = [1, 2, 3, 4, 5, 6];
+
+      for (const lvl of allLevels) {
+        let localData = [];
+        try {
+          const raw = localStorage.getItem(`npt_materials_level_${lvl}`);
+          if (raw) localData = JSON.parse(raw);
+        } catch (e) {}
+
+        if (localData.length > 0) {
+          for (const item of localData) {
+            const { id, ...cleanPayload } = item;
+            const { error } = await supabase.from("npt_materials").insert([
+              {
+                ...cleanPayload,
+                level: Number(cleanPayload.level || lvl),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ]);
+            if (!error) totalSynced++;
           }
-        ]);
-        if (!error) successCount++;
+        }
       }
 
-      alert(`✅ Berhasil menyinkronkan ${successCount} materi dari laptop ke Cloud Supabase! Sekarang HP dan Member sudah bisa melihatnya.`);
+      if (totalSynced === 0) {
+        alert("Tidak ada data materi lokal di laptop yang perlu disinkronkan.");
+      } else {
+        alert(`✅ Sempurna! Berhasil menyinkronkan total ${totalSynced} materi dari seluruh Level (Level 1 – 6) dari laptop ke Cloud Supabase! Sekarang di HP dan seluruh Member sudah muncul.`);
+      }
+
       fetchMaterials();
     } catch (err) {
       alert("Gagal sinkron: " + err.message);
