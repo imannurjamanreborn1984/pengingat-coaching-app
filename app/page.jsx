@@ -176,44 +176,27 @@ export default function CosmicGatewayPage() {
         </div>
       </div>
 
-      {/* Pusat Simbol & Identitas Sufistik NPT */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-lg space-y-6">
-        {/* Logo Lingkaran Merah NPT dengan Denyut Napas Kosmik */}
+      {/* Pusat Simbol Murni & Petunjuk Ketuk Layar (Zen & Minimalis) */}
+      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-lg space-y-12">
+        {/* Logo Lingkaran Merah NPT Murni dengan Denyut Aura Kosmik */}
         <div className="relative group">
-          <div className="absolute -inset-4 bg-gradient-to-tr from-rose-600/30 via-red-500/20 to-amber-500/30 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-1000 animate-pulse" />
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-slate-900/90 border border-rose-500/30 p-3 shadow-2xl shadow-rose-950 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500">
+          <div className="absolute -inset-6 bg-gradient-to-tr from-rose-600/40 via-red-500/30 to-amber-500/20 rounded-full blur-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-1000 animate-pulse" />
+          <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-700">
             <Image
               src="/iconnpt-512x512.png"
               alt="Logo Resmi NPT"
-              width={110}
-              height={110}
-              className="object-contain filter drop-shadow-md"
+              width={160}
+              height={160}
+              className="object-contain filter drop-shadow-2xl"
               priority
             />
           </div>
         </div>
 
-        {/* Judul & Makna Sufistik */}
+        {/* Petunjuk Masuk Minimalis Zen (Seperti Terabaca) */}
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold tracking-widest uppercase">
-            <span>🔴⚪ Merah Putih NPT</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-serif">
-            NPT CENTRE
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide">
-            Nalungtik Titik Manggih Diri • Hakikat Cinta & 14 Akar Spiritual
-          </p>
-        </div>
-
-        {/* Petunjuk Masuk Beranimasi Lembut */}
-        <div className="pt-6 space-y-3">
-          <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-rose-300/90 animate-bounce">
-            <span>✨ Ketuk layar untuk memasuki ruang kesadaran</span>
-            <ArrowRight className="w-4 h-4" />
-          </div>
-          <p className="text-[11px] text-slate-400 font-mono">
-            neuroprogrammingtraining.id
+          <p className="text-[11px] sm:text-xs font-bold tracking-[0.25em] uppercase text-slate-400/80 hover:text-slate-200 transition-colors">
+            KETUK LAYAR UNTUK MASUK KE PORTAL INFORMASI
           </p>
         </div>
       </div>
