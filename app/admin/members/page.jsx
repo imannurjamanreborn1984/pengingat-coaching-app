@@ -18,11 +18,13 @@ import {
   RefreshCw,
   Crown
 } from "lucide-react";
+import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
 export default function MembersAdmin() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -168,8 +170,21 @@ export default function MembersAdmin() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 font-sans">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* Top Navbar & Sidebar Drawer */}
+      <AppNavbar 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        currentUser={{ name: "Admin Utama", role: "super_admin" }}
+        activeTitle="Ruang Persetujuan"
+      />
+      <AppSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentUser={{ name: "Admin Utama", role: "super_admin" }}
+        activePath="/admin/members"
+      />
+
+      <div className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
         {/* Header Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
           <div className="flex items-center gap-3">
