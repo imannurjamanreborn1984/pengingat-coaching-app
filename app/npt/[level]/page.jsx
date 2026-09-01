@@ -228,17 +228,8 @@ export default function NPTLevelDetailPage() {
               Materi NPT Level {levelNum} Segera Diupload
             </h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Materi dan kurikulum untuk jenjang ini sedang dalam proses finalisasi oleh Master Trainer. Silakan pantau berkala atau pelajari modul yang sudah aktif.
+              Materi dan kurikulum untuk jenjang ini sedang dalam proses finalisasi oleh Master Trainer. Silakan pantau berkala setelah diunggah oleh admin.
             </p>
-            <div className="pt-2">
-              <Link
-                href="/buku-saku"
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/30 inline-flex items-center gap-2"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Buka Buku Saku 14 Akar (Level 6 Aktif)</span>
-              </Link>
-            </div>
           </div>
         ) : (
           <div className="space-y-4">
