@@ -37,9 +37,14 @@ const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
 // 👑 DAFTAR EMAIL SUPER ADMIN OTOMATIS
 export const SUPER_ADMIN_EMAILS = [
-  'lautanmahabbah@gmail.com',
   'imannurjamanreborn@gmail.com',
-  'imannnurjanan84@gmail.com'
+  'imannurjaman84@gmail.com',
+  'imannnurjanan84@gmail.com',
+  'imannurjaman@gmail.com',
+  'lautanmahabbah@gmail.com',
+  'admin@nptcentre.id',
+  'admin@neuroprogrammingtraining.id',
+  'admin@npt.com'
 ];
 
 const PLAYLIST_IDS = {

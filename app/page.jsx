@@ -28,8 +28,13 @@ import {
 
 const SUPER_ADMIN_EMAILS = [
   'imannurjamanreborn@gmail.com',
+  'imannurjaman84@gmail.com',
+  'imannnurjanan84@gmail.com',
+  'imannurjaman@gmail.com',
+  'lautanmahabbah@gmail.com',
   'admin@nptcentre.id',
-  'admin@neuroprogrammingtraining.id'
+  'admin@neuroprogrammingtraining.id',
+  'admin@npt.com'
 ];
 
 export default function CosmicGatewayPage() {

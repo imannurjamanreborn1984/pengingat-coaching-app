@@ -19,10 +19,23 @@ import {
   GraduationCap
 } from 'lucide-react';
 
+export const SUPER_ADMIN_EMAILS = [
+  'imannurjamanreborn@gmail.com',
+  'imannurjaman84@gmail.com',
+  'imannnurjanan84@gmail.com',
+  'imannurjaman@gmail.com',
+  'lautanmahabbah@gmail.com',
+  'admin@nptcentre.id',
+  'admin@neuroprogrammingtraining.id',
+  'admin@npt.com'
+];
+
 export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
   if (!isOpen) return null;
 
-  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isSuperAdmin = 
+    currentUser?.role === 'super_admin' || 
+    (currentUser?.email && SUPER_ADMIN_EMAILS.includes(currentUser.email.toLowerCase().trim()));
 
   return (
     <>
@@ -401,7 +414,9 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
 }
 
 export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Hakikat Cinta & Rekaman Live" }) {
-  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isSuperAdmin = 
+    currentUser?.role === 'super_admin' || 
+    (currentUser?.email && SUPER_ADMIN_EMAILS.includes(currentUser.email.toLowerCase().trim()));
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-slate-950/85 border-b border-slate-800 transition-colors">
