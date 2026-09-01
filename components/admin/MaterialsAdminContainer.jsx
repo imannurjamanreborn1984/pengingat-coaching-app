@@ -26,6 +26,7 @@ import {
   Check,
   ZoomIn
 } from "lucide-react";
+import ImageLightboxModal from "../ui/ImageLightboxModal";
 
 export default function MaterialsAdminContainer() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -33,6 +34,7 @@ export default function MaterialsAdminContainer() {
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeLightbox, setActiveLightbox] = useState(null);
 
   // Form State Tambah / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -454,12 +456,21 @@ export default function MaterialsAdminContainer() {
 
                     {/* Thumbnail Gambar jika ada */}
                     {mat.image_url && (
-                      <div className="relative w-40 h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+                      <div
+                        onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
+                        className="relative w-40 h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-zoom-in group shadow-md"
+                        title="Klik untuk Zoom In / Out Preview"
+                      >
                         <img
                           src={mat.image_url}
                           alt={mat.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         />
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="px-2 py-1 rounded-lg bg-slate-900/90 text-white text-[10px] font-bold flex items-center gap-1">
+                            <ZoomIn className="w-3 h-3 text-amber-400" /> Zoom
+                          </span>
+                        </div>
                       </div>
                     )}
 
@@ -736,6 +747,14 @@ export default function MaterialsAdminContainer() {
           </div>
         </div>
       )}
+
+      {/* Lightbox Zoom In / Out Modal */}
+      <ImageLightboxModal
+        isOpen={!!activeLightbox}
+        imageUrl={activeLightbox?.url}
+        title={activeLightbox?.title}
+        onClose={() => setActiveLightbox(null)}
+      />
     </div>
   );
 }

@@ -20,14 +20,17 @@ import {
   Phone,
   UserCheck,
   X,
-  ShieldCheck
+  ShieldCheck,
+  ZoomIn
 } from "lucide-react";
+import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 
 export default function NPTLevelDetailPage() {
   const params = useParams();
   const levelNum = Number(params?.level) || 1;
 
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeLightbox, setActiveLightbox] = useState(null); // { url, title }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -264,12 +267,20 @@ export default function NPTLevelDetailPage() {
                   <div className="space-y-4 pt-2">
                     {mat.image_url && (
                       <div className="space-y-2">
-                        <div className="relative w-full max-h-96 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center">
+                        <div
+                          onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
+                          className="relative w-full max-h-96 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center cursor-zoom-in group shadow-lg"
+                          title="Klik untuk Perbesar Gambar (Zoom In / Out)"
+                        >
                           <img
                             src={mat.image_url}
                             alt={mat.title}
-                            className="w-full h-auto max-h-96 object-contain rounded-2xl"
+                            className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
                           />
+                          <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-white text-[11px] font-bold flex items-center gap-1.5 opacity-90 group-hover:opacity-100 shadow-xl transition-all">
+                            <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Perbesar / Zoom</span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -451,6 +462,14 @@ export default function NPTLevelDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Lightbox Zoom In / Out Modal */}
+      <ImageLightboxModal
+        isOpen={!!activeLightbox}
+        imageUrl={activeLightbox?.url}
+        title={activeLightbox?.title}
+        onClose={() => setActiveLightbox(null)}
+      />
     </div>
   );
 }
