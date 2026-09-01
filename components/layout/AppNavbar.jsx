@@ -132,54 +132,56 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
             </Link>
           </div>
 
-          {/* Admin & Ruang Approval */}
-          <div className="space-y-1">
-            <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400 px-3 py-1">
-              Admin & Manajemen
+          {/* Admin & Ruang Approval (Hanya Tampil untuk Super Admin) */}
+          {isSuperAdmin && (
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-amber-400/80 px-3 py-1">
+                Admin & Manajemen
+              </div>
+
+              <Link
+                href="/admin/members"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all cursor-pointer ${
+                  activePath === '/admin/members' ? 'ring-2 ring-amber-500' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>Ruang Persetujuan & Anggota</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+
+              <Link
+                href="/admin/submissions"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
+                  activePath === '/admin/submissions' ? 'bg-slate-800 text-white' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="w-4 h-4 text-sky-400" />
+                  <span>Rekap Jawaban Peserta</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+
+              <Link
+                href="/admin/dashboard"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
+                  activePath === '/admin/dashboard' ? 'bg-slate-800 text-white' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  <span>Dashboard Admin</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
             </div>
-
-            <Link
-              href="/admin/members"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all cursor-pointer ${
-                activePath === '/admin/members' ? 'ring-2 ring-amber-500' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span>Ruang Persetujuan & Anggota</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
-
-            <Link
-              href="/admin/submissions"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
-                activePath === '/admin/submissions' ? 'bg-slate-800 text-white' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4 text-sky-400" />
-                <span>Rekap Jawaban Peserta</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
-
-            <Link
-              href="/admin/dashboard"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
-                activePath === '/admin/dashboard' ? 'bg-slate-800 text-white' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Crown className="w-4 h-4 text-amber-500" />
-                <span>Dashboard Admin</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
-          </div>
+          )}
         </div>
 
         {/* Footer Drawer */}

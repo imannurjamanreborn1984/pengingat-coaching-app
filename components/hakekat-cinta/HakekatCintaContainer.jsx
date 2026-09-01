@@ -515,6 +515,8 @@ export default function HakekatCintaContainer() {
                   </label>
                   <input
                     type="text"
+                    name="npt_user_fullname"
+                    autoComplete="off"
                     placeholder="Masukkan nama lengkap Anda..."
                     value={inputName}
                     onChange={(e) => setInputName(e.target.value)}
@@ -531,6 +533,8 @@ export default function HakekatCintaContainer() {
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="email"
+                      name="npt_user_email"
+                      autoComplete="off"
                       placeholder="contoh: nama@gmail.com"
                       value={inputEmail}
                       onChange={(e) => setInputEmail(e.target.value)}
