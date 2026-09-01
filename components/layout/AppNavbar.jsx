@@ -104,78 +104,114 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
             </Link>
           </div>
 
-          {/* Navigasi Utama */}
-          <div className="space-y-1">
-            <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400 px-3 py-1">
-              Modul Utama
+          {/* Navigasi 3 Cabang Utama NPT */}
+          <div className="space-y-4">
+            
+            {/* CABANG 1: NPT MULTI-LEVEL & ROAD TO LEVEL 6 */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-3 py-1">
+                <span className="text-[10px] font-black tracking-wider uppercase text-rose-400">
+                  1. NPT (Level 1 – 6)
+                </span>
+                <span className="text-[9px] font-bold text-slate-500">Coaching & Tugas</span>
+              </div>
+
+              <Link
+                href="/dashboard"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activePath === '/dashboard'
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Bell className="w-4 h-4 text-rose-400" />
+                  <span>Reminder & Tugas Peserta</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+
+              <Link
+                href="/buku-saku"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activePath === '/buku-saku'
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-4 h-4 text-rose-400" />
+                  <div>
+                    <p className="leading-tight">Buku Saku 14 Akar Spiritual</p>
+                    <span className="text-[10px] text-amber-400/90 font-medium">Road to NPT Level 6</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
             </div>
 
-            <Link
-              href="/hakekat-cinta"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePath === '/hakekat-cinta'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Film className="w-4 h-4" />
-                <span>Hakikat Cinta & Rekaman Live</span>
+            {/* CABANG 2: EMT (EMOTION MANAGEMENT TRAINING) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-3 py-1">
+                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400">
+                  2. EMT for Teacher
+                </span>
+                <span className="text-[9px] font-bold text-slate-500">Sayap Pendidik</span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
 
-            <Link
-              href="/buku-saku"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePath === '/buku-saku'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <BookOpen className="w-4 h-4" />
-                <span>Buku Saku 14 Akar Spiritual</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
+              <Link
+                href="/emt"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activePath === '/emt'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                    : 'bg-emerald-950/20 hover:bg-emerald-950/50 text-emerald-300 border border-emerald-500/20'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <GraduationCap className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <p className="leading-tight">EMT (Pelatihan Emosi Guru)</p>
+                    <span className="text-[10px] text-emerald-400/80 font-medium">Level 1, 2, 3 & Workshop</span>
+                  </div>
+                </div>
+                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  GURU
+                </span>
+              </Link>
+            </div>
 
-            <Link
-              href="/dashboard"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePath === '/dashboard'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Bell className="w-4 h-4" />
-                <span>Reminder & Penugasan Peserta</span>
+            {/* CABANG 3: HAKIKAT CINTA */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-3 py-1">
+                <span className="text-[10px] font-black tracking-wider uppercase text-purple-400">
+                  3. Hakikat Cinta
+                </span>
+                <span className="text-[9px] font-bold text-slate-500">Kajian & AI Book</span>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
 
-            {/* Sayap Pendidik: EMT */}
-            <Link
-              href="/emt"
-              onClick={onClose}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePath === '/emt'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                  : 'bg-emerald-950/30 hover:bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <GraduationCap className="w-4 h-4 text-amber-400" />
-                <span>EMT (Pelatihan Emosi Guru)</span>
-              </div>
-              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                GURU
-              </span>
-            </Link>
+              <Link
+                href="/hakekat-cinta"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activePath === '/hakekat-cinta'
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Film className="w-4 h-4 text-purple-400" />
+                  <div>
+                    <p className="leading-tight">Rekaman Live Al-Hikam</p>
+                    <span className="text-[10px] text-purple-300/80 font-medium">Video Kajian & Draf Buku AI</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+            </div>
+
           </div>
 
           {/* Admin & Ruang Approval (Hanya Tampil untuk Super Admin) */}
