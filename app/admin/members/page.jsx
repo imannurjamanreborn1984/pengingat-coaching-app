@@ -16,7 +16,9 @@ import {
   Mail,
   Filter,
   RefreshCw,
-  Crown
+  Crown,
+  Edit3,
+  X
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import Link from "next/link";
@@ -32,6 +34,13 @@ export default function MembersAdmin() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [filterTab, setFilterTab] = useState("all"); // 'all' | 'pending' | 'approved'
+
+  // State Edit Member
+  const [editingMember, setEditingMember] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editStatus, setEditStatus] = useState("approved");
 
   // Load daftar teman dari Supabase
   const fetchMembers = async () => {
@@ -117,6 +126,49 @@ export default function MembersAdmin() {
       fetchMembers();
     } catch (err) {
       alert("Gagal menghapus: " + err.message);
+    }
+  };
+
+  // Buka Modal Edit
+  const handleOpenEdit = (member) => {
+    setEditingMember(member);
+    setEditName(member.full_name || "");
+    setEditPhone(member.phone_number ? member.phone_number.replace(/^62/, "0") : "");
+    setEditEmail(member.email || "");
+    setEditStatus(member.status || "approved");
+  };
+
+  // Simpan Perubahan Data Member
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setIsLoading(true);
+
+    let formattedPhone = editPhone ? editPhone.replace(/[^0-9]/g, "") : "";
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "62" + formattedPhone.slice(1);
+    }
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editName.trim(),
+          phone_number: formattedPhone || null,
+          email: editEmail.trim().toLowerCase() || null,
+          status: editStatus,
+        })
+        .eq("id", editingMember.id);
+
+      if (error) throw error;
+
+      alert("✅ Data anggota berhasil diperbarui!");
+      setEditingMember(null);
+      fetchMembers();
+    } catch (err) {
+      alert("Gagal memperbarui: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -401,6 +453,15 @@ export default function MembersAdmin() {
                         </button>
                       )}
 
+                      {/* Tombol Edit Data Anggota */}
+                      <button
+                        onClick={() => handleOpenEdit(member)}
+                        className="p-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition cursor-pointer"
+                        title="Edit Data Anggota (Nama, Email, No WA)"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+
                       {member.phone_number && (
                         <button
                           onClick={() => handleSendWA(member)}
@@ -426,6 +487,113 @@ export default function MembersAdmin() {
           )}
         </div>
       </div>
+
+      {/* MODAL EDIT DATA ANGGOTA */}
+      {editingMember && (
+        <div 
+          onClick={() => setEditingMember(null)}
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-slate-900 border border-sky-500/30 rounded-3xl p-6 shadow-2xl space-y-4 text-left"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Edit Data Anggota</h3>
+                  <p className="text-[10px] text-slate-400">Lengkapi Email atau Perbaiki Nomor WA</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setEditingMember(null)}
+                className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Nama Lengkap
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Alamat Email Gmail (Kunci Login)
+                </label>
+                <input
+                  type="email"
+                  placeholder="contoh: nama@gmail.com"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                />
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  Isi email ini agar member bisa langsung login tanpa tertolak.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Nomor WhatsApp
+                </label>
+                <input
+                  type="text"
+                  placeholder="08123456789"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Status Approval Akses
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                >
+                  <option value="approved">✅ Disetujui (Approved / Full VIP)</option>
+                  <option value="pending">⏳ Menunggu Persetujuan (Pending)</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition cursor-pointer"
+                >
+                  {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

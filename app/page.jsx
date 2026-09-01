@@ -57,8 +57,8 @@ export default function CosmicGatewayPage() {
   const handleSecretLogin = async (e) => {
     e.preventDefault();
     const cleanEmail = inputEmail.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      alert('Masukkan alamat email Gmail yang valid!');
+    if (!cleanEmail) {
+      alert('Masukkan alamat email Gmail atau Nomor WA!');
       return;
     }
 
@@ -88,16 +88,28 @@ export default function CosmicGatewayPage() {
 
     // Untuk Member / Khadim
     try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', cleanEmail)
-        .maybeSingle();
+      let query = supabase.from('profiles').select('*');
+      if (cleanEmail.includes('@')) {
+        query = query.eq('email', cleanEmail);
+      } else {
+        let formattedPhone = cleanEmail.replace(/[^0-9]/g, "");
+        if (formattedPhone.startsWith("0")) formattedPhone = "62" + formattedPhone.slice(1);
+        query = query.or(`phone_number.eq.${formattedPhone},email.eq.${cleanEmail}`);
+      }
+
+      const { data: existingProfiles } = await query;
+      const existingProfile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null;
 
       if (existingProfile && existingProfile.status === 'approved') {
+        // Update email jika belum tersimpan
+        if (!existingProfile.email && cleanEmail.includes('@')) {
+          await supabase.from('profiles').update({ email: cleanEmail }).eq('id', existingProfile.id);
+        }
+
         const userData = {
           id: existingProfile.id,
-          email: cleanEmail,
+          email: cleanEmail.includes('@') ? cleanEmail : existingProfile.email,
+          phone_number: existingProfile.phone_number,
           name: existingProfile.full_name || cleanName,
           role: 'member',
           status: 'approved'
@@ -110,18 +122,19 @@ export default function CosmicGatewayPage() {
           router.push('/hakekat-cinta');
         }, 700);
       } else {
-        // Daftarkan pending jika belum ada
+        // Daftarkan pendaftaran baru otomatis (Sign Up) dengan status 'pending'
         if (!existingProfile) {
           await supabase.from('profiles').insert([
             {
               full_name: cleanName,
-              email: cleanEmail,
+              email: cleanEmail.includes('@') ? cleanEmail : null,
+              phone_number: !cleanEmail.includes('@') ? cleanEmail : null,
               role: 'member',
               status: 'pending'
             }
           ]);
         }
-        setLoginMessage('⏳ Akun dalam antrean persetujuan admin.');
+        setLoginMessage('⏳ Pendaftaran berhasil! Akun dalam antrean persetujuan admin.');
       }
     } catch (err) {
       console.error(err);

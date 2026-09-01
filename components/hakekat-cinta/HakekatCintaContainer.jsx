@@ -26,6 +26,8 @@ import {
   Crown,
   Key,
   Mail,
+  Phone,
+  Clock,
   Shield,
   UserCheck
 } from 'lucide-react';
@@ -79,6 +81,7 @@ export default function HakekatCintaContainer() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [inputEmail, setInputEmail] = useState('');
+  const [inputPhone, setInputPhone] = useState('');
   const [inputName, setInputName] = useState('');
 
   // Video State
@@ -149,19 +152,24 @@ export default function HakekatCintaContainer() {
     }
   };
 
-  // Login Email Mandiri & Cek Status Approval di Database Supabase
+  // Login Mandiri (Email / No WhatsApp) & Cek Status Approval di Database Supabase
   const [approvalStatus, setApprovalStatus] = useState(null); // null | 'approved' | 'pending' | 'checking'
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     const cleanEmail = inputEmail.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      alert('Masukkan alamat email Gmail yang valid!');
+    let formattedPhone = inputPhone ? inputPhone.replace(/[^0-9]/g, "") : "";
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "62" + formattedPhone.slice(1);
+    }
+
+    if (!cleanEmail && !formattedPhone) {
+      alert('Harap masukkan Alamat Email Gmail atau Nomor WhatsApp!');
       return;
     }
 
-    const cleanName = inputName.trim() || cleanEmail.split('@')[0];
-    const isAdmin = SUPER_ADMIN_EMAILS.includes(cleanEmail);
+    const cleanName = inputName.trim() || (cleanEmail ? cleanEmail.split('@')[0] : formattedPhone);
+    const isAdmin = cleanEmail && SUPER_ADMIN_EMAILS.includes(cleanEmail);
 
     if (isAdmin) {
       const userData = {
@@ -178,20 +186,35 @@ export default function HakekatCintaContainer() {
       return;
     }
 
-    // Untuk peserta umum, cek ke database Supabase
+    // Cek ke database Supabase
     setApprovalStatus('checking');
     try {
-      const { data: existingProfile, error: fetchErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', cleanEmail)
-        .maybeSingle();
+      let query = supabase.from('profiles').select('*');
+      if (cleanEmail && formattedPhone) {
+        query = query.or(`email.eq.${cleanEmail},phone_number.eq.${formattedPhone}`);
+      } else if (cleanEmail) {
+        query = query.eq('email', cleanEmail);
+      } else {
+        query = query.eq('phone_number', formattedPhone);
+      }
+
+      const { data: existingProfiles, error: fetchErr } = await query;
+      const existingProfile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null;
 
       if (existingProfile) {
         if (existingProfile.status === 'approved') {
+          // Jika data di database belum punya email tapi sekarang diisi, update otomatis!
+          if (!existingProfile.email && cleanEmail) {
+            await supabase.from('profiles').update({ email: cleanEmail }).eq('id', existingProfile.id);
+          }
+          if (!existingProfile.phone_number && formattedPhone) {
+            await supabase.from('profiles').update({ phone_number: formattedPhone }).eq('id', existingProfile.id);
+          }
+
           const userData = {
             id: existingProfile.id,
-            email: cleanEmail,
+            email: cleanEmail || existingProfile.email,
+            phone_number: formattedPhone || existingProfile.phone_number,
             name: existingProfile.full_name || cleanName,
             role: 'member',
             status: 'approved'
@@ -204,11 +227,12 @@ export default function HakekatCintaContainer() {
           setApprovalStatus('pending');
         }
       } else {
-        // Daftarkan permohonan baru dengan status 'pending'
+        // Daftarkan pendaftaran baru otomatis (Sign Up) dengan status 'pending'
         await supabase.from('profiles').insert([
           {
             full_name: cleanName,
-            email: cleanEmail,
+            email: cleanEmail || null,
+            phone_number: formattedPhone || null,
             role: 'member',
             status: 'pending'
           }
@@ -217,15 +241,7 @@ export default function HakekatCintaContainer() {
       }
     } catch (err) {
       console.error('Error checking approval:', err);
-      // Fallback: izinkan jika offline/gagal koneksi
-      const userData = {
-        email: cleanEmail,
-        name: cleanName,
-        role: 'member',
-        status: 'approved'
-      };
-      setCurrentUser(userData);
-      localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+      setApprovalStatus('pending');
     }
   };
 
@@ -539,9 +555,29 @@ export default function HakekatCintaContainer() {
                       value={inputEmail}
                       onChange={(e) => setInputEmail(e.target.value)}
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                      required
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Nomor WhatsApp:
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      name="npt_user_phone"
+                      autoComplete="off"
+                      placeholder="contoh: 08123456789"
+                      value={inputPhone}
+                      onChange={(e) => setInputPhone(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    *Bisa masukkan Email atau Nomor WA terdaftar untuk masuk.
+                  </p>
                 </div>
 
                 <button
