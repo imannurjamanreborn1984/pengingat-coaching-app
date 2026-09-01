@@ -15,7 +15,8 @@ import {
   LogOut, 
   User, 
   X,
-  ChevronRight
+  ChevronRight,
+  GraduationCap
 } from 'lucide-react';
 
 export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
@@ -155,6 +156,25 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                 <span>Reminder & Penugasan Peserta</span>
               </div>
               <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+            </Link>
+
+            {/* Sayap Pendidik: EMT */}
+            <Link
+              href="/emt"
+              onClick={onClose}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activePath === '/emt'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'bg-emerald-950/30 hover:bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-4 h-4 text-amber-400" />
+                <span>EMT (Pelatihan Emosi Guru)</span>
+              </div>
+              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                GURU
+              </span>
             </Link>
           </div>
 
