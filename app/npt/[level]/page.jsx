@@ -65,7 +65,7 @@ export default function NPTLevelDetailPage() {
           .eq("is_published", true)
           .order("order_index", { ascending: true });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setMaterials(data);
           setIsLoading(false);
           return;
