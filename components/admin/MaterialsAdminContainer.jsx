@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
+import AdminHeaderTabs from "./AdminHeaderTabs";
 import {
   BookOpen,
   Plus,
@@ -230,6 +231,8 @@ export default function MaterialsAdminContainer() {
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
+        {/* Admin Quick Switch Tabs */}
+        <AdminHeaderTabs activeTab="materials" />
         
         {/* Top Header Card */}
         <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">

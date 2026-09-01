@@ -6,19 +6,28 @@ import { supabase } from "@/lib/supabaseClient";
 import { Users, BookOpen, Clock, FileDown, ArrowLeft, RefreshCw } from "lucide-react";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { saveAs } from "file-saver";
+import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
+import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminSubmissions() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    try {
+      const authStr = localStorage.getItem("npt_user_auth");
+      if (authStr) setCurrentUser(JSON.parse(authStr));
+    } catch (e) {}
     fetchSubmissions();
   }, []);
 
   const fetchSubmissions = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from("submissions")
         .select(`
@@ -66,7 +75,6 @@ export default function AdminSubmissions() {
       ];
 
       items.forEach((item, index) => {
-        // Nama Peserta & Waktu
         docChildren.push(
           new Paragraph({
             children: [
@@ -86,7 +94,6 @@ export default function AdminSubmissions() {
           })
         );
 
-        // Teks Jawaban
         docChildren.push(
           new Paragraph({
             children: [
@@ -114,38 +121,38 @@ export default function AdminSubmissions() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
+      <AppNavbar
+        onToggleSidebar={() => setIsSidebarOpen(true)}
+        currentUser={currentUser || { name: "Admin Utama", role: "super_admin" }}
+        activeTitle="Rekap Jawaban & Evaluasi"
+      />
+      <AppSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentUser={currentUser || { name: "Admin Utama", role: "super_admin" }}
+        activePath="/admin/submissions"
+      />
+
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
+        {/* Admin Quick Switch Tabs */}
+        <AdminHeaderTabs activeTab="submissions" />
+
         {/* Header */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Link
-                href="/admin/dashboard"
-                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
-                <span>Dashboard Admin</span>
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-800 transition"
-              >
-                Tampilan Peserta
-              </Link>
-            </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <Users className="w-6 h-6 text-sky-400" /> Rekap Jawaban Peserta
+              <Users className="w-6 h-6 text-sky-400" /> Periksa Jawaban & Evaluasi Peserta
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Jawaban otomatis dikelompokkan berdasarkan klaster pertanyaan
+              Jawaban otomatis dikelompokkan berdasarkan klaster tugas untuk dievaluasi atau di-export ke Word (.docx).
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               onClick={fetchSubmissions}
               disabled={loading}
-              className="p-2 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg transition flex items-center gap-1.5"
+              className="p-2.5 text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
               title="Refresh Data"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-sky-400" : ""}`} />
@@ -155,41 +162,38 @@ export default function AdminSubmissions() {
         </div>
 
         {loading ? (
-          <p className="text-xs text-slate-500 animate-pulse">Memuat rekap jawaban...</p>
+          <p className="text-xs text-slate-500 animate-pulse">Memuat rekap jawaban peserta...</p>
         ) : Object.keys(groupedSubmissions).length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
-            Belum ada peserta yang mengirimkan jawaban.
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-400 text-xs space-y-2">
+            <Users className="w-10 h-10 text-slate-600 mx-auto" />
+            <p className="font-semibold text-slate-300">Belum ada peserta yang mengirimkan jawaban tugas.</p>
+            <p className="text-[11px] text-slate-500">Jawaban yang disetor peserta di menu Reminder & Penugasan akan otomatis masuk ke sini.</p>
           </div>
         ) : (
-          /* Mapping Berdasarkan Kelompok Pertanyaan/Tugas */
           Object.entries(groupedSubmissions).map(([title, items]) => (
-            <div key={title} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
-              
-              {/* Header Partisi / Klaster */}
+            <div key={title} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-sky-400" />
                     {title}
                   </h2>
                   <span className="text-xs text-slate-400">
-                    Total Respon: <strong className="text-sky-400">{items.length}</strong>
+                    Total Respon Peserta: <strong className="text-sky-400">{items.length}</strong>
                   </span>
                 </div>
 
-                {/* Tombol Export ke Word per Pertanyaan */}
                 <button
                   onClick={() => exportToWord(title, items)}
-                  className="bg-sky-600 hover:bg-sky-500 text-white text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition-all w-fit"
+                  className="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all w-fit shadow-md shadow-sky-600/30 cursor-pointer"
                 >
-                  <FileDown className="w-4 h-4" /> Export Word (.docx)
+                  <FileDown className="w-4 h-4" /> Export ke Word (.docx)
                 </button>
               </div>
 
-              {/* Daftar Jawaban dalam Klaster Ini */}
               <div className="grid grid-cols-1 gap-3">
                 {items.map((sub) => (
-                  <div key={sub.id} className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+                  <div key={sub.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
                     <div className="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800/60 pb-2">
                       <span className="font-semibold text-slate-200">
                         {sub.user_name || "Peserta Anonymous"}
@@ -205,11 +209,10 @@ export default function AdminSubmissions() {
                   </div>
                 ))}
               </div>
-
             </div>
           ))
         )}
-      </div>
+      </main>
     </div>
   );
 }

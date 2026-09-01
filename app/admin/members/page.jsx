@@ -21,6 +21,7 @@ import {
   X
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
+import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -237,6 +238,9 @@ export default function MembersAdmin() {
       />
 
       <div className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
+        {/* Admin Quick Switch Tabs */}
+        <AdminHeaderTabs activeTab="members" />
+
         {/* Header Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
           <div className="flex items-center gap-3">

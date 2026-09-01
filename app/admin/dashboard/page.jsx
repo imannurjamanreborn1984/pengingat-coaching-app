@@ -4,10 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Sparkles, Send, Link as LinkIcon, FileText, Trash2, Edit3, X, ArrowLeft, Users, FileCheck2, ZoomIn, ArrowUp, ArrowDown } from "lucide-react";
+import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
+import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
@@ -205,47 +209,30 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
+      <AppNavbar
+        onToggleSidebar={() => setIsSidebarOpen(true)}
+        currentUser={currentUser || { name: "Admin Utama", role: "super_admin" }}
+        activeTitle="Broadcast & Monitoring WA"
+      />
+      <AppSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentUser={currentUser || { name: "Admin Utama", role: "super_admin" }}
+        activePath="/admin/dashboard"
+      />
+
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
+        {/* Admin Quick Switch Tabs */}
+        <AdminHeaderTabs activeTab="dashboard" />
+
         {/* Header */}
         <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Link
-                href="/dashboard"
-                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
-                title="Keluar / Kembali ke Halaman Peserta"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
-                <span>Halaman Peserta</span>
-              </Link>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
-              Dashboard Admin - Reminder NPT
+            <h1 className="text-xl sm:text-2xl font-bold text-white">
+              Dashboard Admin - Reminder & Broadcast NPT
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">Persiapan Event 22 Agustus 2026</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/buku-saku"
-              className="text-xs bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold px-3 py-2 rounded-lg shadow-xs transition flex items-center gap-1.5"
-            >
-              <span>📖 Buku Saku 14 Akar</span>
-            </Link>
-            <Link
-              href="/admin/submissions"
-              className="text-xs bg-slate-900 hover:bg-slate-800 text-sky-400 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
-            >
-              <FileCheck2 className="w-4 h-4" />
-              <span>Jawaban Peserta</span>
-            </Link>
-            <Link
-              href="/admin/members"
-              className="text-xs bg-slate-900 hover:bg-slate-800 text-sky-400 px-3 py-2 rounded-lg border border-slate-800 transition flex items-center gap-1.5"
-            >
-              <Users className="w-4 h-4" />
-              <span>Kelola Members</span>
-            </Link>
+            <p className="text-xs text-slate-400 mt-0.5">Kelola penugasan harian coaching dan pesan pengingat peserta.</p>
           </div>
         </div>
 
@@ -409,7 +396,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
