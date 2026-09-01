@@ -45,29 +45,31 @@ Instruksi Wajib:
       },
     };
 
-    // Daftar model yang dicoba secara bertahap (fallback)
+    // Daftar model aktif yang diprioritaskan: gemini-2.0-flash & gemini-1.5-flash
     const candidateModels = [
-      process.env.GEMINI_MODEL,
       "gemini-2.0-flash",
-      "gemini-1.5-flash-latest",
       "gemini-1.5-flash",
+      "gemini-1.5-flash-8b",
       "gemini-2.5-flash",
-      "gemini-1.5-pro-latest",
-      "gemini-1.5-pro",
+      "gemini-2.0-flash-exp",
+      process.env.GEMINI_MODEL
     ].filter(Boolean);
 
     let lastError = null;
     let extractedText = null;
 
-    for (const modelName of candidateModels) {
+    for (const rawModelName of candidateModels) {
       try {
+        const modelName = rawModelName.replace(/^models\//, "");
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent([prompt, imagePart]);
         const response = await result.response;
         extractedText = response.text();
-        if (extractedText) break;
+        if (extractedText && extractedText.trim()) {
+          break;
+        }
       } catch (err) {
-        console.warn(`Percobaan model ${modelName} gagal:`, err.message);
+        console.warn(`Percobaan model ${rawModelName} gagal:`, err.message);
         lastError = err;
       }
     }
