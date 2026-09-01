@@ -109,9 +109,19 @@ export default function BukuSakuContainer() {
 
   useEffect(() => {
     try {
+      let savedUser = null;
       const authStr = localStorage.getItem('npt_user_auth');
       if (authStr) {
-        setCurrentUser(JSON.parse(authStr));
+        savedUser = JSON.parse(authStr);
+      } else {
+        const match = document.cookie.match(/(?:^|; )npt_device_auth=([^;]*)/);
+        if (match) {
+          savedUser = JSON.parse(decodeURIComponent(match[1]));
+          localStorage.setItem('npt_user_auth', JSON.stringify(savedUser));
+        }
+      }
+      if (savedUser) {
+        setCurrentUser(savedUser);
       }
     } catch (e) {}
     loadAllData();
@@ -154,11 +164,13 @@ export default function BukuSakuContainer() {
           status: "approved"
         };
         setCurrentUser(userData);
-        localStorage.setItem("npt_user_auth", JSON.stringify(userData));
+        const jsonStr = JSON.stringify(userData);
+        localStorage.setItem("npt_user_auth", jsonStr);
         localStorage.setItem("participant_name", userData.name);
+        document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
         setIsAuthModalOpen(false);
         setAuthStatus(null);
-        alert("✅ Akses Member Terbuka! Anda sekarang dapat membuka seluruh 14 Akar Spiritual.");
+        alert("✅ Akses Member Terbuka! Perangkat HP Anda tersimpan selamanya.");
       } else {
         if (!profile) {
           await supabase.from("profiles").insert([
