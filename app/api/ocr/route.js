@@ -12,12 +12,17 @@ export async function POST(req) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    // Bersihkan base64 data URI
+    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+    // Ambil API key yang valid (prioritaskan key AIzaSy...)
+    let apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
     if (!apiKey) {
       return NextResponse.json(
         {
           success: false,
-          error: "GEMINI_API_KEY belum dikonfigurasi pada environment variable server.",
+          error: "GEMINI_API_KEY belum dikonfigurasi di environment variable server.",
         },
         { status: 500 }
       );
@@ -25,18 +30,10 @@ export async function POST(req) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Hapus header data URI jika ada (misal 'data:image/jpeg;base64,')
-    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-
-    // Prompt FULL OCR Sempurna: Menangkap seluruh isi teks tanpa peringkasan atau filter
-    const prompt = `Anda adalah mesin Full OCR (Optical Character Recognition) berpresisi tinggi.
-Tugas Anda adalah menyalin dan mentranskripsikan SELURUH teks yang terdapat di dalam gambar ini secara lengkap, utuh, dan 100% sempurna:
-
-Instruksi Wajib:
-1. Ekstrak SEMUA tulisan yang ada pada gambar tanpa terkecuali: judul utama, subjudul, badan teks/paragraf, poin-poin/list nomor, kutipan, catatan kaki, instruksi, rumus, maupun pertanyaan.
-2. JANGAN memotong, meringkas, atau menyaring isi gambar. Salin seluruh kalimat kata per kata sebagaimana tertulis pada gambar.
-3. Pertahankan tata letak dan struktur aslinya (baris baru, paragraf, penomoran 1, 2, 3 atau bullet points).
-4. Berikan HANYA hasil teks salinan murni dari gambar, tanpa menambahkan kata pengantar atau penutup dari Anda.`;
+    const prompt = `Anda adalah sistem OCR (Optical Character Recognition) berpresisi tinggi.
+Tugas Anda adalah membaca dan menyalin SELURUH teks yang terdapat di dalam gambar ini secara lengkap, kata demi kata, persis seperti aslinya.
+- Salin seluruh judul, poin, nomor, dan paragraf tanpa meringkas.
+- Berikan hanya hasil teks salinan gambar tanpa kata pengantar atau penutup.`;
 
     const imagePart = {
       inlineData: {
@@ -45,40 +42,49 @@ Instruksi Wajib:
       },
     };
 
-    // Daftar model aktif yang diprioritaskan: gemini-2.0-flash & gemini-1.5-flash
+    // Daftar model aktif Google AI Studio
     const candidateModels = [
       "gemini-2.0-flash",
       "gemini-1.5-flash",
       "gemini-1.5-flash-8b",
       "gemini-2.5-flash",
-      "gemini-2.0-flash-exp",
-      process.env.GEMINI_MODEL
-    ].filter(Boolean);
+    ];
 
-    let lastError = null;
     let extractedText = null;
+    let lastError = null;
 
-    for (const rawModelName of candidateModels) {
+    for (const modelName of candidateModels) {
       try {
-        const modelName = rawModelName.replace(/^models\//, "");
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent([prompt, imagePart]);
         const response = await result.response;
-        extractedText = response.text();
-        if (extractedText && extractedText.trim()) {
+        const text = response.text();
+        if (text && text.trim()) {
+          extractedText = text.trim();
           break;
         }
       } catch (err) {
-        console.warn(`Percobaan model ${rawModelName} gagal:`, err.message);
+        console.warn(`Percobaan model ${modelName} gagal:`, err.message);
         lastError = err;
       }
     }
 
     if (!extractedText) {
-      throw lastError || new Error("Tidak dapat membaca gambar dengan model Gemini yang tersedia.");
+      const errMsg = lastError?.message || "";
+      if (errMsg.includes("leaked") || errMsg.includes("PERMISSION_DENIED")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "API Key Gemini Anda telah dinonaktifkan oleh Google karena terdeteksi bocor di repo publik. Silakan buat API Key baru gratis di Google AI Studio (https://aistudio.google.com/app/apikey) lalu pasang di environment variable.",
+          },
+          { status: 403 }
+        );
+      }
+
+      throw lastError || new Error("Gagal membaca teks dari gambar.");
     }
 
-    return NextResponse.json({ success: true, text: extractedText.trim() });
+    return NextResponse.json({ success: true, text: extractedText });
   } catch (err) {
     console.error("Error OCR Gemini:", err);
     return NextResponse.json(
