@@ -381,28 +381,22 @@ export default function HakekatCintaContainer() {
         teksMentahKajian = `Kembangkan tulisan naskah spiritual Islam secara komprehensif murni berdasarkan esensi dari judul kajian ini: ${judulVideo}.`;
       }
 
-      const ai = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const res = await fetch("/api/generate-book-chapter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          judulVideo,
+          kategoriNama: INFO_KATEGORI[kategoriAktif].nama,
+          teksMentahKajian
+        }),
+      });
 
-      const instruksiPrompt = `
-        Kamu adalah seorang Editor Buku Islami profesional, tasawuf, dan spiritual mendalam. 
-        Tugasmu adalah menyusun sebuah bab buku yang rapi, mengalir, puitis, dan padat ilmu berdasarkan bahan kajian di bawah ini.
-        
-        Judul Bab Buku: ${judulVideo}
-        Kategori Kajian: ${INFO_KATEGORI[kategoriAktif].nama}
+      const data = await res.json();
+      if (!data.success || !data.text) {
+        throw new Error(data.error || "Gagal memproses draf naskah AI.");
+      }
 
-        Bahan Mentah Sumber Kajian:
-        "${teksMentahKajian}"
-
-        Aturan Penulisan Bab Buku:
-        1. Tulis hasil akhirnya langsung ke isi materinya dalam bentuk paragraf buku yang mengalir indah dan enak dibaca (buat minimal 3-4 paragraf panjang berbobot). JANGAN hanya menulis poin ringkas atau resume pendek!
-        2. Buang kata-kata lisan yang berulang, sapaan santai, link media sosial, jualan, atau teks timestamp.
-        3. Rapikan penulisan istilah spiritual/arab agar baku dan bermartabat (misal: Tazkiyatun Nafs, Hakikat, Syariat, Qalbu, Ma'rifat, Fana, Baqa, 14 Akar Spiritual).
-        4. Hidupkan suasana pengajaran yang menyentuh jiwa, bijaksana, mendalam, dan membimbing pembaca menuju ketenangan transcendental batin.
-      `;
-
-      const hasilGemini = await model.generateContent(instruksiPrompt);
-      const teksHasilBuku = hasilGemini.response.text();
+      const teksHasilBuku = data.text;
 
       const updatedCollection = {
         ...koleksiBuku,
@@ -418,7 +412,7 @@ export default function HakekatCintaContainer() {
       alert(`✨ Alhamdulillah! Bab "${judulVideo}" berhasil dirangkum oleh AI Gemini dan masuk Draft Buku.`);
     } catch (error) {
       console.error('Gagal memproses AI:', error);
-      alert('❌ Gagal memproses AI Gemini. Cek koneksi internet.');
+      alert('❌ Gagal memproses AI Gemini: ' + (error.message || 'Cek koneksi internet.'));
     } finally {
       setSedangMerangkum(false);
     }
