@@ -284,6 +284,22 @@ export default function MaterialsAdminContainer() {
     fetchMaterials();
   };
 
+  // Helper Ikon Tipe File
+  const getFileBadge = (type) => {
+    switch (type) {
+      case "pdf":
+        return <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">📄 PDF</span>;
+      case "ppt":
+        return <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">📊 PPT / Slide</span>;
+      case "docx":
+        return <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold">📝 Word / DOCX</span>;
+      case "gdrive":
+        return <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">☁️ Google Drive</span>;
+      default:
+        return <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">📎 Dokumen</span>;
+    }
+  };
+
   const handleEdit = (mat) => {
     setEditingId(mat.id);
     setImageFile(null);
