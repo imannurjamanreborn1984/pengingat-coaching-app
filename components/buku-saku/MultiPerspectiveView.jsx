@@ -325,8 +325,12 @@ export const MultiPerspectiveView = ({
                   </h4>
 
                   {item.quote && (
-                    <div className="relative my-3 p-4 rounded-xl bg-[#faf2e3] border-l-4 border-[#b38b42] text-[#26150a] italic text-xs sm:text-sm leading-relaxed font-serif">
-                      "{item.quote}"
+                    <div className={`relative my-3 p-4 rounded-xl border-[#b38b42] text-[#26150a] leading-relaxed ${
+                      /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(item.quote)
+                        ? 'font-kitab-arabic arabic-quote-box'
+                        : 'bg-[#faf2e3] border-l-4 italic text-xs sm:text-sm font-serif'
+                    }`}>
+                      {item.quote}
                     </div>
                   )}
 
