@@ -230,6 +230,25 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
 
                   <div className="space-y-1 pt-1">
                     <Link
+                      href="/npt/6"
+                      onClick={onClose}
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        activePath === '/npt/6'
+                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                          : 'text-slate-300 hover:bg-slate-800/90'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="w-3.5 h-3.5 text-sky-400" />
+                        <div>
+                          <p className="leading-tight">Materi & Modul NPT 6</p>
+                          <span className="text-[9px] text-sky-300/80 font-normal">Modul, Dokumen & Video</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3 h-3 opacity-60" />
+                    </Link>
+
+                    <Link
                       href="/buku-saku"
                       onClick={onClose}
                       className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${

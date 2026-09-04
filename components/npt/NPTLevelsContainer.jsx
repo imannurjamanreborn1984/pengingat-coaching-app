@@ -57,8 +57,15 @@ const NPT_LEVELS = [
     title: "NPT Level 5",
     subtitle: "Cosmic Awareness & Sufistic Mindset",
     desc: "Kematangan pandangan kosmik, kepasrahan total, dan kesadaran hakikat keberadaan.",
-    status: "upcoming",
-    badge: "Segera Hadir"
+    status: "active",
+    badge: "LIVE & AKTIF",
+    modules: [
+      {
+        name: "📚 Materi & Modul Pembelajaran Level 5",
+        path: "/npt/5",
+        desc: "Akses 35+ modul materi, dokumen PDF/PPT/Word, dan video penjelasan resmi."
+      }
+    ]
   },
   {
     level: 6,
@@ -68,6 +75,11 @@ const NPT_LEVELS = [
     status: "active",
     badge: "LIVE & AKTIF",
     modules: [
+      {
+        name: "📚 Materi & Modul Pembelajaran Level 6",
+        path: "/npt/6",
+        desc: "Akses modul materi, dokumen PDF/PPT/Word, dan video penjelasan Level 6."
+      },
       {
         name: "📖 Buku Saku 14 Akar Spiritualitas",
         path: "/buku-saku",
@@ -173,9 +185,13 @@ export default function NPTLevelsContainer() {
                   </div>
 
                   {!isActive && (
-                    <span className="text-[11px] text-slate-500 italic self-end sm:self-auto">
-                      Materi & isi akan segera diupload
-                    </span>
+                    <Link
+                      href={`/npt/${lvl.level}`}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-rose-400 border border-rose-500/20 transition flex items-center gap-1.5 self-end sm:self-auto cursor-pointer"
+                    >
+                      <span>Buka Modul Level {lvl.level}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
                   )}
                 </div>
 
