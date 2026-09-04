@@ -87,6 +87,7 @@ export default function BukuSakuContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedElement, setSelectedElement] = useState('ALL');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
 
   // Modals & UI
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -268,7 +269,9 @@ export default function BukuSakuContainer() {
   const totalPop = roots.reduce((acc, r) => acc + (r.popCultureFolklore?.length || 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme ? "bg-parchment text-[#231409]" : "bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100"
+    }`}>
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -283,15 +286,17 @@ export default function BukuSakuContainer() {
       />
 
       {/* Subnav Action Bar */}
-      <div className="bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-800 py-2.5 px-4 sm:px-6">
+      <div className={`py-2.5 px-4 sm:px-6 border-b transition-colors ${
+        isKitabTheme ? "bg-[#eee2ca]/90 border-[#d4b886]" : "bg-slate-100 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800"
+      }`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <nav className="flex items-center gap-1">
             <button
               onClick={() => { setSelectedRoot(null); setActiveTab('roots'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 activeTab === 'roots' && !selectedRoot
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
+                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
               14 Akar
@@ -302,10 +307,10 @@ export default function BukuSakuContainer() {
                 setSelectedRoot(null); 
                 setActiveTab('journal'); 
               }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
                 activeTab === 'journal'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
+                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
               <span>Jurnal ({journals.length})</span>
@@ -317,10 +322,10 @@ export default function BukuSakuContainer() {
                 setSelectedRoot(null); 
                 setActiveTab('assessment'); 
               }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
                 activeTab === 'assessment'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
+                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
               <span>Pemetaan</span>
@@ -329,12 +334,27 @@ export default function BukuSakuContainer() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setIsKitabTheme(!isKitabTheme)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+              }`}
+              title="Ganti Mode Tampilan (Kitab Klasik Perkamen / Mode Gelap)"
+            >
+              <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+            </button>
+
             <button
               onClick={() => {
                 if (!isApproved) { setIsAuthModalOpen(true); return; }
                 handleOpenQuickAdd();
               }}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all cursor-pointer"
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer ${
+                isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324] text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'
+              }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Tambah Bahan</span>
@@ -342,7 +362,9 @@ export default function BukuSakuContainer() {
             {isApproved && (
               <button
                 onClick={() => setIsDataModalOpen(true)}
-                className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                className={`p-1.5 rounded-xl border cursor-pointer ${
+                  isKitabTheme ? 'text-[#4a2e12] border-[#cbb38b] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'
+                }`}
                 title="Backup & Sinkronisasi JSON"
               >
                 <Download className="w-4 h-4" />
@@ -362,60 +384,106 @@ export default function BukuSakuContainer() {
             onStartPractice={handleStartPractice}
             isBookmarked={bookmarks.includes(selectedRoot.id)}
             onToggleBookmark={handleToggleBookmark}
+            isKitabTheme={isKitabTheme}
           />
         ) : activeTab === 'roots' ? (
           <div className="space-y-6 pb-12">
             {/* Hero Banner */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-purple-950 dark:to-slate-950 text-white p-6 sm:p-8 shadow-xl border border-indigo-900/40">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            {isKitabTheme ? (
+              <div className="relative overflow-hidden rounded-3xl card-kitab-frame p-6 sm:p-8 shadow-xl text-[#231409]">
+                <div className="relative z-10 max-w-3xl space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eee2cb] border border-[#cbb38b] text-xs font-bold text-[#5c3c1b]">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Pusat Riset & Praktik Spiritual NPT • Edisi Kitab Klasik</span>
+                  </div>
 
-              <div className="relative z-10 max-w-2xl space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-rose-300">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Pusat Riset & Praktik Spiritual NPT</span>
-                </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-kitab-arabic text-[#8a5d28] tracking-widest font-bold">
+                      بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                    </p>
+                    <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#26150a] leading-tight font-kitab-title">
+                      Kitab Induk 14 Akar Spiritualitas
+                    </h1>
+                  </div>
 
-                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                  Peta 14 Akar Spiritual & Integrasi Multi-Perspektif
-                </h1>
+                  <p className="text-xs sm:text-sm text-[#3d2514] leading-relaxed font-sans font-medium">
+                    Sistem pemetaan spiritualitas berbasis 14 fondasi batin: dari sains biologi & epigenetika, kearifan tasawuf & kitab hikmah klasik, hingga budaya & pop-culture kontemporer.
+                  </p>
 
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Sistem pemetaan spiritualitas berbasis 14 fondasi batin: dari sains biologi & neurobiologi, kearifan tasawuf & kitab hikmah, hingga budaya & pop-culture kontemporer.
-                </p>
-
-                {/* Status Lencana Akses */}
-                <div className="pt-1 flex flex-wrap items-center gap-3">
-                  {isApproved ? (
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Akses Penuh Member Aktif (14 Akar Terbuka)</span>
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => setIsAuthModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/40 transition flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Mode Tamu: Masuk Member Untuk Buka Kunci Bab</span>
-                    </button>
-                  )}
+                  {/* Status Lencana Akses */}
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                    {isApproved ? (
+                      <span className="px-3.5 py-1.5 rounded-full bg-[#e3eedb] text-[#28491a] border border-[#b2d3a0] text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                        <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                        <span>Akses Member Terbuka Penuh (Seluruh 14 Bab Terbuka)</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="px-4 py-2 rounded-full bg-[#9e2a2b] hover:bg-[#852324] text-white text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Mode Tamu: Masuk Member Untuk Buka Kunci Bab</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-purple-950 dark:to-slate-950 text-white p-6 sm:p-8 shadow-xl border border-indigo-900/40">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 max-w-2xl space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-rose-300">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Pusat Riset & Praktik Spiritual NPT</span>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    Peta 14 Akar Spiritual & Integrasi Multi-Perspektif
+                  </h1>
+
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Sistem pemetaan spiritualitas berbasis 14 fondasi batin: dari sains biologi & neurobiologi, kearifan tasawuf & kitab hikmah, hingga budaya & pop-culture kontemporer.
+                  </p>
+
+                  <div className="pt-1 flex flex-wrap items-center gap-3">
+                    {isApproved ? (
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span>Akses Penuh Member Aktif (14 Akar Terbuka)</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="px-3.5 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/40 transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Mode Tamu: Masuk Member Untuk Buka Kunci Bab</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* GUEST BANNER PERINGATAN TERGEMBOK */}
             {!isApproved && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+              <div className={`p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg ${
+                isKitabTheme
+                  ? "card-kitab-frame border-[#b38b42]"
+                  : "bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40"
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20 shrink-0">
-                    <Lock className="w-5 h-5 text-rose-400" />
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center border border-rose-500/20 shrink-0">
+                    <Lock className="w-5 h-5 text-rose-600" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">
+                    <h4 className="text-xs font-bold text-[#26150a]">
                       Dokumen & Latihan 14 Akar Khusus Member NPT
                     </h4>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-[#734822]">
                       Anda sedang melihat pratinjau daftar 14 Akar. Klik kartu akar manapun untuk masuk/daftar sebagai member terverifikasi.
                     </p>
                   </div>
@@ -423,7 +491,7 @@ export default function BukuSakuContainer() {
 
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition shrink-0 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#9e2a2b] hover:bg-[#852324] text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer"
                 >
                   🔓 Masuk / Login Member
                 </button>
@@ -431,25 +499,29 @@ export default function BukuSakuContainer() {
             )}
 
             {/* Sambutan & Panduan Guru Pembina */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
+            <div className={`rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 ${
+              isKitabTheme ? "card-kitab-frame" : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+            }`}>
               <button
                 onClick={() => setShowPreface(!showPreface)}
                 className="w-full flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
+                    isKitabTheme ? "bg-[#eee2cb] text-[#8a5d28] border border-[#cbb38b]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                  }`}>
                     <HeartHandshake className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    <h2 className="text-sm sm:text-base font-bold text-[#26150a] group-hover:text-[#9e2a2b] transition-colors font-kitab-title">
                       {GURU_PREFACE.title}
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-[#734822] font-semibold">
                       {GURU_PREFACE.subtitle} • {GURU_PREFACE.author}
                     </p>
                   </div>
                 </div>
-                <div className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200">
+                <div className="text-[#82613d] group-hover:text-[#26150a]">
                   {showPreface ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </div>
               </button>
@@ -505,18 +577,26 @@ export default function BukuSakuContainer() {
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${
+                    isKitabTheme ? "text-[#82613d]" : "text-slate-400"
+                  }`} />
                   <input
                     type="text"
-                    placeholder="Cari nama akar, keyword (vitalitas, fokus), sains (mitokondria), atau film (matrix)..."
+                    placeholder="Cari nama akar, keyword (vitalitas, fokus), sains (mitokondria), atau rujukan kitab..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs sm:text-sm shadow-xs focus:ring-2 focus:ring-rose-500 focus:outline-hidden placeholder:text-slate-400"
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-2xl text-xs sm:text-sm shadow-xs focus:ring-2 focus:outline-hidden transition-all ${
+                      isKitabTheme
+                        ? "bg-[#fdfaf3] border border-[#cbb38b] text-[#26150a] placeholder:text-[#82613d] focus:ring-[#b38b42]"
+                        : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-rose-500"
+                    }`}
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold cursor-pointer ${
+                        isKitabTheme ? "text-[#82613d] hover:text-[#26150a]" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      }`}
                     >
                       Reset
                     </button>
@@ -527,7 +607,9 @@ export default function BukuSakuContainer() {
                   onClick={() => setShowBookmarksOnly(!showBookmarksOnly)}
                   className={`px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
                     showBookmarksOnly
-                      ? 'bg-amber-500 text-white border-amber-500 shadow-xs shadow-amber-500/30'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                      : isKitabTheme
+                      ? 'bg-[#fdfaf3] border-[#cbb38b] text-[#5e3d1c] hover:bg-[#ebdcc4]'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -541,10 +623,14 @@ export default function BukuSakuContainer() {
                   <button
                     key={el.id}
                     onClick={() => setSelectedElement(el.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer ${
                       selectedElement === el.id
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        ? isKitabTheme
+                          ? 'bg-[#3a2211] text-[#fbf6ec] border border-[#8f632d] shadow-sm font-bold'
+                          : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs font-bold'
+                        : isKitabTheme
+                        ? 'bg-[#eee3cb] text-[#543516] border border-[#d8c3a1] hover:bg-[#dfcdab] font-medium'
+                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
                     }`}
                   >
                     {el.label}
@@ -555,12 +641,14 @@ export default function BukuSakuContainer() {
 
             {/* Grid */}
             {filteredRoots.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 space-y-3">
-                <Compass className="w-10 h-10 text-slate-400 mx-auto" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <div className={`text-center py-16 rounded-3xl p-8 space-y-3 ${
+                isKitabTheme ? "card-kitab-frame" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+              }`}>
+                <Compass className="w-10 h-10 text-[#82613d] mx-auto opacity-70" />
+                <h3 className="text-sm font-bold text-[#26150a]">
                   Tidak ada akar spiritual yang sesuai
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                <p className="text-xs text-[#734822] max-w-md mx-auto">
                   Coba ubah kata kunci pencarian atau reset filter elemen.
                 </p>
                 <button
@@ -569,7 +657,7 @@ export default function BukuSakuContainer() {
                     setSelectedElement('ALL');
                     setShowBookmarksOnly(false);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white shadow-xs cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#9e2a2b] hover:bg-[#852324] text-white shadow-xs cursor-pointer"
                 >
                   Reset Semua Filter
                 </button>
@@ -583,6 +671,7 @@ export default function BukuSakuContainer() {
                     isBookmarked={bookmarks.includes(root.id)}
                     onToggleBookmark={handleToggleBookmark}
                     onSelectRoot={(r) => handleSelectRoot(r)}
+                    isKitabTheme={isKitabTheme}
                   />
                 ))}
               </div>
