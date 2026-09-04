@@ -35,6 +35,7 @@ export default function MaterialsAdminContainer() {
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeLightbox, setActiveLightbox] = useState(null);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
 
   // Form State Tambah / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,7 +59,6 @@ export default function MaterialsAdminContainer() {
   const [imagePreview, setImagePreview] = useState(null);
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
   const [copiedOcr, setCopiedOcr] = useState(false);
-
 
   useEffect(() => {
     try {

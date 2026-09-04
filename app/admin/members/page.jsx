@@ -28,6 +28,7 @@ export const dynamic = 'force-dynamic';
 
 export default function MembersAdmin() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -101,9 +102,10 @@ export default function MembersAdmin() {
     }
   };
 
-  // Ubah Status Approval (Setujui / Batalkan)
+  // Update Status Approval Member (Setujui / Pending)
   const handleUpdateStatus = async (id, newStatus) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase
         .from("profiles")
         .update({ status: newStatus })
@@ -111,30 +113,22 @@ export default function MembersAdmin() {
 
       if (error) throw error;
 
-      alert(newStatus === "approved" ? "✅ Akses anggota berhasil disetujui!" : "⚠️ Akses anggota dibatalkan/ditangguhkan.");
-      fetchMembers();
+      // Update state lokal
+      setMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, status: newStatus } : m))
+      );
     } catch (err) {
-      alert("Gagal mengubah status: " + err.message);
+      alert("Gagal update status: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Hapus Member
-  const handleDelete = async (id) => {
-    if (!confirm("Yakin ingin menghapus teman ini dari daftar?")) return;
-    try {
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
-      if (error) throw error;
-      fetchMembers();
-    } catch (err) {
-      alert("Gagal menghapus: " + err.message);
-    }
-  };
-
-  // Buka Modal Edit
+  // Buka Modal Edit Member
   const handleOpenEdit = (member) => {
     setEditingMember(member);
     setEditName(member.full_name || "");
-    setEditPhone(member.phone_number ? member.phone_number.replace(/^62/, "0") : "");
+    setEditPhone(member.phone_number || "");
     setEditEmail(member.email || "");
     setEditStatus(member.status || "approved");
   };
@@ -150,83 +144,104 @@ export default function MembersAdmin() {
       formattedPhone = "62" + formattedPhone.slice(1);
     }
 
+    const cleanEmail = editEmail ? editEmail.trim().toLowerCase() : null;
+
     try {
       const { error } = await supabase
         .from("profiles")
         .update({
           full_name: editName.trim(),
           phone_number: formattedPhone || null,
-          email: editEmail.trim().toLowerCase() || null,
+          email: cleanEmail,
           status: editStatus,
         })
         .eq("id", editingMember.id);
 
       if (error) throw error;
 
-      alert("✅ Data anggota berhasil diperbarui!");
+      alert("Data anggota berhasil diperbarui!");
       setEditingMember(null);
       fetchMembers();
     } catch (err) {
-      alert("Gagal memperbarui: " + err.message);
+      alert("Gagal memperbarui data: " + err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Kirim WA Manual
-  const handleSendWA = (member) => {
-    if (!member.phone_number) {
-      alert("Anggota ini belum memasukkan nomor WA.");
-      return;
+  // Hapus Member
+  const handleDelete = async (id) => {
+    if (!confirm("Yakin ingin menghapus anggota ini?")) return;
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.from("profiles").delete().eq("id", id);
+      if (error) throw error;
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      alert("Gagal menghapus: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
-    const participantName = member.full_name || "Sahabat";
-    const appDashboardUrl = `${window.location.origin}/dashboard`;
-    const textMessage = `Halo Kak ${participantName}! 👋\n\nAkun Anda di Portal NPT sudah aktif. Silakan buka tautan berikut untuk memantau tugas dan rekaman kajian:\n👉 ${appDashboardUrl}\n\nSemangat berproses! 🔥`;
-    const encodedText = encodeURIComponent(textMessage);
-    window.open(`https://wa.me/${member.phone_number}?text=${encodedText}`, "_blank");
   };
 
-  // Kirim WA Broadcast Otomatis ke SEMUA Nomor (via API Fonnte)
-  const handleBroadcastAll = async () => {
-    const validMembers = members.filter((m) => m.phone_number);
-    if (validMembers.length === 0) return alert("Belum ada kontak dengan nomor WA terdaftar!");
-    if (!confirm(`Kirim pesan WA broadcast otomatis ke SEMUA (${validMembers.length}) kontak?`)) return;
+  // Kirim Pengingat WhatsApp ke Member
+  const handleSendWA = (member) => {
+    if (!member.phone_number) {
+      alert("Nomor WA belum tersimpan.");
+      return;
+    }
 
+    const text = encodeURIComponent(
+      `Assalamu'alaikum Wr. Wb. Sahabat ${member.full_name},\n\nAkses materi pembelajaran & rekaman live NPT Anda telah aktif. Silakan buka portal:\nhttps://neuroprogrammingtraining.id/hakekat-cinta\n\nTerima kasih!`
+    );
+
+    window.open(`https://wa.me/${member.phone_number}?text=${text}`, "_blank");
+  };
+
+  // Broadcast Massal
+  const handleBroadcastAll = async () => {
+    if (!confirm(`Kirim broadcast link materi ke ${members.filter(m => m.phone_number).length} anggota via WA Gateway?`)) return;
     setIsBroadcasting(true);
     try {
-      const response = await fetch("/api/broadcast", {
+      const res = await fetch("/api/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customMessage: "Jangan lupa cek Portal NPT hari ini untuk update materi dan tugas terbaru ya! 🔥",
-        }),
+          message: "Akses pembelajaran & rekaman live kajian Hakikat Cinta NPT telah diperbarui. Silakan buka modul di: https://neuroprogrammingtraining.id"
+        })
       });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Gagal broadcast");
-
-      alert(`✅ Broadcast Terkirim!\nSukses: ${result.results.success} nomor\nGagal: ${result.results.failed} nomor`);
-    } catch (err) {
-      alert("Error Broadcast: " + err.message);
+      const data = await res.json();
+      if (data.success) {
+        alert("Broadcast pesan berhasil dikirim!");
+      } else {
+        alert("Broadcast gateway offline / belum terkonfigurasi. Anda bisa kirim manual 1 per 1.");
+      }
+    } catch (e) {
+      alert("Gagal broadcast: " + e.message);
     } finally {
       setIsBroadcasting(false);
     }
   };
 
-  const pendingCount = members.filter((m) => m.status === "pending" || !m.status).length;
+  // Filter Data
+  const pendingCount = members.filter((m) => m.status === "pending").length;
   const approvedCount = members.filter((m) => m.status === "approved").length;
 
   const filteredMembers = members.filter((m) => {
-    if (filterTab === "pending") return m.status === "pending" || !m.status;
+    if (filterTab === "pending") return m.status === "pending";
     if (filterTab === "approved") return m.status === "approved";
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme 
+        ? 'bg-parchment text-[#231409]' 
+        : 'bg-slate-950 text-slate-100'
+    }`}>
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggleSidebar={() => setIsSidebarOpen(true)}
         currentUser={{ name: "Admin Utama", role: "super_admin" }}
         activeTitle="Ruang Persetujuan"
       />
@@ -239,30 +254,46 @@ export default function MembersAdmin() {
 
       <div className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
         {/* Admin Quick Switch Tabs */}
-        <AdminHeaderTabs activeTab="members" />
+        <AdminHeaderTabs 
+          activeTab="members" 
+          isKitabTheme={isKitabTheme}
+          onToggleTheme={() => setIsKitabTheme(!isKitabTheme)}
+        />
 
         {/* Header Navigation */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5 ${
+          isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+        }`}>
           <div className="flex items-center gap-3">
             <Link
               href="/admin/dashboard"
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className={`p-2 rounded-xl border transition ${
+                isKitabTheme 
+                  ? 'bg-[#eee3cb] border-[#d8c3a1] text-[#634224] hover:bg-[#dfcdab]' 
+                  : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white'
+              }`}
               title="Kembali ke Dashboard Admin"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+                <h1 className={`text-xl sm:text-2xl font-bold ${
+                  isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent'
+                }`}>
                   Ruang Persetujuan & Anggota NPT
                 </h1>
                 {pendingCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-extrabold border animate-pulse ${
+                    isKitabTheme 
+                      ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]' 
+                      : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  }`}>
                     {pendingCount} Menunggu Approval
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className={`text-xs mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
                 Kelola izin masuk peserta, approval rekaman video, dan kontak reminder WhatsApp.
               </p>
             </div>
@@ -272,17 +303,25 @@ export default function MembersAdmin() {
             <button
               onClick={fetchMembers}
               disabled={isLoading}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                isKitabTheme
+                  ? 'bg-[#eee3cb] text-[#3a2211] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                  : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300'
+              }`}
               title="Segarkan Data"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-sky-400" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-amber-600" : ""}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
             <button
               onClick={handleBroadcastAll}
               disabled={isBroadcasting || members.length === 0}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer"
+              className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition flex items-center gap-2 cursor-pointer disabled:opacity-50 ${
+                isKitabTheme
+                  ? 'bg-[#1b6b55] hover:bg-[#155644] shadow-emerald-900/20'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 shadow-emerald-600/20'
+              }`}
             >
               <MessageSquareShare className={`w-4 h-4 ${isBroadcasting ? "animate-bounce" : ""}`} />
               <span>{isBroadcasting ? "Mengirim..." : "Broadcast WA Massal"}</span>
@@ -291,9 +330,15 @@ export default function MembersAdmin() {
         </div>
 
         {/* Form Tambah Anggota Manual */}
-        <div className="p-5 sm:p-6 bg-slate-900/80 border border-slate-800 rounded-3xl space-y-4">
-          <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-            <UserPlus className="w-4 h-4 text-sky-400" />
+        <div className={`p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm ${
+          isKitabTheme
+            ? 'card-kitab-frame'
+            : 'bg-slate-900/80 border border-slate-800'
+        }`}>
+          <h2 className={`text-sm font-bold flex items-center gap-2 ${
+            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-200'
+          }`}>
+            <UserPlus className={`w-4 h-4 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'}`} />
             <span>Tambah Anggota Baru Langsung (Otomatis Disetujui)</span>
           </h2>
 
@@ -303,7 +348,11 @@ export default function MembersAdmin() {
               placeholder="Nama Lengkap *"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+              }`}
               required
             />
 
@@ -312,7 +361,11 @@ export default function MembersAdmin() {
               placeholder="Alamat Email Gmail (Opsional)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+              }`}
             />
 
             <div className="flex gap-2">
@@ -321,13 +374,21 @@ export default function MembersAdmin() {
                 placeholder="No WA (08xx...)"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                    : 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+                }`}
               />
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shrink-0 transition cursor-pointer"
+                className={`px-4 py-2.5 text-white text-xs font-bold rounded-xl shrink-0 transition cursor-pointer disabled:opacity-50 ${
+                  isKitabTheme
+                    ? 'bg-[#9e2a2b] hover:bg-[#852324]'
+                    : 'bg-sky-600 hover:bg-sky-500'
+                }`}
               >
                 + Simpan
               </button>
@@ -336,24 +397,26 @@ export default function MembersAdmin() {
         </div>
 
         {/* Filter Tab Approval */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div className={`flex items-center justify-between gap-2 border-b pb-3 ${
+          isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+        }`}>
           <div className="flex items-center gap-2 overflow-x-auto">
             <button
               onClick={() => setFilterTab("all")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
                 filterTab === "all"
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? isKitabTheme ? "bg-[#3a2211] text-[#fbf6ec] border-[#8f632d]" : "bg-slate-800 text-white border-slate-700"
+                  : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
               }`}
             >
               Semua ({members.length})
             </button>
             <button
               onClick={() => setFilterTab("pending")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
                 filterTab === "pending"
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -361,10 +424,10 @@ export default function MembersAdmin() {
             </button>
             <button
               onClick={() => setFilterTab("approved")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
                 filterTab === "approved"
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? isKitabTheme ? "bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -374,20 +437,24 @@ export default function MembersAdmin() {
         </div>
 
         {/* Daftar Anggota & Status Approval */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-3">
+        <div className={`rounded-3xl p-4 sm:p-6 space-y-3 shadow-sm ${
+          isKitabTheme
+            ? 'card-kitab-frame'
+            : 'bg-slate-900/60 border border-slate-800'
+        }`}>
           {isLoading ? (
-            <div className="py-12 text-center text-xs text-slate-400">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-500" />
+            <div className={`py-12 text-center text-xs ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}`}>
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-600" />
               <span>Memuat data anggota & permohonan akses...</span>
             </div>
           ) : filteredMembers.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-500">
+            <div className={`py-12 text-center text-xs ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
               {filterTab === "pending"
                 ? "🎉 Tidak ada permintaan yang menunggu persetujuan."
                 : "Belum ada anggota di kategori ini."}
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/80">
+            <div className={`divide-y ${isKitabTheme ? 'divide-[#dfcfb0]' : 'divide-slate-800/80'}`}>
               {filteredMembers.map((member) => {
                 const isApproved = member.status === "approved";
                 const isSuperAdminRole = member.role === "super_admin";
@@ -399,38 +466,54 @@ export default function MembersAdmin() {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-100">
+                        <span className={`font-bold text-sm ${
+                          isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+                        }`}>
                           {member.full_name || "Tanpa Nama"}
                         </span>
                         {isSuperAdminRole ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                            <Crown className="w-3 h-3 text-amber-400" /> Admin Utama
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                            isKitabTheme
+                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
+                            <Crown className="w-3 h-3 text-amber-500" /> Admin Utama
                           </span>
                         ) : isApproved ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Disetujui
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                            isKitabTheme
+                              ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          }`}>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Disetujui
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1 animate-pulse">
-                            <Clock className="w-3 h-3 text-amber-400" /> Menunggu Approval
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 animate-pulse ${
+                            isKitabTheme
+                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            <Clock className="w-3 h-3 text-amber-600" /> Menunggu Approval
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                      <div className={`flex flex-wrap items-center gap-3 text-xs ${
+                        isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+                      }`}>
                         {member.email && (
                           <span className="flex items-center gap-1">
-                            <Mail className="w-3.5 h-3.5 text-slate-500" />
+                            <Mail className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
                             {member.email}
                           </span>
                         )}
                         {member.phone_number && (
                           <span className="flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5 text-slate-500" />
+                            <Phone className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
                             +{member.phone_number}
                           </span>
                         )}
-                        <span className="text-[10px] text-slate-500">
+                        <span className={`text-[10px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
                           Terdaftar: {new Date(member.created_at).toLocaleDateString("id-ID")}
                         </span>
                       </div>
@@ -441,7 +524,11 @@ export default function MembersAdmin() {
                       {!isApproved ? (
                         <button
                           onClick={() => handleUpdateStatus(member.id, "approved")}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+                          className={`px-3 py-1.5 rounded-xl text-white text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer ${
+                            isKitabTheme
+                              ? 'bg-[#1b6b55] hover:bg-[#155644]'
+                              : 'bg-emerald-600 hover:bg-emerald-500'
+                          }`}
                           title="Setujui Akses Video & Portal"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -450,7 +537,11 @@ export default function MembersAdmin() {
                       ) : (
                         <button
                           onClick={() => handleUpdateStatus(member.id, "pending")}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer"
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
+                            isKitabTheme
+                              ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                              : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                          }`}
                           title="Tangguhkan Akses"
                         >
                           Tangguhkan
@@ -460,7 +551,11 @@ export default function MembersAdmin() {
                       {/* Tombol Edit Data Anggota */}
                       <button
                         onClick={() => handleOpenEdit(member)}
-                        className="p-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition cursor-pointer"
+                        className={`p-2 rounded-xl border transition cursor-pointer ${
+                          isKitabTheme
+                            ? 'bg-[#eee3cb] text-[#8f632d] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                            : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/20'
+                        }`}
                         title="Edit Data Anggota (Nama, Email, No WA)"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -469,7 +564,11 @@ export default function MembersAdmin() {
                       {member.phone_number && (
                         <button
                           onClick={() => handleSendWA(member)}
-                          className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition cursor-pointer"
+                          className={`p-2 rounded-xl border transition cursor-pointer ${
+                            isKitabTheme
+                              ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3] hover:bg-[#cbeae4]'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                          }`}
                           title="Kirim Pesan WA"
                         >
                           <Send className="w-4 h-4" />
@@ -478,7 +577,11 @@ export default function MembersAdmin() {
 
                       <button
                         onClick={() => handleDelete(member.id)}
-                        className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer"
+                        className={`p-2 rounded-xl border transition cursor-pointer ${
+                          isKitabTheme
+                            ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#dfcdab]'
+                            : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'
+                        }`}
                         title="Hapus dari Daftar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -496,26 +599,44 @@ export default function MembersAdmin() {
       {editingMember && (
         <div 
           onClick={() => setEditingMember(null)}
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-sky-500/30 rounded-3xl p-6 shadow-2xl space-y-4 text-left"
+            className={`w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 text-left ${
+              isKitabTheme
+                ? 'card-kitab-frame'
+                : 'bg-slate-900 border border-sky-500/30'
+            }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+            }`}>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
+                  isKitabTheme
+                    ? 'bg-[#eee3cb] text-[#8f632d] border-[#d8c3a1]'
+                    : 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                }`}>
                   <Edit3 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Edit Data Anggota</h3>
-                  <p className="text-[10px] text-slate-400">Lengkapi Email atau Perbaiki Nomor WA</p>
+                  <h3 className={`text-sm font-bold ${
+                    isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                  }`}>
+                    Edit Data Anggota
+                  </h3>
+                  <p className={`text-[10px] ${isKitabTheme ? 'text-[#734822]' : 'text-slate-400'}`}>
+                    Lengkapi Email atau Perbaiki Nomor WA
+                  </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setEditingMember(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                className={`p-1 rounded-xl cursor-pointer ${
+                  isKitabTheme ? 'text-[#734822] hover:bg-[#dfcfb0]' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -523,7 +644,9 @@ export default function MembersAdmin() {
 
             <form onSubmit={handleSaveEdit} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
                   Nama Lengkap
                 </label>
                 <input
@@ -531,12 +654,18 @@ export default function MembersAdmin() {
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
                   Alamat Email Gmail (Kunci Login)
                 </label>
                 <input
@@ -544,15 +673,21 @@ export default function MembersAdmin() {
                   placeholder="contoh: nama@gmail.com"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+                  }`}
                 />
-                <p className="text-[10px] text-slate-500 mt-0.5">
+                <p className={`text-[10px] mt-0.5 ${isKitabTheme ? 'text-[#734822]' : 'text-slate-500'}`}>
                   Isi email ini agar member bisa langsung login tanpa tertolak.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
                   Nomor WhatsApp
                 </label>
                 <input
@@ -560,18 +695,28 @@ export default function MembersAdmin() {
                   placeholder="08123456789"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className={`block text-xs font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
                   Status Approval Akses
                 </label>
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-sky-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+                  }`}
                 >
                   <option value="approved">✅ Disetujui (Approved / Full VIP)</option>
                   <option value="pending">⏳ Menunggu Persetujuan (Pending)</option>
@@ -582,14 +727,22 @@ export default function MembersAdmin() {
                 <button
                   type="button"
                   onClick={() => setEditingMember(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition cursor-pointer"
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                    isKitabTheme
+                      ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition cursor-pointer"
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition cursor-pointer ${
+                    isKitabTheme
+                      ? 'bg-[#9e2a2b] hover:bg-[#852324]'
+                      : 'bg-sky-600 hover:bg-sky-500 shadow-sky-600/30'
+                  }`}
                 >
                   {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>

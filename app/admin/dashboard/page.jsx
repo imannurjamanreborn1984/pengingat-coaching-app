@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -209,7 +210,11 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme 
+        ? 'bg-parchment text-[#231409]' 
+        : 'bg-slate-950 text-slate-100'
+    }`}>
       <AppNavbar
         onToggleSidebar={() => setIsSidebarOpen(true)}
         currentUser={currentUser || { name: "Admin Utama", role: "super_admin" }}
@@ -224,29 +229,47 @@ export default function AdminDashboard() {
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-8 space-y-6">
         {/* Admin Quick Switch Tabs */}
-        <AdminHeaderTabs activeTab="dashboard" />
+        <AdminHeaderTabs 
+          activeTab="dashboard" 
+          isKitabTheme={isKitabTheme}
+          onToggleTheme={() => setIsKitabTheme(!isKitabTheme)}
+        />
 
         {/* Header */}
-        <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className={`border-b pb-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 ${
+          isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+        }`}>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">
+            <h1 className={`text-xl sm:text-2xl font-bold ${
+              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+            }`}>
               Dashboard Admin - Reminder & Broadcast NPT
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">Kelola penugasan harian coaching dan pesan pengingat peserta.</p>
+            <p className={`text-xs mt-1 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+              Kelola penugasan harian coaching dan pesan pengingat peserta.
+            </p>
           </div>
         </div>
 
         {/* Form Input / Edit */}
-        <form onSubmit={handleSubmit} className="space-y-6 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-            <h2 className="text-sm font-semibold text-sky-400">
+        <form onSubmit={handleSubmit} className={`space-y-6 p-6 rounded-3xl shadow-sm ${
+          isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border border-slate-800'
+        }`}>
+          <div className={`flex justify-between items-center border-b pb-3 ${
+            isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+          }`}>
+            <h2 className={`text-sm font-bold flex items-center gap-2 ${
+              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-sky-400'
+            }`}>
               {editingId ? "✏️ Edit Reminder NPT" : "➕ Buat Reminder NPT Baru"}
             </h2>
             {editingId && (
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="text-xs text-rose-400 hover:underline flex items-center gap-1"
+                className={`text-xs flex items-center gap-1 font-semibold cursor-pointer ${
+                  isKitabTheme ? 'text-[#9e2a2b] hover:underline' : 'text-rose-400 hover:underline'
+                }`}
               >
                 <X className="w-3.5 h-3.5" /> Batal Edit
               </button>
@@ -254,95 +277,151 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1 text-slate-300">Judul Modul / Hari Ke-</label>
+            <label className={`block text-xs font-semibold mb-1 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Judul Modul / Hari Ke-
+            </label>
             <input
               type="text"
               placeholder="Contoh: Refleksi Nur dan Nar Diri - Hari ke-1"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2.5 border border-slate-800 rounded-lg focus:ring-1 focus:ring-sky-500 outline-none text-xs text-white bg-slate-950"
+              className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+              }`}
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-              <FileText className="w-4 h-4 text-sky-400" /> Teks Pesan dari Group Chat WA
+            <label className={`block text-xs font-semibold mb-1 flex items-center gap-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              <FileText className={`w-4 h-4 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'}`} /> Teks Pesan dari Group Chat WA
             </label>
             <textarea
               rows={3}
               placeholder="Paste pesan / pengantar instruksi dari mentor di sini..."
               value={groupChatText}
               onChange={(e) => setGroupChatText(e.target.value)}
-              className="w-full p-2.5 border border-slate-800 rounded-lg focus:ring-1 focus:ring-sky-500 outline-none text-xs text-white bg-slate-950"
+              className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1 text-slate-300">Unggah Gambar Materi (Poster/Soal)</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} className="w-full text-xs text-slate-400" />
+            <label className={`block text-xs font-semibold mb-1 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Unggah Gambar Materi (Poster/Soal)
+            </label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleImageChange} 
+              className={`w-full text-xs ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`} 
+            />
             {preview && (
-              <div className="mt-3 relative w-48 h-48 border border-slate-800 rounded-lg overflow-hidden bg-slate-950">
+              <div className={`mt-3 relative w-48 h-48 border rounded-xl overflow-hidden ${
+                isKitabTheme ? 'bg-[#fdfbf6] border-[#decba4]' : 'bg-slate-950 border-slate-800'
+              }`}>
                 <img src={preview} alt="Preview" className="w-full h-full object-contain" />
               </div>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-              <Sparkles className="w-4 h-4 text-amber-400" /> Hasil Full OCR Otomatis (Seluruh Isi Teks Gambar)
+            <label className={`block text-xs font-semibold mb-1 flex items-center gap-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              <Sparkles className={`w-4 h-4 ${isKitabTheme ? 'text-[#b38b42]' : 'text-amber-400'}`} /> Hasil Full OCR Otomatis (Seluruh Isi Teks Gambar)
             </label>
             {isProcessingOcr ? (
-              <p className="text-xs text-amber-400 animate-pulse">Sedang melakukan Full OCR seluruh teks dari gambar...</p>
+              <p className={`text-xs animate-pulse font-semibold ${
+                isKitabTheme ? 'text-[#b38b42]' : 'text-amber-400'
+              }`}>
+                Sedang melakukan Full OCR seluruh teks dari gambar...
+              </p>
             ) : (
               <textarea
                 rows={6}
                 value={ocrText}
                 onChange={(e) => setOcrText(e.target.value)}
                 placeholder="Seluruh teks lengkap dari gambar materi akan diekstrak otomatis di sini (dapat Anda edit/sesuaikan kembali)..."
-                className="w-full p-2.5 border border-slate-800 rounded-lg text-xs focus:ring-1 focus:ring-sky-500 outline-none text-slate-200 bg-slate-950 font-mono leading-relaxed"
+                className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none font-mono leading-relaxed ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:ring-1 focus:ring-sky-500'
+                }`}
               />
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1 flex items-center gap-1.5 text-slate-300">
-              <LinkIcon className="w-4 h-4 text-emerald-400" /> Link Eksternal (Opsional)
+            <label className={`block text-xs font-semibold mb-1 flex items-center gap-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              <LinkIcon className={`w-4 h-4 ${isKitabTheme ? 'text-[#1b6b55]' : 'text-emerald-400'}`} /> Link Eksternal (Opsional)
             </label>
-            {/* Diubah type="text" agar tidak memicu validasi URL bawaan browser saat kosong */}
             <input
               type="text"
               placeholder="https://youtube.com/watch?v=... (Boleh dikosongkan)"
               value={externalLink}
               onChange={(e) => setExternalLink(e.target.value)}
-              className="w-full p-2.5 border border-slate-800 rounded-lg focus:ring-1 focus:ring-sky-500 outline-none text-xs text-white bg-slate-950"
+              className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:ring-1 focus:ring-sky-500'
+              }`}
             />
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition disabled:opacity-50"
+            className={`w-full py-3 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-md ${
+              isKitabTheme
+                ? 'bg-gradient-to-r from-[#9e2a2b] via-[#b38b42] to-[#8f632d] hover:brightness-110 shadow-amber-900/20'
+                : 'bg-sky-600 hover:bg-sky-500 shadow-sky-600/30'
+            }`}
           >
             <Send className="w-4 h-4" /> {isSubmitting ? "Memproses..." : editingId ? "Update Reminder NPT" : "Publish Reminder NPT Hari Ini"}
           </button>
         </form>
 
         {/* List Tugas yang Sudah Rilis */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 space-y-4">
-          <h3 className="font-semibold text-slate-200 text-sm border-b border-slate-800 pb-2">
+        <div className={`p-6 rounded-3xl space-y-4 shadow-sm ${
+          isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border border-slate-800'
+        }`}>
+          <h3 className={`font-bold text-sm border-b pb-3 ${
+            isKitabTheme ? 'font-kitab-title text-[#26150a] border-[#dfcfb0]' : 'text-slate-200 border-slate-800'
+          }`}>
             Daftar Reminder NPT yang Sudah Dipublikasikan ({tasks.length})
           </h3>
-          <div className="divide-y divide-slate-800">
+          <div className={`divide-y ${isKitabTheme ? 'divide-[#dfcfb0]' : 'divide-slate-800'}`}>
             {tasks.map((task, index) => (
-              <div key={task.id} className="py-3 flex items-center justify-between gap-4">
+              <div key={task.id} className="py-3.5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-md bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-center font-bold">
+                  <span className={`w-7 h-7 rounded-lg border text-xs font-bold font-mono flex items-center justify-center ${
+                    isKitabTheme
+                      ? 'bg-[#eee3cb] border-[#d8c3a1] text-[#634224]'
+                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                  }`}>
                     {index + 1}
                   </span>
                   <div>
-                    <p className="text-xs font-semibold text-sky-400">{task.title}</p>
-                    <p className="text-[10px] text-slate-500">Tanggal: {task.publish_date}</p>
+                    <p className={`text-xs font-bold ${
+                      isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-sky-400'
+                    }`}>{task.title}</p>
+                    <p className={`text-[10px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
+                      Tanggal: {task.publish_date}
+                    </p>
                   </div>
                 </div>
 
@@ -352,7 +431,11 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={() => handleMoveTask(index, "up")}
                     disabled={index === 0 || movingId !== null}
-                    className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition disabled:opacity-20 disabled:cursor-not-allowed"
+                    className={`p-1.5 rounded-lg transition cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
+                      isKitabTheme
+                        ? 'text-[#634224] hover:text-[#26150a] hover:bg-[#dfcdab]'
+                        : 'text-slate-400 hover:text-sky-400 hover:bg-slate-800'
+                    }`}
                     title={index === 0 ? "Sudah di posisi paling atas" : "Pindah ke Atas"}
                   >
                     <ArrowUp className="w-4 h-4" />
@@ -363,20 +446,28 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={() => handleMoveTask(index, "down")}
                     disabled={index === tasks.length - 1 || movingId !== null}
-                    className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition disabled:opacity-20 disabled:cursor-not-allowed"
+                    className={`p-1.5 rounded-lg transition cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
+                      isKitabTheme
+                        ? 'text-[#634224] hover:text-[#26150a] hover:bg-[#dfcdab]'
+                        : 'text-slate-400 hover:text-sky-400 hover:bg-slate-800'
+                    }`}
                     title={index === tasks.length - 1 ? "Sudah di posisi paling bawah" : "Pindah ke Bawah"}
                   >
                     <ArrowDown className="w-4 h-4" />
                   </button>
 
                   {/* Garis Pemisah */}
-                  <span className="w-px h-4 bg-slate-800 mx-1" />
+                  <span className={`w-px h-4 mx-1 ${isKitabTheme ? 'bg-[#dfcfb0]' : 'bg-slate-800'}`} />
 
                   {/* Tombol Edit */}
                   <button
                     type="button"
                     onClick={() => handleEditInit(task)}
-                    className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded transition"
+                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                      isKitabTheme
+                        ? 'bg-[#eee3cb] text-[#8f632d] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                        : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800'
+                    }`}
                     title="Edit Tugas"
                   >
                     <Edit3 className="w-4 h-4" />
@@ -386,7 +477,11 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => handleDeleteTask(task.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded transition"
+                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                      isKitabTheme
+                        ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#dfcdab]'
+                        : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                    }`}
                     title="Hapus Tugas"
                   >
                     <Trash2 className="w-4 h-4" />
