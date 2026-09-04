@@ -16,7 +16,8 @@ import {
   User, 
   X,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  FileText
 } from 'lucide-react';
 
 export const SUPER_ADMIN_EMAILS = [
