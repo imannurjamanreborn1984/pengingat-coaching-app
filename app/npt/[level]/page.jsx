@@ -27,6 +27,37 @@ import {
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 
+function formatYouTubeEmbedUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  const cleanUrl = url.trim();
+  if (!cleanUrl) return "";
+
+  // 1. YouTube Shorts: /shorts/VIDEO_ID
+  const shortsMatch = cleanUrl.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+  if (shortsMatch && shortsMatch[1]) {
+    return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+  }
+
+  // 2. YouTu.be short links: youtu.be/VIDEO_ID
+  const youtuMatch = cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (youtuMatch && youtuMatch[1]) {
+    return `https://www.youtube.com/embed/${youtuMatch[1]}`;
+  }
+
+  // 3. Standard watch?v=VIDEO_ID or m.youtube.com/watch?v=VIDEO_ID
+  const watchMatch = cleanUrl.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+  if (watchMatch && watchMatch[1]) {
+    return `https://www.youtube.com/embed/${watchMatch[1]}`;
+  }
+
+  // 4. If already an embed link with query params
+  if (cleanUrl.includes("/embed/")) {
+    return cleanUrl;
+  }
+
+  return cleanUrl;
+}
+
 function ExpandableContent({ content, isKitabTheme = true }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLong = content && (content.length > 250 || content.split("\n").length > 6);
@@ -475,23 +506,31 @@ export default function NPTLevelDetailPage() {
 
                     {mat.youtube_url && (
                       <div className="space-y-2">
-                        <span className={`text-xs font-bold flex items-center gap-1.5 ${
-                          isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-                        }`}>
-                          <Film className="w-4 h-4 text-red-500" />
-                          <span>Video Penjelasan Resmi:</span>
-                        </span>
-                        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                            isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                          }`}>
+                            <Film className="w-4 h-4 text-red-500" />
+                            <span>Video Penjelasan Resmi:</span>
+                          </span>
+                          <a
+                            href={mat.youtube_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
+                              isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
+                            }`}
+                          >
+                            <span>Buka di YouTube</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
                           <iframe
-                            src={
-                              mat.youtube_url.includes("embed/")
-                                ? mat.youtube_url
-                                : mat.youtube_url.includes("watch?v=")
-                                ? mat.youtube_url.replace("watch?v=", "embed/")
-                                : mat.youtube_url
-                            }
+                            src={formatYouTubeEmbedUrl(mat.youtube_url)}
                             title={mat.title}
-                            className="w-full h-full"
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
                           />
                         </div>
