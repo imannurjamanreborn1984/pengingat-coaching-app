@@ -21,9 +21,59 @@ import {
   UserCheck,
   X,
   ShieldCheck,
-  ZoomIn
+  ZoomIn,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
+
+function ExpandableContent({ content }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLong = content && (content.length > 250 || content.split("\n").length > 6);
+
+  if (!isLong) {
+    return (
+      <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-slate-800/80 font-sans">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative bg-slate-950/60 rounded-2xl border border-slate-800/80 overflow-hidden transition-all duration-300">
+      <div
+        className={`text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line p-4 sm:p-5 transition-all duration-300 font-sans ${
+          !isExpanded ? "max-h-44 overflow-hidden relative" : ""
+        }`}
+      >
+        {content}
+        {!isExpanded && (
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none" />
+        )}
+      </div>
+
+      <div className="p-2 border-t border-slate-800/50 bg-slate-950/95 flex justify-center">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 py-1.5 px-4 rounded-xl hover:bg-amber-500/10 transition cursor-pointer"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              <span>Tampilkan Lebih Sedikit</span>
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4" />
+              <span>Tampilkan Lebih Banyak (Baca Selengkapnya)...</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function NPTLevelDetailPage() {
   const params = useParams();
@@ -267,11 +317,7 @@ export default function NPTLevelDetailPage() {
                   {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
                 </div>
 
-                {mat.content && (
-                  <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
-                    {mat.content}
-                  </div>
-                )}
+                {mat.content && <ExpandableContent content={mat.content} />}
 
                 {/* MEMBER LOCK VS FULL ACCESS */}
                 {isApproved ? (
