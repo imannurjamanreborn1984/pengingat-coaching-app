@@ -27,36 +27,56 @@ import {
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 
-function ExpandableContent({ content }) {
+function ExpandableContent({ content, isKitabTheme = true }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLong = content && (content.length > 250 || content.split("\n").length > 6);
 
   if (!isLong) {
     return (
-      <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-slate-800/80 font-sans">
+      <div className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 sm:p-5 rounded-2xl border font-sans ${
+        isKitabTheme
+          ? 'bg-[#fbf7ee] text-[#2c1810] border-[#dfcfb0]'
+          : 'bg-slate-950/60 text-slate-300 border-slate-800/80'
+      }`}>
         {content}
       </div>
     );
   }
 
   return (
-    <div className="relative bg-slate-950/60 rounded-2xl border border-slate-800/80 overflow-hidden transition-all duration-300">
+    <div className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${
+      isKitabTheme
+        ? 'bg-[#fbf7ee] border-[#dfcfb0]'
+        : 'bg-slate-950/60 border-slate-800/80'
+    }`}>
       <div
-        className={`text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line p-4 sm:p-5 transition-all duration-300 font-sans ${
-          !isExpanded ? "max-h-44 overflow-hidden relative" : ""
-        }`}
+        className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 sm:p-5 transition-all duration-300 font-sans ${
+          isKitabTheme ? 'text-[#2c1810]' : 'text-slate-300'
+        } ${!isExpanded ? "max-h-44 overflow-hidden relative" : ""}`}
       >
         {content}
         {!isExpanded && (
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none" />
+          <div className={`absolute inset-x-0 bottom-0 h-24 pointer-events-none ${
+            isKitabTheme
+              ? 'bg-gradient-to-t from-[#fbf7ee] via-[#fbf7ee]/90 to-transparent'
+              : 'bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent'
+          }`} />
         )}
       </div>
 
-      <div className="p-2 border-t border-slate-800/50 bg-slate-950/95 flex justify-center">
+      <div className={`p-2 border-t flex justify-center ${
+        isKitabTheme
+          ? 'border-[#dfcfb0] bg-[#f5ebd7]'
+          : 'border-slate-800/50 bg-slate-950/95'
+      }`}>
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 py-1.5 px-4 rounded-xl hover:bg-amber-500/10 transition cursor-pointer"
+          className={`text-xs font-bold flex items-center gap-1.5 py-1.5 px-4 rounded-xl transition cursor-pointer ${
+            isKitabTheme
+              ? 'text-[#9e2a2b] hover:bg-[#ebdcc4]'
+              : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+          }`}
         >
           {isExpanded ? (
             <>
@@ -84,6 +104,7 @@ export default function NPTLevelDetailPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
 
   // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -212,20 +233,64 @@ export default function NPTLevelDetailPage() {
   const getFileBadge = (type) => {
     switch (type) {
       case "pdf":
-        return <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">📄 PDF Dokumen</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+            isKitabTheme
+              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+              : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+          }`}>
+            📄 PDF Dokumen
+          </span>
+        );
       case "ppt":
-        return <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">📊 Slide (PPT)</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+            isKitabTheme
+              ? 'bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]'
+              : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+          }`}>
+            📊 Slide (PPT)
+          </span>
+        );
       case "docx":
-        return <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold">📝 Dokumen Word</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+            isKitabTheme
+              ? 'bg-[#e0d6c3] text-[#2c3e50] border-[#c5b8a0]'
+              : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+          }`}>
+            📝 Dokumen Word
+          </span>
+        );
       case "gdrive":
-        return <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">☁️ Google Drive</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+            isKitabTheme
+              ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+          }`}>
+            ☁️ Google Drive
+          </span>
+        );
       default:
-        return <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">📎 Lampiran</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+            isKitabTheme
+              ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]'
+              : 'bg-slate-800 text-slate-300 border-slate-700'
+          }`}>
+            📎 Lampiran
+          </span>
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme 
+        ? 'bg-parchment text-[#231409]' 
+        : 'bg-slate-950 text-slate-100 selection:bg-rose-600 selection:text-white'
+    }`}>
       <AppNavbar
         onToggleSidebar={() => setIsSidebarOpen(true)}
         currentUser={currentUser}
@@ -241,58 +306,107 @@ export default function NPTLevelDetailPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
         
         {/* Navigation Breadcrumb & Member Status Badge */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/npt"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rose-400 transition"
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold transition ${
+              isKitabTheme 
+                ? 'text-[#634224] hover:text-[#9e2a2b]' 
+                : 'text-slate-400 hover:text-rose-400'
+            }`}
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Kembali ke Roadmap NPT (1 – 6)</span>
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setIsKitabTheme(!isKitabTheme)}
+              className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+              }`}
+              title="Ganti Mode Tampilan (Kitab Klasik / Mode Gelap)"
+            >
+              <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+            </button>
+
             {isApproved ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Member VIP Terbuka
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 border ${
+                isKitabTheme
+                  ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              }`}>
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Member VIP Terbuka
               </span>
             ) : (
               <button
                 onClick={() => setIsAuthModalOpen(true)}
-                className="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold hover:bg-rose-500/20 transition flex items-center gap-1 cursor-pointer"
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition flex items-center gap-1 cursor-pointer border ${
+                  isKitabTheme
+                    ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#dfcdab]'
+                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
+                }`}
               >
-                <Lock className="w-3 h-3 text-rose-400" /> Buka Akses Member
+                <Lock className="w-3 h-3" /> Buka Akses Member
               </button>
             )}
-            <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-black">
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+              isKitabTheme
+                ? 'bg-[#3a2211] text-[#fbf6ec] border-[#8f632d]'
+                : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+            }`}>
               LEVEL {levelNum}
             </span>
           </div>
         </div>
 
         {/* Level Header Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-2 shadow-xl">
-          <h1 className="text-xl sm:text-3xl font-black text-white">
+        <div className={`p-6 sm:p-8 rounded-3xl space-y-2 shadow-sm ${
+          isKitabTheme
+            ? 'card-kitab-frame'
+            : 'bg-slate-900 border border-slate-800 shadow-xl'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📜</span>
+            <span className={`text-xs font-bold uppercase tracking-wider ${
+              isKitabTheme ? 'text-[#9e2a2b]' : 'text-rose-400'
+            }`}>
+              Kurikulum Modul Resmi NPT
+            </span>
+          </div>
+          <h1 className={`text-xl sm:text-3xl font-black ${
+            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+          }`}>
             Materi & Modul Pembelajaran NPT Level {levelNum}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Akses materi bacaan, file presentasi PPT, modul PDF, dokumen Word, serta video penjelasan resmi.
+          <p className={`text-xs sm:text-sm ${
+            isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+          }`}>
+            Akses materi bacaan, file presentasi PPT, modul PDF, dokumen Word, serta rekaman video penjelasan resmi.
           </p>
         </div>
 
         {/* Material Items */}
         {isLoading ? (
-          <div className="py-16 text-center text-xs text-slate-400">
+          <div className={`py-16 text-center text-xs ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}`}>
             Memuat materi pembelajaran...
           </div>
         ) : materials.length === 0 ? (
-          <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+          <div className={`p-8 rounded-3xl text-center space-y-3 ${
+            isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900/60 border border-slate-800'
+          }`}>
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto border ${
+              isKitabTheme ? 'bg-[#ebdcc4] text-[#8f632d] border-[#cbb38b]' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+            }`}>
               <Clock className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="text-base font-bold text-slate-200">
+            <h3 className={`text-base font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-200'}`}>
               Materi NPT Level {levelNum} Segera Diupload
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            <p className={`text-xs max-w-md mx-auto leading-relaxed ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
               Materi dan kurikulum untuk jenjang ini sedang dalam proses finalisasi oleh Master Trainer. Silakan pantau berkala setelah diunggah oleh admin.
             </p>
           </div>
@@ -301,15 +415,25 @@ export default function NPTLevelDetailPage() {
             {materials.map((mat, idx) => (
               <div
                 key={mat.id || idx}
-                className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition shadow-xl space-y-4 text-left"
+                className={`p-6 rounded-3xl transition space-y-4 text-left ${
+                  isKitabTheme
+                    ? 'card-kitab-frame shadow-md'
+                    : 'bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-xl'
+                }`}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div className={`flex flex-wrap items-center justify-between gap-2 border-b pb-3 ${
+                  isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+                }`}>
                   <div>
-                    <h2 className="text-base font-extrabold text-white">
+                    <h2 className={`text-base font-extrabold ${
+                      isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                    }`}>
                       {mat.title}
                     </h2>
                     {mat.subtitle && (
-                      <p className="text-xs text-amber-400 font-medium mt-0.5">
+                      <p className={`text-xs font-medium mt-0.5 ${
+                        isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'
+                      }`}>
                         {mat.subtitle}
                       </p>
                     )}
@@ -317,7 +441,7 @@ export default function NPTLevelDetailPage() {
                   {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
                 </div>
 
-                {mat.content && <ExpandableContent content={mat.content} />}
+                {mat.content && <ExpandableContent content={mat.content} isKitabTheme={isKitabTheme} />}
 
                 {/* MEMBER LOCK VS FULL ACCESS */}
                 {isApproved ? (
@@ -327,7 +451,9 @@ export default function NPTLevelDetailPage() {
                       <div className="space-y-2">
                         <div
                           onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                          className="relative w-full max-h-96 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center cursor-zoom-in group shadow-lg"
+                          className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
+                            isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
+                          }`}
                           title="Klik untuk Perbesar Gambar (Zoom In / Out)"
                         >
                           <img
@@ -335,8 +461,12 @@ export default function NPTLevelDetailPage() {
                             alt={mat.title}
                             className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
                           />
-                          <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-white text-[11px] font-bold flex items-center gap-1.5 opacity-90 group-hover:opacity-100 shadow-xl transition-all">
-                            <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                          <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
+                            isKitabTheme
+                              ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
+                              : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
+                          }`}>
+                            <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
                             <span>Perbesar / Zoom</span>
                           </div>
                         </div>
@@ -345,7 +475,9 @@ export default function NPTLevelDetailPage() {
 
                     {mat.youtube_url && (
                       <div className="space-y-2">
-                        <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                          isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                        }`}>
                           <Film className="w-4 h-4 text-red-500" />
                           <span>Video Penjelasan Resmi:</span>
                         </span>
@@ -372,7 +504,11 @@ export default function NPTLevelDetailPage() {
                           href={mat.file_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                          className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
+                            isKitabTheme
+                              ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
+                              : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
+                          }`}
                         >
                           <Download className="w-4 h-4" />
                           <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
@@ -383,16 +519,24 @@ export default function NPTLevelDetailPage() {
                   </div>
                 ) : (
                   /* NON-MEMBER / GUEST: PROTECTED LOCK CARD */
-                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isKitabTheme
+                      ? 'bg-[#f5ebd7] border-[#d8c3a1]'
+                      : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
+                  }`}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20 shrink-0">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                        isKitabTheme
+                          ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      }`}>
                         <Lock className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-100">
+                        <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
                           Lampiran Dokumen & Video Terkunci
                         </h4>
-                        <p className="text-[11px] text-slate-400">
+                        <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
                           Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong> dan memutar video.
                         </p>
                       </div>
@@ -400,7 +544,11 @@ export default function NPTLevelDetailPage() {
 
                     <button
                       onClick={() => setIsAuthModalOpen(true)}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition shrink-0 cursor-pointer"
+                      className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
+                        isKitabTheme
+                          ? 'bg-[#9e2a2b] hover:bg-[#852324]'
+                          : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
+                      }`}
                     >
                       🔓 Masuk / Buka Akses
                     </button>

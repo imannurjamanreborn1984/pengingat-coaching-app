@@ -97,6 +97,7 @@ const NPT_LEVELS = [
 export default function NPTLevelsContainer() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
 
   useEffect(() => {
     try {
@@ -108,7 +109,11 @@ export default function NPTLevelsContainer() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme 
+        ? 'bg-parchment text-[#231409]' 
+        : 'bg-slate-950 text-slate-100 selection:bg-rose-600 selection:text-white'
+    }`}>
       {/* Top Navbar & Sidebar */}
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(true)}
@@ -123,20 +128,54 @@ export default function NPTLevelsContainer() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
         
-        {/* Header Hero */}
-        <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-950 border border-rose-500/30 text-center space-y-3 relative overflow-hidden shadow-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Roadmap Pendidikan NPT</span>
+        {/* Top Switcher Bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📜</span>
+            <span className={`text-xs font-bold ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+              Roadmap Resmi Pendidikan Karakter & Spiritual
+            </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-            Neuro Programming Training <span className="text-rose-500">(NPT)</span>
+          <button
+            onClick={() => setIsKitabTheme(!isKitabTheme)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+              isKitabTheme
+                ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+            title="Ganti Mode Tampilan"
+          >
+            <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+          </button>
+        </div>
+
+        {/* Header Hero */}
+        <section className={`p-6 sm:p-8 rounded-3xl text-center space-y-3 relative overflow-hidden shadow-md ${
+          isKitabTheme
+            ? 'card-kitab-frame'
+            : 'bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-950 border border-rose-500/30 shadow-2xl'
+        }`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+            isKitabTheme
+              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+              : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+          }`}>
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Kurikulum Berjenjang NPT</span>
+          </div>
+
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${
+            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+          }`}>
+            Neuro Programming Training <span className={isKitabTheme ? 'text-[#9e2a2b]' : 'text-rose-500'}>(NPT)</span>
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+          <p className={`text-xs sm:text-sm max-w-xl mx-auto leading-relaxed ${
+            isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+          }`}>
             Kurikulum berjenjang dari <strong>Level 1 hingga Level 6</strong> serta level lanjutan mendatang untuk transformasi kesadaran diri, pembersihan emosi, dan kedalaman spiritual.
           </p>
         </section>
@@ -150,7 +189,11 @@ export default function NPTLevelsContainer() {
               <div
                 key={lvl.level}
                 className={`p-5 sm:p-6 rounded-3xl transition-all ${
-                  isActive
+                  isKitabTheme
+                    ? isActive
+                      ? 'card-kitab-frame border-2 border-[#b38b42] shadow-lg'
+                      : 'bg-[#fbf7ee] border border-[#dfcfb0] hover:border-[#cbb38b]'
+                    : isActive
                     ? 'bg-slate-900 border-2 border-rose-500/50 shadow-xl shadow-rose-950/40'
                     : 'bg-slate-900/60 border border-slate-800/80 hover:border-slate-700'
                 }`}
@@ -159,7 +202,11 @@ export default function NPTLevelsContainer() {
                   <div className="flex items-start sm:items-center gap-3.5">
                     <div
                       className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-md ${
-                        isActive
+                        isKitabTheme
+                          ? isActive
+                            ? 'bg-gradient-to-tr from-[#9e2a2b] via-[#b38b42] to-[#8f632d] text-white shadow-amber-900/30'
+                            : 'bg-[#ebdcc4] text-[#543516] border border-[#d8c3a1]'
+                          : isActive
                           ? 'bg-gradient-to-tr from-rose-600 to-amber-600 text-white shadow-rose-600/30'
                           : 'bg-slate-800 text-slate-400'
                       }`}
@@ -169,25 +216,41 @@ export default function NPTLevelsContainer() {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-base text-white">{lvl.title}</h3>
+                        <h3 className={`font-bold text-base ${
+                          isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                        }`}>
+                          {lvl.title}
+                        </h3>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
                             isActive
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse'
+                              ? isKitabTheme
+                                ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse'
+                              : isKitabTheme
+                              ? 'bg-[#eee3cb] text-[#634224] border-[#d8c3a1]'
                               : 'bg-slate-800 text-slate-400'
                           }`}
                         >
                           {lvl.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-amber-400/90 font-medium">{lvl.subtitle}</p>
+                      <p className={`text-xs font-medium ${
+                        isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400/90'
+                      }`}>
+                        {lvl.subtitle}
+                      </p>
                     </div>
                   </div>
 
                   {!isActive && (
                     <Link
                       href={`/npt/${lvl.level}`}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-rose-400 border border-rose-500/20 transition flex items-center gap-1.5 self-end sm:self-auto cursor-pointer"
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 self-end sm:self-auto cursor-pointer ${
+                        isKitabTheme
+                          ? 'bg-[#eee3cb] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#ebdcc4]'
+                          : 'bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-500/20'
+                      }`}
                     >
                       <span>Buka Modul Level {lvl.level}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -195,26 +258,44 @@ export default function NPTLevelsContainer() {
                   )}
                 </div>
 
-                <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+                <p className={`text-xs mt-3 leading-relaxed ${
+                  isKitabTheme ? 'text-[#543516]' : 'text-slate-400'
+                }`}>
                   {lvl.desc}
                 </p>
 
-                {/* Sub-modul Level 6 Aktif */}
+                {/* Sub-modul Level Aktif */}
                 {isActive && lvl.modules && (
-                  <div className="mt-4 pt-4 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className={`mt-4 pt-4 border-t grid grid-cols-1 sm:grid-cols-2 gap-3 ${
+                    isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+                  }`}>
                     {lvl.modules.map((mod, idx) => (
                       <Link
                         key={idx}
                         href={mod.path}
-                        className="p-3.5 rounded-2xl bg-slate-950/80 hover:bg-slate-950 border border-rose-500/30 hover:border-rose-500/60 transition group flex items-center justify-between gap-2"
+                        className={`p-3.5 rounded-2xl border transition group flex items-center justify-between gap-2 ${
+                          isKitabTheme
+                            ? 'bg-[#fdfaf3] hover:bg-[#f5edd7] border-[#cbb38b] hover:border-[#b38b42]'
+                            : 'bg-slate-950/80 hover:bg-slate-950 border border-rose-500/30 hover:border-rose-500/60'
+                        }`}
                       >
                         <div className="space-y-0.5">
-                          <h4 className="text-xs font-bold text-slate-100 group-hover:text-rose-400 transition-colors">
+                          <h4 className={`text-xs font-bold transition-colors ${
+                            isKitabTheme
+                              ? 'text-[#26150a] group-hover:text-[#9e2a2b]'
+                              : 'text-slate-100 group-hover:text-rose-400'
+                          }`}>
                             {mod.name}
                           </h4>
-                          <p className="text-[11px] text-slate-400">{mod.desc}</p>
+                          <p className={`text-[11px] ${
+                            isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+                          }`}>
+                            {mod.desc}
+                          </p>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-rose-500 shrink-0 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className={`w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform ${
+                          isKitabTheme ? 'text-[#9e2a2b]' : 'text-rose-500'
+                        }`} />
                       </Link>
                     ))}
                   </div>

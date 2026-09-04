@@ -101,6 +101,7 @@ export default function HakekatCintaContainer() {
   // UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('video'); // 'video' | 'draft_buku'
+  const [isKitabTheme, setIsKitabTheme] = useState(true);
 
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
@@ -463,7 +464,9 @@ export default function HakekatCintaContainer() {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isKitabTheme ? "bg-parchment text-[#231409]" : "bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100"
+    }`}>
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -481,23 +484,23 @@ export default function HakekatCintaContainer() {
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-20 md:pb-8 space-y-6">
         {isAuthLoading ? (
           <div className="py-24 text-center space-y-3">
-            <RefreshCw className="w-8 h-8 text-rose-500 animate-spin mx-auto" />
-            <p className="text-xs text-slate-400">Memeriksa hak akses anggota...</p>
+            <RefreshCw className="w-8 h-8 text-[#9e2a2b] animate-spin mx-auto" />
+            <p className="text-xs text-[#734822]">Memeriksa hak akses anggota...</p>
           </div>
         ) : !currentUser ? (
           /* AUTH GATE / GEMBOK LOGIN GMAIL & AUTO ADMIN */
-          <div className="max-w-md mx-auto my-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-bl from-rose-500/10 via-amber-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner">
+          <div className={`max-w-md mx-auto my-10 rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-5 relative overflow-hidden ${
+            isKitabTheme ? "card-kitab-frame" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+          }`}>
+            <div className="w-14 h-14 rounded-2xl bg-[#eee2cb] text-[#8a5d28] border border-[#cbb38b] flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-[#26150a] tracking-tight font-kitab-title">
                 Akses Eksklusif Rekaman Live NPT
               </h2>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-xs text-[#734822] leading-relaxed">
                 Kajian siaran ulang Hakikat Cinta & Olah Nafas hanya diperuntukkan bagi peserta dan admin NPT terdaftar.
               </p>
             </div>
@@ -505,18 +508,18 @@ export default function HakekatCintaContainer() {
             {/* Tampilan Jika Menunggu Persetujuan Admin */}
             {approvalStatus === 'pending' ? (
               <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3 animate-in fade-in">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center mx-auto">
                   <Clock className="w-6 h-6 animate-pulse" />
                 </div>
-                <h3 className="text-sm font-bold text-amber-500">
+                <h3 className="text-sm font-bold text-amber-700">
                   Permintaan Akses Sedang Ditinjau
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+                <p className="text-xs text-[#734822] leading-relaxed max-w-xs mx-auto">
                   Email Anda <strong>{inputEmail}</strong> sudah terkirim ke <em>Ruang Persetujuan Admin NPT</em>. Silakan hubungi Admin atau coba masuk kembali setelah disetujui.
                 </p>
                 <button
                   onClick={() => setApprovalStatus(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                  className="px-4 py-2 rounded-xl bg-[#3a2211] text-[#fbf6ec] text-xs font-semibold transition cursor-pointer"
                 >
                   Coba Email Lain
                 </button>
@@ -525,7 +528,7 @@ export default function HakekatCintaContainer() {
               /* Form Input Email Langsung */
               <form onSubmit={handleEmailLogin} className="space-y-3 text-left">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#26150a] mb-1">
                     Nama Lengkap Anda:
                   </label>
                   <input
@@ -535,17 +538,17 @@ export default function HakekatCintaContainer() {
                     placeholder="Masukkan nama lengkap Anda..."
                     value={inputName}
                     onChange={(e) => setInputName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#cbb38b] bg-[#fdfaf3] text-xs text-[#26150a] focus:outline-none focus:ring-2 focus:ring-[#b38b42]"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#26150a] mb-1">
                     Alamat Email Gmail:
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Mail className="w-4 h-4 text-[#82613d] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="email"
                       name="npt_user_email"
@@ -553,17 +556,17 @@ export default function HakekatCintaContainer() {
                       placeholder="contoh: nama@gmail.com"
                       value={inputEmail}
                       onChange={(e) => setInputEmail(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#cbb38b] bg-[#fdfaf3] text-xs text-[#26150a] focus:outline-none focus:ring-2 focus:ring-[#b38b42]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#26150a] mb-1">
                     Nomor WhatsApp:
                   </label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-[#82613d] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       name="npt_user_phone"
@@ -571,10 +574,10 @@ export default function HakekatCintaContainer() {
                       placeholder="contoh: 08123456789"
                       value={inputPhone}
                       onChange={(e) => setInputPhone(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#cbb38b] bg-[#fdfaf3] text-xs text-[#26150a] focus:outline-none focus:ring-2 focus:ring-[#b38b42]"
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-[#734822] mt-1 font-semibold">
                     *Bisa masukkan Email atau Nomor WA terdaftar untuk masuk.
                   </p>
                 </div>
@@ -582,7 +585,7 @@ export default function HakekatCintaContainer() {
                 <button
                   type="submit"
                   disabled={approvalStatus === 'checking'}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                  className="w-full py-3 rounded-xl bg-[#9e2a2b] hover:bg-[#852324] active:scale-95 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
                 >
                   <UserCheck className="w-4 h-4" />
                   <span>{approvalStatus === 'checking' ? 'Memeriksa Izin...' : 'Masuk & Buka Portal Rekaman'}</span>
@@ -590,7 +593,7 @@ export default function HakekatCintaContainer() {
               </form>
             )}
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
+            <div className="pt-3 border-t border-[#dfcfb0] text-[11px] text-[#734822]">
               💡 <em>Email admin resmi otomatis mendapatkan hak Super Admin.</em>
             </div>
           </div>
@@ -598,7 +601,9 @@ export default function HakekatCintaContainer() {
           /* KONTEN VIDEO AKTIF SETELAH LOGIN */
           <>
             {/* Category Playlist Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${
+              isKitabTheme ? "border-[#d4b886]" : "border-slate-200 dark:border-slate-800"
+            }`}>
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {Object.entries(INFO_KATEGORI).map(([key, info]) => (
                   <button
@@ -606,7 +611,11 @@ export default function HakekatCintaContainer() {
                     onClick={() => setKategoriAktif(key)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
                       kategoriAktif === key
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md shadow-slate-900/20'
+                        ? isKitabTheme
+                          ? 'bg-[#3a2211] text-[#fbf6ec] border border-[#8f632d] shadow-md'
+                          : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                        : isKitabTheme
+                        ? 'bg-[#eee3cb] text-[#543516] border border-[#d8c3a1] hover:bg-[#dfcdab]'
                         : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
@@ -617,16 +626,31 @@ export default function HakekatCintaContainer() {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Theme Switcher Button */}
+                <button
+                  onClick={() => setIsKitabTheme(!isKitabTheme)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                  }`}
+                  title="Ganti Mode Tampilan (Kitab Klasik Perkamen / Mode Gelap)"
+                >
+                  <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+                </button>
+
                 <button
                   onClick={() => setActiveTab(activeTab === 'video' ? 'draft_buku' : 'video')}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                     activeTab === 'draft_buku'
-                      ? 'bg-rose-600 text-white border-rose-600'
+                      ? 'bg-[#9e2a2b] text-white border-[#9e2a2b] shadow-xs'
+                      : isKitabTheme
+                      ? 'bg-[#fdfaf3] border-[#cbb38b] text-[#3a2211] hover:bg-[#ebdcc4]'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <FileText className="w-4 h-4" />
-                  <span>Draf Buku AI ({totalDrafBab} Bab)</span>
+                  <span>Draf Kitab AI ({totalDrafBab} Bab)</span>
                 </button>
               </div>
             </div>
@@ -649,13 +673,23 @@ export default function HakekatCintaContainer() {
                       </div>
 
                       {/* Video Metadata & AI Action Card */}
-                      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm space-y-4">
+                      <div className={`rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 ${
+                        isKitabTheme 
+                          ? 'card-kitab-frame' 
+                          : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
+                      }`}>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${INFO_KATEGORI[kategoriAktif].badge}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              isKitabTheme
+                                ? 'bg-[#ebdcc4] text-[#4a2e15] border-[#cbb38b]'
+                                : INFO_KATEGORI[kategoriAktif].badge
+                            }`}>
                               {INFO_KATEGORI[kategoriAktif].nama}
                             </span>
-                            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mt-1.5 leading-snug">
+                            <h2 className={`text-base sm:text-lg font-bold mt-1.5 leading-snug ${
+                              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-900 dark:text-slate-100'
+                            }`}>
                               {videoAktif.judul}
                             </h2>
                           </div>
@@ -664,38 +698,58 @@ export default function HakekatCintaContainer() {
                           <button
                             onClick={handleProsesBabOtomatis}
                             disabled={sedangMerangkum}
-                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:opacity-90 active:scale-95 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                            className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
+                              isKitabTheme
+                                ? 'bg-gradient-to-r from-[#9e2a2b] via-[#b38b42] to-[#8f632d] hover:brightness-110 shadow-amber-900/30'
+                                : 'bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:opacity-90 shadow-rose-600/30'
+                            }`}
                           >
                             <Sparkles className={`w-4 h-4 ${sedangMerangkum ? 'animate-spin' : ''}`} />
-                            <span>{sedangMerangkum ? 'AI Sedang Menyusun...' : 'Rangkum Jadi Bab Buku AI'}</span>
+                            <span>{sedangMerangkum ? 'AI Sedang Menyusun...' : 'Rangkum Jadi Bab Kitab AI'}</span>
                           </button>
                         </div>
 
                         {/* Jika bab ini sudah pernah dirangkum */}
                         {koleksiBuku[videoAktif.id_video] && (
-                          <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-500/30 space-y-2">
+                          <div className={`p-4 rounded-2xl border space-y-2 ${
+                            isKitabTheme
+                              ? 'bg-[#f5ebd7] border-[#d8c3a1]'
+                              : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500/30'
+                          }`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                <span>Bab Buku Tersimpan (Disusun oleh AI):</span>
+                              <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                                isKitabTheme ? 'text-[#3a2211]' : 'text-amber-900 dark:text-amber-300'
+                              }`}>
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <span>Bab Kitab Tersimpan (Disarikan AI):</span>
                               </span>
                               <button
                                 onClick={() => setActiveTab('draft_buku')}
-                                className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                                className={`text-[11px] font-bold hover:underline cursor-pointer ${
+                                  isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-700 dark:text-amber-400'
+                                }`}
                               >
-                                Buka Draft Buku →
+                                Buka Naskah Kitab →
                               </button>
                             </div>
-                            <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed italic">
+                            <p className={`text-xs line-clamp-3 leading-relaxed italic ${
+                              isKitabTheme ? 'text-[#543516] font-serif' : 'text-slate-700 dark:text-slate-300'
+                            }`}>
                               "{koleksiBuku[videoAktif.id_video].isi.slice(0, 220)}..."
                             </p>
                           </div>
                         )}
 
                         {videoAktif.deskripsi && (
-                          <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Deskripsi Rekaman:</span>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed max-h-36 overflow-y-auto">
+                          <div className={`space-y-1 pt-2 border-t ${
+                            isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-100 dark:border-slate-800'
+                          }`}>
+                            <span className={`text-xs font-bold ${
+                              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-700 dark:text-slate-300'
+                            }`}>Deskripsi Rekaman:</span>
+                            <p className={`text-xs whitespace-pre-line leading-relaxed max-h-36 overflow-y-auto ${
+                              isKitabTheme ? 'text-[#634224]' : 'text-slate-600 dark:text-slate-400'
+                            }`}>
                               {videoAktif.deskripsi}
                             </p>
                           </div>
@@ -703,14 +757,18 @@ export default function HakekatCintaContainer() {
                       </div>
                     </div>
                   ) : loading ? (
-                    <div className="aspect-video w-full rounded-3xl bg-slate-900 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                      <RefreshCw className="w-8 h-8 text-rose-500 animate-spin" />
-                      <p className="text-xs text-slate-400">Memuat video siaran ulang...</p>
+                    <div className={`aspect-video w-full rounded-3xl flex flex-col items-center justify-center text-center p-8 space-y-3 ${
+                      isKitabTheme ? 'bg-[#f4ebd5] border border-[#d4b886]' : 'bg-slate-900'
+                    }`}>
+                      <RefreshCw className="w-8 h-8 text-amber-600 animate-spin" />
+                      <p className={`text-xs ${isKitabTheme ? 'text-[#543516]' : 'text-slate-400'}`}>Memuat video siaran ulang...</p>
                     </div>
                   ) : (
-                    <div className="aspect-video w-full rounded-3xl bg-slate-900 flex flex-col items-center justify-center text-center p-8">
-                      <Film className="w-12 h-12 text-slate-700 mb-2" />
-                      <p className="text-sm font-bold text-slate-400">Pilih video dari playlist di samping</p>
+                    <div className={`aspect-video w-full rounded-3xl flex flex-col items-center justify-center text-center p-8 ${
+                      isKitabTheme ? 'bg-[#f4ebd5] border border-[#d4b886]' : 'bg-slate-900'
+                    }`}>
+                      <Film className={`w-12 h-12 mb-2 ${isKitabTheme ? 'text-[#b38b42]' : 'text-slate-700'}`} />
+                      <p className={`text-sm font-bold ${isKitabTheme ? 'text-[#3a2211]' : 'text-slate-400'}`}>Pilih video dari daftar naskah kajian di samping</p>
                     </div>
                   )}
                 </div>
@@ -718,30 +776,46 @@ export default function HakekatCintaContainer() {
                 {/* Right 1 Col: Video Playlist List */}
                 <div className="space-y-3">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${
+                      isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
+                    }`} />
                     <input
                       type="text"
-                      placeholder="Cari judul rekaman live..."
+                      placeholder="Cari rekaman live..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs focus:outline-none ${
+                        isKitabTheme
+                          ? 'bg-[#fdfaf3] border border-[#cbb38b] text-[#26150a] focus:ring-1 focus:ring-[#b38b42] placeholder:text-[#8f7556]'
+                          : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-rose-500'
+                      }`}
                     />
                   </div>
 
-                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm space-y-2 max-h-[600px] overflow-y-auto">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      <span>Daftar Video ({filteredVideos.length})</span>
+                  <div className={`rounded-3xl p-4 shadow-sm space-y-2 max-h-[600px] overflow-y-auto ${
+                    isKitabTheme
+                      ? 'card-kitab-frame'
+                      : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
+                  }`}>
+                    <div className={`flex items-center justify-between pb-2 border-b text-xs font-semibold ${
+                      isKitabTheme
+                        ? 'border-[#dfcfb0] text-[#543516]'
+                        : 'border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400'
+                    }`}>
+                      <span>Daftar Rekaman ({filteredVideos.length})</span>
                       <span>{INFO_KATEGORI[kategoriAktif].nama}</span>
                     </div>
 
                     {loading ? (
-                      <div className="py-12 text-center text-xs text-slate-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-rose-500" />
-                        <span>Menyinkronkan playlist...</span>
+                      <div className="py-12 text-center text-xs text-amber-700">
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-600" />
+                        <span>Menyinkronkan daftar kajian...</span>
                       </div>
                     ) : filteredVideos.length === 0 ? (
-                      <div className="py-8 text-center text-xs text-slate-400">
-                        Tidak ada video ditemukan.
+                      <div className={`py-8 text-center text-xs ${
+                        isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
+                      }`}>
+                        Tidak ada rekaman ditemukan.
                       </div>
                     ) : (
                       filteredVideos.map((vid, idx) => {
@@ -754,24 +828,38 @@ export default function HakekatCintaContainer() {
                             onClick={() => setVideoAktif(vid)}
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex gap-3 items-start group ${
                               isSelected
-                                ? 'bg-rose-500/10 border-rose-500/40 text-slate-900 dark:text-slate-100'
+                                ? isKitabTheme
+                                  ? 'bg-[#edd8b6] border-[#b38b42] text-[#26150a] shadow-xs'
+                                  : 'bg-rose-500/10 border-rose-500/40 text-slate-900 dark:text-slate-100'
+                                : isKitabTheme
+                                ? 'border-[#e2d2b8] hover:bg-[#f5edd7] text-[#4a2e15]'
                                 : 'border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                             }`}
                           >
                             <span className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ${
-                              isSelected ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                              isSelected 
+                                ? isKitabTheme ? 'bg-[#9e2a2b] text-white' : 'bg-rose-600 text-white' 
+                                : isKitabTheme ? 'bg-[#dfcfb0] text-[#4a2e15]' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                             }`}>
                               {idx + 1}
                             </span>
 
                             <div className="flex-1 min-w-0 space-y-1">
-                              <h4 className="text-xs font-bold line-clamp-2 leading-snug group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                              <h4 className={`text-xs font-bold line-clamp-2 leading-snug transition-colors ${
+                                isKitabTheme
+                                  ? 'group-hover:text-[#9e2a2b] text-[#26150a]'
+                                  : 'group-hover:text-rose-600 dark:group-hover:text-rose-400 text-slate-900 dark:text-slate-100'
+                              }`}>
                                 {vid.judul}
                               </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                              <div className={`flex items-center gap-2 text-[10px] ${
+                                isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
+                              }`}>
                                 {vid.tanggal && <span>📅 {vid.tanggal}</span>}
                                 {hasDraft && (
-                                  <span className="text-amber-500 font-semibold flex items-center gap-0.5">
+                                  <span className={`font-semibold flex items-center gap-0.5 ${
+                                    isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-500'
+                                  }`}>
                                     <Sparkles className="w-3 h-3" /> Ada Draf
                                   </span>
                                 )}
@@ -786,7 +874,11 @@ export default function HakekatCintaContainer() {
                       <button
                         onClick={() => ambilDataPlaylistYouTube(nextPageToken)}
                         disabled={loadingMore}
-                        className="w-full py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer mt-2"
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer mt-2 ${
+                          isKitabTheme
+                            ? 'bg-[#eee3cb] text-[#3a2211] hover:bg-[#dfcdab] border border-[#d8c3a1]'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
                       >
                         {loadingMore ? 'Memuat...' : 'Muat Lebih Banyak Video'}
                       </button>
@@ -795,29 +887,47 @@ export default function HakekatCintaContainer() {
                 </div>
               </div>
             ) : (
-              /* DRAFT BUKU VIEW */
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              /* DRAFT BUKU / NASKAH KITAB VIEW */
+              <div className={`rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 ${
+                isKitabTheme
+                  ? 'card-kitab-frame'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
+              }`}>
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${
+                  isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-100 dark:border-slate-800'
+                }`}>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                      📖 Kumpulan Naskah & Draf Buku "Hakikat Cinta"
+                    <h3 className={`text-lg font-bold ${
+                      isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-900 dark:text-slate-100'
+                    }`}>
+                      📖 Kumpulan Naskah & Draf Kitab "Hakikat Cinta"
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Bab-bab buku yang disusun dan disarikan secara otomatis oleh AI Gemini dari rekaman siaran langsung.
+                    <p className={`text-xs mt-0.5 ${
+                      isKitabTheme ? 'text-[#734822]' : 'text-slate-500 dark:text-slate-400'
+                    }`}>
+                      Bab-bab buku yang disusun dan disarikan secara otomatis oleh AI dari rekaman siaran langsung Al-Hikam & Olah Nafas.
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleUnduhDraftBuku}
-                      className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                      className={`px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer ${
+                        isKitabTheme
+                          ? 'bg-[#9e2a2b] hover:bg-[#852324] shadow-amber-900/20'
+                          : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30'
+                      }`}
                     >
                       <Download className="w-4 h-4" />
                       <span>Unduh Semua Naskah (.txt)</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('video')}
-                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                      className={`px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                        isKitabTheme
+                          ? 'bg-[#eee3cb] text-[#3a2211] hover:bg-[#dfcdab] border border-[#d8c3a1]'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
                     >
                       Kembali ke Video
                     </button>
@@ -826,10 +936,10 @@ export default function HakekatCintaContainer() {
 
                 {totalDrafBab === 0 ? (
                   <div className="py-16 text-center space-y-2">
-                    <FileText className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto" />
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">Belum ada bab buku tersimpan</h4>
-                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                      Pilih salah satu video rekaman live, lalu klik tombol "Rangkum Jadi Bab Buku AI" untuk mulai menyusun naskah.
+                    <FileText className={`w-12 h-12 mx-auto ${isKitabTheme ? 'text-[#cbb38b]' : 'text-slate-300 dark:text-slate-700'}`} />
+                    <h4 className={`text-sm font-bold ${isKitabTheme ? 'text-[#3a2211]' : 'text-slate-700 dark:text-slate-300'}`}>Belum ada bab kitab tersimpan</h4>
+                    <p className={`text-xs max-w-sm mx-auto ${isKitabTheme ? 'text-[#734822]' : 'text-slate-400'}`}>
+                      Pilih salah satu video rekaman live, lalu klik tombol "Rangkum Jadi Bab Kitab AI" untuk mulai menyusun naskah.
                     </p>
                   </div>
                 ) : (
@@ -837,27 +947,43 @@ export default function HakekatCintaContainer() {
                     {Object.entries(koleksiBuku).map(([vidId, bab], idx) => (
                       <div
                         key={vidId}
-                        className="p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-3"
+                        className={`p-6 rounded-2xl border space-y-3 ${
+                          isKitabTheme
+                            ? 'bg-[#fbf7ee] border-[#dfcfb0]'
+                            : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800'
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                              isKitabTheme ? 'text-[#9e2a2b]' : 'text-rose-600 dark:text-rose-400'
+                            }`}>
                               BAB {idx + 1} • {bab.kategori || 'Kajian NPT'}
                             </span>
-                            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                            <h4 className={`text-base font-bold mt-0.5 ${
+                              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-900 dark:text-slate-100'
+                            }`}>
                               {bab.judul}
                             </h4>
                           </div>
                           <button
                             onClick={() => handleDeleteBab(vidId)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isKitabTheme
+                                ? 'text-[#82613d] hover:text-[#9e2a2b] hover:bg-[#ebdcc4]'
+                                : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                            }`}
                             title="Hapus Bab"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
-                        <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-serif bg-white dark:bg-slate-900/80 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                        <div className={`text-xs sm:text-sm whitespace-pre-line leading-relaxed font-serif p-5 rounded-xl border ${
+                          isKitabTheme
+                            ? 'bg-[#fdfaf3] text-[#2c1810] border-[#d8c3a1] shadow-xs'
+                            : 'bg-white dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-100 dark:border-slate-800/60'
+                        }`}>
                           {bab.isi}
                         </div>
                       </div>
