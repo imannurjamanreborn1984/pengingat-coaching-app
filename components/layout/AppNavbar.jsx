@@ -356,9 +356,30 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
           {/* Admin & Ruang Approval (Hanya Tampil untuk Super Admin) */}
           {isSuperAdmin && (
             <div className="space-y-1">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-amber-400/80 px-3 py-1">
-                Admin & Manajemen
+              <div className="text-[10px] font-bold tracking-wider uppercase text-amber-400/80 px-3 py-1 flex items-center justify-between">
+                <span>Admin & Ruang Pribadi</span>
+                <Crown className="w-3 h-3 text-amber-400" />
               </div>
+
+              {/* RUANG PRIBADI KANG IMAN (WIRID & AFIRMASI PATEN LEVEL 5) */}
+              <Link
+                href="/wirid-khusus"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-600/30 via-amber-500/20 to-rose-600/20 text-amber-200 border border-amber-500/40 shadow-md shadow-amber-950/40 transition-all cursor-pointer ${
+                  activePath === '/wirid-khusus' ? 'ring-2 ring-amber-400' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">📿</span>
+                  <div>
+                    <p className="leading-tight text-amber-300">Riyadhoh Khusus Kang Iman</p>
+                    <span className="text-[9px] text-amber-400/80 font-normal">Afirmasi Paten Level 5 & Barier</span>
+                  </div>
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black">
+                  PRIVAT
+                </span>
+              </Link>
 
               <Link
                 href="/admin/members"
