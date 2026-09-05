@@ -169,7 +169,7 @@ export default function EMTContainer() {
   const [journalForm, setJournalForm] = useState({
     nama: '',
     tanggal: new Date().toISOString().split('T')[0],
-    kondisiEmosi: 'Tenang & Sadar',
+    kondisiEmosi: 'Bahagia',
     triggerEmosi: '',
     responTubuh: '',
     teknikPraktik: 'Nafas Ritmik 4-4-8',
@@ -745,15 +745,15 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                         <select
                           value={journalForm.kondisiEmosi}
                           onChange={(e) => setJournalForm({ ...journalForm, kondisiEmosi: e.target.value })}
-                          className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-hidden ${
+                          className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-hidden ${
                             isKitabTheme ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]' : 'bg-slate-950 text-white border-slate-800'
                           }`}
                         >
-                          <option value="Tenang & Sadar">✨ Tenang, Damai & Sadar</option>
-                          <option value="Lelah & Butuh Jeda">☕ Lelah / Butuh Jeda</option>
-                          <option value="Cemas / Khawatir">🌊 Cemas / Khawatir</option>
-                          <option value="Tegang / Terpicu Marah">⚡ Tegang / Terpicu Marah</option>
-                          <option value="Penuh Kasih & Semangat">💖 Penuh Kasih & Syukur</option>
+                          <option value="Takut">😨 Takut (Fear / Cemas / Was-was)</option>
+                          <option value="Jijik">🤢 Jijik (Disgust / Muak / Menolak)</option>
+                          <option value="Sedih">😢 Sedih (Sadness / Kecewa / Terpuruk)</option>
+                          <option value="Bahagia">😊 Bahagia (Joy / Sukacita / Syukur)</option>
+                          <option value="Marah">😡 Marah (Anger / Jengkel / Terbakar)</option>
                         </select>
                       </div>
 
@@ -865,9 +865,28 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                         <div key={j.id} className={`p-4 rounded-2xl border space-y-2 ${
                           isKitabTheme ? 'bg-[#fdfbf6] border-[#decba4]' : 'bg-slate-950 border-slate-800'
                         }`}>
-                          <div className="flex items-center justify-between text-xs border-b pb-1.5">
-                            <span className="font-bold text-emerald-600">{j.nama}</span>
-                            <span className="text-[10px] text-slate-400">{j.tanggal} • {j.kondisiEmosi}</span>
+                          <div className="flex items-center justify-between text-xs border-b pb-1.5 gap-2">
+                            <span className="font-bold text-emerald-600 truncate">{j.nama}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                j.kondisiEmosi === 'Takut'
+                                  ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+                                  : j.kondisiEmosi === 'Jijik'
+                                  ? 'bg-purple-500/15 text-purple-700 border-purple-500/30'
+                                  : j.kondisiEmosi === 'Sedih'
+                                  ? 'bg-blue-500/15 text-blue-700 border-blue-500/30'
+                                  : j.kondisiEmosi === 'Marah'
+                                  ? 'bg-rose-500/15 text-rose-700 border-rose-500/30'
+                                  : 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
+                              }`}>
+                                {j.kondisiEmosi === 'Takut' ? '😨 Takut' :
+                                 j.kondisiEmosi === 'Jijik' ? '🤢 Jijik' :
+                                 j.kondisiEmosi === 'Sedih' ? '😢 Sedih' :
+                                 j.kondisiEmosi === 'Marah' ? '😡 Marah' :
+                                 j.kondisiEmosi === 'Bahagia' ? '😊 Bahagia' : j.kondisiEmosi}
+                              </span>
+                              <span className="text-[10px] text-slate-400">{j.tanggal}</span>
+                            </div>
                           </div>
 
                           {j.triggerEmosi && (
