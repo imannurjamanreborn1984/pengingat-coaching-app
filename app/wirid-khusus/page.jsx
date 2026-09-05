@@ -24,14 +24,18 @@ import {
   Volume2,
   VolumeX,
   Copy,
-  Check
+  Check,
+  Heart,
+  Scroll
 } from 'lucide-react';
 
 export default function WiridKhususPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(true);
-  const [activeTab, setActiveTab] = useState('afirmasi'); // 'afirmasi' | 'barier' | 'kasyaf' | 'log'
+  
+  // Tab: 'wirid_harian' | 'afirmasi' | 'barier' | 'kasyaf'
+  const [activeTab, setActiveTab] = useState('wirid_harian');
   
   // Tasbih Counter untuk 33 Ruang Kasyaf
   const [counterKasyaf, setCounterKasyaf] = useState(0);
@@ -43,9 +47,6 @@ export default function WiridKhususPage() {
 
   // Status Centang Log Pribadi
   const [dailyLog, setDailyLog] = useState({});
-
-  // Feedback Copy
-  const [copiedSection, setCopiedSection] = useState(null);
 
   useEffect(() => {
     try {
@@ -110,7 +111,6 @@ export default function WiridKhususPage() {
       setCounterKasyaf(0);
       setTotalKasyafRounds((prev) => prev + 1);
       
-      // Update Log
       const todayStr = new Date().toISOString().split('T')[0];
       const updatedLog = {
         ...dailyLog,
@@ -126,12 +126,6 @@ export default function WiridKhususPage() {
     } else {
       setCounterKasyaf(counterKasyaf + 1);
     }
-  };
-
-  const handleCopyText = (text, sectionName) => {
-    navigator.clipboard.writeText(text);
-    setCopiedSection(sectionName);
-    setTimeout(() => setCopiedSection(null), 2000);
   };
 
   // Jika Bukan Super Admin, Kunci Halaman Ini Secara Mutlak
@@ -155,7 +149,7 @@ export default function WiridKhususPage() {
             Ruang Riyadhoh Pribadi Terkunci
           </h2>
           <p className={`text-xs leading-relaxed ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-            Halaman ini khusus memuat rancangan batin, afirmasi paten, dan protokol suluk harian pribadi Kang Iman.
+            Halaman ini khusus memuat rancangan batin, wirid harian, afirmasi paten, dan protokol suluk pribadi Kang Iman.
           </p>
           <Link
             href="/npt"
@@ -218,10 +212,10 @@ export default function WiridKhususPage() {
               <h1 className={`text-xl sm:text-3xl font-black mt-2 tracking-tight leading-snug ${
                 isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
               }`}>
-                Kitab Riyadhoh, Afirmasi Paten Level 5 & Barier Energi
+                Kitab Riyadhoh, Amalan Harian & Afirmasi Paten
               </h1>
               <p className={`text-xs mt-1 italic ${isKitabTheme ? 'text-[#734822]' : 'text-slate-400'}`}>
-                "Rancangan Sesuai Diri Pribadi — Penataan 7 Martabat Alam Tubuh, 4 Perintah Energi Ilahi & 33 Ruang Kasyaf."
+                "Untaian Wirid Mahabbah, Munajat Kebajikan, Sholawat Pembuka (Al-Fatih), Barier 24 Jam & 33 Ruang Kasyaf."
               </p>
             </div>
 
@@ -239,8 +233,25 @@ export default function WiridKhususPage() {
             </button>
           </div>
 
-          {/* Navigasi 3 Bagian Wirid */}
+          {/* Navigasi 4 Bagian Wirid */}
           <div className="flex flex-wrap items-center gap-2 pt-4">
+            <button
+              onClick={() => setActiveTab('wirid_harian')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+                activeTab === 'wirid_harian'
+                  ? isKitabTheme 
+                    ? 'bg-[#3a2211] text-[#fbf6ec] border-[#8f632d] shadow-sm' 
+                    : 'bg-amber-600 text-white border-amber-500 shadow-amber-600/30'
+                  : isKitabTheme 
+                    ? 'text-[#634224] hover:bg-[#ebdcc4] border-transparent' 
+                    : 'text-slate-400 hover:text-white border-transparent'
+              }`}
+            >
+              <Heart className="w-4 h-4 text-rose-500" />
+              <span>1. Amalan & Munajat Harian</span>
+              <span className="px-1.5 py-0.2 bg-amber-500 text-slate-950 text-[9px] font-black rounded-full">UTAMA</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('afirmasi')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
@@ -254,7 +265,7 @@ export default function WiridKhususPage() {
               }`}
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>1. Afirmasi Paten Level 5 (4 Perintah)</span>
+              <span>2. Afirmasi Paten Level 5 (4 Perintah)</span>
             </button>
 
             <button
@@ -270,7 +281,7 @@ export default function WiridKhususPage() {
               }`}
             >
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>2. Aktivasi Barier Pagi</span>
+              <span>3. Aktivasi Barier Pagi</span>
             </button>
 
             <button
@@ -285,14 +296,238 @@ export default function WiridKhususPage() {
                     : 'text-slate-400 hover:text-white border-transparent'
               }`}
             >
-              <Compass className="w-4 h-4 text-rose-500" />
-              <span>3. 33 Ruang Kasyaf (Tasbih)</span>
+              <Compass className="w-4 h-4 text-sky-500" />
+              <span>4. 33 Ruang Kasyaf (Tasbih)</span>
             </button>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* BAGIAN 1: AFIRMASI PATEN LEVEL 5 (LENGKAP)                                */}
+        {/* BAGIAN 1: AMALAN & MUNAJAT HARIAN KANG IMAN (BARU)                       */}
+        {/* ========================================================================= */}
+        {activeTab === 'wirid_harian' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            
+            {/* KOTAK PEMBUKA: SYAHADAT, AL-IKHLAS 4X & ISTIGHFAR */}
+            <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="border-b pb-3 flex items-center justify-between">
+                <div>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                    FASAL 1 — PEMBUKA GERBANG RUHANIAH
+                  </span>
+                  <h3 className={`text-base sm:text-lg font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                    Syahadatain, Al-Ikhlas (4x), Istighfar & Husnul Khotimah
+                  </h3>
+                </div>
+                <span className="text-xl">📿</span>
+              </div>
+
+              {/* Teks Arab Syahadat & Al-Ikhlas */}
+              <div className="space-y-3">
+                <div className="arabic-quote-box text-xl sm:text-2xl">
+                  أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللَّهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللَّهِ
+                </div>
+
+                <div className={`p-4 rounded-2xl border text-xs sm:text-sm leading-relaxed space-y-2 ${
+                  isKitabTheme ? 'bg-[#faf2e3] border-[#dfcfb0] text-[#2c1810]' : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <strong className="text-amber-700">Surah Al-Ikhlas (Dibaca 4x):</strong>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700">4 KALI</span>
+                  </div>
+                  <div className="font-kitab-arabic arabic-text text-xl pt-1">
+                    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br />
+                    قُلْ هُوَ اللَّهُ أَحَدٌ • اللَّهُ الصَّمَدُ • لَمْ يَلِدْ وَلَمْ يُولَدْ • وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border text-xs sm:text-sm leading-relaxed space-y-2 ${
+                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <strong className="text-amber-700">Istighfar & Doa Husnul Khotimah:</strong>
+                  <div className="font-kitab-arabic arabic-text text-xl">
+                    أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ
+                  </div>
+                  <div className="font-kitab-arabic arabic-text text-xl text-rose-800 dark:text-rose-300 pt-1">
+                    يَا اللَّهُ بِهَا • يَا اللَّهُ بِهَا • يَا اللَّهُ بِحُسْنِ الْخَاتِمَةِ
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* KOTAK UNTAIAN SHOLAWAT AGUNG */}
+            <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="border-b pb-3">
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                  FASAL 2 — UNTAIAN SHOLAWAT KHUSUS & NUR MUHAMMAD
+                </span>
+                <h3 className={`text-base sm:text-lg font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                  Sholawat Ya Ahad, Sholawat Adrikni & Sholawat Nuris Sari
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {/* Sholawat Ya Ahad */}
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#faf2e3] border-[#dfcfb0]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">1. Sholawat Ya Ahad:</span>
+                  <div className="font-kitab-arabic arabic-text text-lg sm:text-xl">
+                    اللَّهُمَّ يَا أَحَدُ صَلِّ عَلَى سَيِّدِنَا أَحْمَدَ<br />
+                    اللَّهُمَّ يَا أَحَدُ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ<br />
+                    اللَّهُمَّ يَا أَحَدُ صَلِّ عَلَى الْمَهْدِيِّ خَلِيفَتِكَ يَا أَحَدُ
+                  </div>
+                </div>
+
+                {/* Sholawat Awwalin & Adrikni */}
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#faf2e3] border-[#dfcfb0]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">2. Sholawat Awwalin & Sholawat Adrikni:</span>
+                  <div className="font-kitab-arabic arabic-text text-lg sm:text-xl">
+                    اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ فِي الْأَوَّلِينَ وَالْآخِرِينَ فِي الْمَلَإِ الْأَعْلَى إِلَىٰ يَوْمِ الدِّينِ<br />
+                    اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ قَدْ ضَاقَتْ حِيلَتِي أَدْرِكْنِي يَا رَسُولَ اللَّهِ
+                  </div>
+                </div>
+
+                {/* Sholawat Nuris Sari */}
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#faf2e3] border-[#dfcfb0]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">3. Sholawat Nuris Sari (Penyatu Segala Athwar):</span>
+                  <div className="font-kitab-arabic arabic-text text-lg sm:text-xl">
+                    اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَىٰ سَيِّدِنَا مُحَمَّدٍ نُورِكَ السَّارِي وَمَدَدِكَ الْجَارِي وَاجْمَعْنِي بِهِ فِي كُلِّ أَطْوَارِي وَعَلَىٰ آلِهِ وَصَحْبِهِ يَا نُورُ
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* KOTAK MUNAJAT PERLINDUNGAN & PEMBIMBING RUHANI */}
+            <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="border-b pb-3">
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                  FASAL 3 — MUNAJAT PENJAGAAN KELUARGA & GURU RUHANI
+                </span>
+                <h3 className={`text-base sm:text-lg font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                  Permohonan Putusnya Harapan Syaitan & Pembimbing Rijalul Ghaib
+                </h3>
+              </div>
+
+              <div className={`p-5 rounded-2xl border text-xs sm:text-sm leading-relaxed space-y-3 font-serif ${
+                isKitabTheme ? 'bg-[#fbf7ee] border-[#dfcfb0] text-[#2c1810]' : 'bg-slate-950 border-slate-800 text-slate-200'
+              }`}>
+                <div className="p-3 rounded-xl bg-[#faf2e3] border border-[#d8c3a1] space-y-1">
+                  <strong className="text-rose-800 dark:text-rose-400 block not-italic">🛡️ Pemutus Godaan Syaitan untuk Keturunan:</strong>
+                  <p>
+                    "Ya Allah, hamba meminta: <strong>putuskanlah harapan syaitan untuk menggoda kami (aku, istri, dan keturunan kami)</strong>, sebagaimana syaitan telah putus harapannya dari mengharapkan rahmat-Mu."
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#faf2e3] border border-[#d8c3a1] space-y-1">
+                  <strong className="text-amber-800 dark:text-amber-400 block not-italic">👑 Pembimbing Ruhani & Pengurusan Jenazah:</strong>
+                  <p>
+                    "Aku mohon Ya Allah, jadikanlah <strong>Rasulullah SAW, Sayyidina Jibril, Sayyidina Muqorrobin, Imam Mahdi, Nabi Khidir AS, Al-Ghaust, Qutubuzzaman, Shohibud Dark, Shohibul Waqt, Shohibul Balad, dan Shohibul Wilayah</strong> sebagai pembimbing dan guru kami..."
+                  </p>
+                  <p>
+                    "Serta jadikanlah saat kami meninggal kelak, <strong>merekalah yang menyolatkan kami dan mengurus jenazah kami</strong> sebelum semua habib, masyarakat, serta pejabat mensholati kami. Dan saat kami meninggal, jadikanlah agar kami tetap bisa bermanfaat untuk semua orang seperti halnya Rasulullah SAW, serta sandingkanlah kami bersama para Waliyullah dan Rasulullah SAW."
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* KOTAK MUNAJAT KEBERLIMPAHAN DUNIA & KEZUHUDAN ABUL HASAN ASY-SYADZILI */}
+            <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="border-b pb-3">
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                  FASAL 4 — KEBERLIMPAHAN HARTA ANAS BIN MALIK & DERAJAT ABUL HASAN ASY-SYADZILI
+                </span>
+                <h3 className={`text-base sm:text-lg font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                  Kaya Tanpa Lelah Bekerja, Pintar Tanpa Belajar & Doa Secepat Petir
+                </h3>
+              </div>
+
+              <div className={`p-5 rounded-2xl border text-xs sm:text-sm leading-relaxed space-y-3 font-serif ${
+                isKitabTheme ? 'bg-[#fbf7ee] border-[#dfcfb0] text-[#2c1810]' : 'bg-slate-950 border-slate-800 text-slate-200'
+              }`}>
+                <p>
+                  "Ya Allah, limpahkanlah semasa hidup kami <strong>semua kenikmatan dunia yang terbaik dan tidak pernah surut seperti halnya harta Anas bin Malik</strong>, serta buatlah hati kami <strong>Zuhud terhadap dunia</strong>, sebagaimana Engkau memberikan keberlimpahan Iman, Islam, Ihsan, rezeki, harta, tahta, kesehatan, ilmu dan kezuhudan kepada <strong>Syeikh Abu Hasan Asy-Syadzili</strong>."
+                </p>
+
+                <div className="p-3.5 rounded-xl bg-[#faf2e3] border border-[#d8c3a1] space-y-1.5">
+                  <p className="font-bold text-amber-800 dark:text-amber-400 not-italic">
+                    ⚡ Rahasia Karomah Doa Habib Sholeh Tanggul & Kyai Asrory:
+                  </p>
+                  <p>
+                    "Ya Allah Robb, jadikanlah kami <strong>kaya tanpa bekerja</strong>, jadikanlah kami <strong>pintar tanpa belajar</strong>, dan jadikanlah doa-doa kami <strong>terkabul lebih cepat dari kilatan petir</strong>, sebagaimana Habib Sholeh berdoa dan sebagaimana Engkau memberikan keistimewaan ini kepada <strong>Habib Sholeh Tanggul</strong>."
+                  </p>
+                  <p>
+                    "Ya Allah, jadikanlah aku berdoa seperti halnya <strong>Kyai Asrory Al-Ishaqi</strong> berdoa kepada-MU."
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* KOTAK DZIKIR ASMA PENGABUL HAJAT & SHOLAWAT FATIH */}
+            <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="border-b pb-3">
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                  FASAL 5 — ASMA PENGABUL HAJAT & SHOLAWATUL FATIH PEMBUKA KUNCI
+                </span>
+                <h3 className={`text-base sm:text-lg font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                  Qodhiyal Hajat, Hasbunallah & Sholawatul Fatih
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className={`p-4 rounded-2xl border space-y-2 ${
+                  isKitabTheme ? 'bg-[#faf2e3] border-[#dfcfb0]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <div className="font-kitab-arabic arabic-text text-xl sm:text-2xl text-amber-900 dark:text-amber-300">
+                    اللَّهُمَّ يَا قَاضِيَ الْحَاجَاتِ (٣x)<br />
+                    اللَّهُمَّ يَا كَافِيَ الْمُهِمَّاتِ • اللَّهُمَّ يَا رَافِعَ الدَّرَجَاتِ<br />
+                    اللَّهُمَّ يَا شَافِيَ الْأَمْرَاضِ • اللَّهُمَّ يَا أَرْحَمَ الرَّاحِمِينَ
+                  </div>
+
+                  <div className="font-kitab-arabic arabic-text text-xl pt-2 text-emerald-800 dark:text-emerald-300">
+                    حَسْبُنَا اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ
+                  </div>
+                </div>
+
+                {/* SHOLAWATUL FATIH LENGKAP */}
+                <div className="arabic-quote-box text-xl sm:text-2xl leading-loose">
+                  اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَىٰ سَيِّدِنَا مُحَمَّدٍ الْفَاتِحِ لِمَا أُغْلِقَ، وَالْخَاتِمِ لِمَا سَبَقَ، نَاصِرِ الْحَقِّ بِالْحَقِّ، وَالْهَادِي إِلَىٰ صِرَاطِكَ الْمُسْتَقِيمِ، صَلَّى اللَّهُ عَلَيْهِ وَعَلَىٰ آلِهِ وَأَصْحَابِهِ حَقَّ قَدْرِهِ وَمِقْدَارِهِ الْعَظِيمِ
+                </div>
+
+                {/* SHOLAWAT MAQ'ADUL MUQORROB & PENUTUP */}
+                <div className={`p-4 rounded-2xl border space-y-2 text-center ${
+                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <div className="font-kitab-arabic arabic-text text-xl text-amber-900 dark:text-amber-300">
+                    اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَأَنْزِلْهُ الْمَقْعَدَ الْمُقَرَّبَ عِنْدَكَ يَوْمَ الْقِيَامَةِ<br />
+                    يَا رَبِّ صَلِّ عَلَىٰ مُحَمَّدٍ وَافْتَحْ مِنَ الْخَيْرِ كُلَّ مُغْلَقٍ
+                  </div>
+                  <p className="text-xs italic font-serif text-slate-600 dark:text-slate-300">
+                    "Ya Rabbi Sholli 'Ala Muhammad Waftah Minal Khoiri Kulla Mughlaq (Wahai Tuhanku, limpahkanlah sholawat atas Nabi Muhammad dan bukakanlah segala pintu kebaikan yang terkunci)."
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* BAGIAN 2: AFIRMASI PATEN LEVEL 5 (LENGKAP)                                */}
         {/* ========================================================================= */}
         {activeTab === 'afirmasi' && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -564,7 +799,7 @@ export default function WiridKhususPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* BAGIAN 2: PROTOKOL BARIER HARIAN (TIAP PAGI)                              */}
+        {/* BAGIAN 3: PROTOKOL BARIER HARIAN (TIAP PAGI)                              */}
         {/* ========================================================================= */}
         {activeTab === 'barier' && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -624,7 +859,7 @@ export default function WiridKhususPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* BAGIAN 3: 33 RUANG KASYAF (TIAP PAGI & BA'DA SHOLAT)                      */}
+        {/* BAGIAN 4: 33 RUANG KASYAF (TIAP PAGI & BA'DA SHOLAT)                      */}
         {/* ========================================================================= */}
         {activeTab === 'kasyaf' && (
           <div className="space-y-6 animate-in fade-in duration-200">
