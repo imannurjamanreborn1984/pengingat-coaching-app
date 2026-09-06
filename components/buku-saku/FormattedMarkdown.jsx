@@ -16,8 +16,53 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
     .map(p => p.trim())
     .filter(Boolean);
 
-  // Helper untuk memproses inline markdown: **bold**, *italic*, `code`
-  const renderInline = (text) => {
+  // Helper untuk memformat potongan teks Arab inline (1.5x lebih besar ala Traditional Arabic 18-20pt vs Latin 11-12pt)
+  const formatArabicInline = (plainText, keyPrefix = "ar") => {
+    if (typeof plainText !== "string") return plainText;
+    if (!/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(plainText)) {
+      return plainText;
+    }
+
+    // Regex mencocokkan teks Arab, baik di dalam kurung (فَرْعٌ) maupun potongan frasa Arab biasa
+    const tokenRegex = /(\(\s*[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s\d،؛؟ـ\.\,\:\-]+\s*\)|[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+(?:[\s،؛؟ـ]+[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)*)/g;
+
+    const segments = [];
+    let lastIdx = 0;
+    let match;
+    let subKey = 0;
+
+    while ((match = tokenRegex.exec(plainText)) !== null) {
+      if (match.index > lastIdx) {
+        segments.push(plainText.substring(lastIdx, match.index));
+      }
+      const arabicPart = match[0];
+      segments.push(
+        <span
+          key={`${keyPrefix}-${subKey++}`}
+          dir="rtl"
+          className="inline-block font-serif text-[1.45em] sm:text-[1.55em] font-medium text-[#7a1818] px-1 align-baseline select-text"
+          style={{
+            fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', 'Noto Naskh Arabic', serif",
+            lineHeight: "1.4",
+            verticalAlign: "-0.1em"
+          }}
+        >
+          {arabicPart}
+        </span>
+      );
+      lastIdx = tokenRegex.lastIndex;
+    }
+
+    if (lastIdx < plainText.length) {
+      segments.push(plainText.substring(lastIdx));
+    }
+
+    return segments.length > 0 ? segments : plainText;
+  };
+
+  // Helper untuk memproses inline markdown: **bold**, *italic*, `code` & inline Arabic
+  const renderInline = (text, keyPrefix = "inl") => {
+    if (typeof text !== "string") return text;
     const parts = [];
     let keyIdx = 0;
     const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
@@ -26,20 +71,23 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
 
     while ((match = regex.exec(text)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
+        const plainSegment = text.substring(lastIndex, match.index);
+        parts.push(formatArabicInline(plainSegment, `${keyPrefix}-p-${keyIdx++}`));
       }
 
       const token = match[0];
       if (token.startsWith('**') && token.endsWith('**')) {
+        const inner = token.slice(2, -2);
         parts.push(
           <strong key={`b-${keyIdx++}`} className={isKitab ? "font-bold text-[#26150a]" : "font-bold text-slate-100"}>
-            {token.slice(2, -2)}
+            {formatArabicInline(inner, `${keyPrefix}-b-${keyIdx}`)}
           </strong>
         );
       } else if (token.startsWith('*') && token.endsWith('*')) {
+        const inner = token.slice(1, -1);
         parts.push(
           <em key={`i-${keyIdx++}`} className="italic">
-            {token.slice(1, -1)}
+            {formatArabicInline(inner, `${keyPrefix}-i-${keyIdx}`)}
           </em>
         );
       } else if (token.startsWith('`') && token.endsWith('`')) {
@@ -53,10 +101,11 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
     }
 
     if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
+      const remaining = text.substring(lastIndex);
+      parts.push(formatArabicInline(remaining, `${keyPrefix}-end-${keyIdx++}`));
     }
 
-    return parts.length > 0 ? parts : text;
+    return parts.length > 0 ? parts : formatArabicInline(text, keyPrefix);
   };
 
   // Deteksi apakah teks mayoritas adalah huruf Arab murni (bukan teks Sunda/Indonesia yang memuat istilah Arab)
@@ -162,8 +211,8 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
           return (
             <ul key={pIdx} className="space-y-2 pl-5 list-disc list-outside my-2 text-[#3d2514]">
               {lines.map((line, lIdx) => (
-                <li key={lIdx} className="pl-1">
-                  {renderInline(line.replace(/^[-*•]\s+/, ''))}
+                <li key={lIdx} className="pl-1 leading-loose">
+                  {renderInline(line.replace(/^[-*•]\s+/, ''), `ul-${pIdx}-${lIdx}`)}
                 </li>
               ))}
             </ul>
@@ -176,8 +225,8 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
           return (
             <ol key={pIdx} className="space-y-2 pl-5 list-decimal list-outside my-2 font-medium text-[#3d2514]">
               {lines.map((line, lIdx) => (
-                <li key={lIdx} className="pl-1">
-                  {renderInline(line.replace(/^\d+[\.)]\s+/, ''))}
+                <li key={lIdx} className="pl-1 leading-loose">
+                  {renderInline(line.replace(/^\d+[\.)]\s+/, ''), `ol-${pIdx}-${lIdx}`)}
                 </li>
               ))}
             </ol>
@@ -195,21 +244,21 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
               className={`my-3 p-4 rounded-xl border-l-4 ${
                 isQuoteArabic
                   ? `text-right bg-[#fdfaf3] border-[#8b1e1e] text-[#26150a] font-serif ${getArabicFontSize()}`
-                  : `italic bg-[#faf2e3] border-[#b38b42] text-[#3d2514]`
+                  : `italic bg-[#faf2e3] border-[#b38b42] text-[#3d2514] leading-loose`
               }`}
               style={isQuoteArabic ? { fontFamily: "'Amiri', 'Traditional Arabic', serif" } : {}}
             >
-              {renderInline(quoteText)}
+              {renderInline(quoteText, `bq-${pIdx}`)}
             </blockquote>
           );
         }
 
         // 6. PARAGRAF BIASA
         return (
-          <p key={pIdx} className="leading-relaxed text-[#3d2514]">
+          <p key={pIdx} className="leading-loose sm:leading-[2.1] text-[#3d2514]">
             {lines.map((line, lIdx) => (
               <React.Fragment key={lIdx}>
-                {renderInline(line)}
+                {renderInline(line, `p-${pIdx}-${lIdx}`)}
                 {lIdx < lines.length - 1 && <br />}
               </React.Fragment>
             ))}
