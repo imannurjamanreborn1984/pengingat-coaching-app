@@ -22,9 +22,14 @@ import {
   Share2,
   RefreshCw,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Cloud,
+  CloudCheck,
+  CheckCircle2,
+  Wifi
 } from "lucide-react";
 import FormattedMarkdown from "@/components/buku-saku/FormattedMarkdown";
+import { supabase } from "@/lib/supabaseClient";
 
 const KITAB_OPTIONS = [
   {
@@ -77,6 +82,7 @@ const KITAB_OPTIONS = [
   }
 ];
 
+const MAKTABAH_ASSIGNMENT_ID = "ed3dadac-dce6-4752-883c-b58b057e1001";
 const STORAGE_KEY = "maktabah_kang_iman_v1";
 
 export default function MaktabahBedahKitabPage() {
@@ -93,6 +99,10 @@ export default function MaktabahBedahKitabPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // Cloud Sync State
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState("Tersambung ke Cloud (Laptop & HP)");
+
   // Presenter / Mimbar Mode
   const [isMimbarMode, setIsMimbarMode] = useState(false);
   const [fontSizeLevel, setFontSizeLevel] = useState("base"); // 'base' | 'lg' | 'xl' | '2xl'
@@ -102,18 +112,91 @@ export default function MaktabahBedahKitabPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArsipId, setSelectedArsipId] = useState(null);
 
+  // Sync Cloud on Mount
   useEffect(() => {
+    let localData = [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setArsipList(JSON.parse(stored));
+        localData = JSON.parse(stored);
+        setArsipList(localData);
       }
     } catch (e) {
-      console.error("Gagal membaca arsip:", e);
+      console.error("Gagal membaca arsip lokal:", e);
     }
+    fetchAndSyncCloud(localData);
   }, []);
 
-  const saveToLocalStorage = (newList) => {
+  const fetchAndSyncCloud = async (currentLocalList = []) => {
+    try {
+      setIsSyncingCloud(true);
+      const { data, error } = await supabase
+        .from("submissions")
+        .select("id, answer_text, created_at")
+        .eq("assignment_id", MAKTABAH_ASSIGNMENT_ID)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const cloudItems = (data || [])
+        .map((row) => {
+          try {
+            const parsed = JSON.parse(row.answer_text);
+            return {
+              ...parsed,
+              supabaseId: row.id,
+              createdAt: parsed.createdAt || row.created_at,
+            };
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      // Merge: Gabungkan data cloud dan data lokal tanpa duplikasi
+      const cloudIds = new Set(cloudItems.map((c) => c.id));
+      const localOnly = currentLocalList.filter((l) => !cloudIds.has(l.id));
+
+      // Jika ada data lokal yang belum masuk cloud (misal dibuat sebelum fitur cloud aktif), auto-upload ke cloud
+      for (const localItem of localOnly) {
+        try {
+          const { data: ins } = await supabase
+            .from("submissions")
+            .insert({
+              assignment_id: MAKTABAH_ASSIGNMENT_ID,
+              user_name: "Kang Iman (Maktabah)",
+              answer_text: JSON.stringify(localItem),
+              is_completed: true,
+            })
+            .select("id")
+            .single();
+          if (ins) {
+            localItem.supabaseId = ins.id;
+          }
+        } catch (e) {
+          console.error("Gagal auto-upload data lokal:", e);
+        }
+      }
+
+      const merged = [...cloudItems, ...localOnly].sort((a, b) => {
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
+
+      setArsipList(merged);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      } catch (e) {}
+
+      setCloudSyncStatus("Tersinkron Sempurna (Laptop & HP)");
+    } catch (err) {
+      console.error("Gagal sinkronisasi cloud:", err);
+      setCloudSyncStatus("Mode Offline (Data Lokal)");
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  const saveToLocalStorageAndState = (newList) => {
     setArsipList(newList);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
@@ -163,7 +246,7 @@ export default function MaktabahBedahKitabPage() {
       }
 
       setCurrentResult(data.data);
-      setCurrentResultMeta({
+      const newEntryMeta = {
         id: "kajian-" + Date.now(),
         kitabId: selectedKitab,
         kitabNama: activeKitabObj?.nama,
@@ -171,24 +254,38 @@ export default function MaktabahBedahKitabPage() {
         teksArabInput: teksArab,
         targetMaqolahHikam,
         catatanKonteks,
-        createdAt: new Date().toISOString(),
-      });
-
-      // Simpan otomatis ke riwayat arsip
-      const newEntry = {
-        id: "kajian-" + Date.now(),
-        kitabId: selectedKitab,
-        kitabNama: activeKitabObj?.nama,
-        lokasiMajlis,
-        teksArabInput: teksArab,
-        targetMaqolahHikam,
-        catatanKonteks,
-        hasilMarkdown: data.data,
         createdAt: new Date().toISOString(),
       };
+      setCurrentResultMeta(newEntryMeta);
+
+      // Simpan otomatis ke riwayat arsip lokal & Cloud Supabase
+      const newEntry = {
+        ...newEntryMeta,
+        hasilMarkdown: data.data,
+      };
+
+      // Simpan ke cloud Supabase agar langsung muncul di HP
+      try {
+        const { data: ins, error: insErr } = await supabase
+          .from("submissions")
+          .insert({
+            assignment_id: MAKTABAH_ASSIGNMENT_ID,
+            user_name: "Kang Iman (Maktabah)",
+            answer_text: JSON.stringify(newEntry),
+            is_completed: true,
+          })
+          .select("id")
+          .single();
+
+        if (ins && !insErr) {
+          newEntry.supabaseId = ins.id;
+        }
+      } catch (cloudErr) {
+        console.error("Gagal simpan ke cloud Supabase:", cloudErr);
+      }
 
       const updated = [newEntry, ...arsipList.filter((a) => a.id !== newEntry.id)];
-      saveToLocalStorage(updated);
+      saveToLocalStorageAndState(updated);
       setSelectedArsipId(newEntry.id);
     } catch (err) {
       console.error("Error bedah kitab:", err);
@@ -210,14 +307,30 @@ export default function MaktabahBedahKitabPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDeleteArsip = (id, e) => {
+  const handleDeleteArsip = async (id, e) => {
     e.stopPropagation();
-    if (confirm("Hapus catatan kajian ini dari arsip maktabah?")) {
+    if (confirm("Hapus catatan kajian ini dari arsip maktabah (Laptop & HP)?")) {
+      const targetItem = arsipList.find((a) => a.id === id);
       const updated = arsipList.filter((a) => a.id !== id);
-      saveToLocalStorage(updated);
+      saveToLocalStorageAndState(updated);
       if (selectedArsipId === id) {
         setSelectedArsipId(null);
         setCurrentResult(null);
+      }
+
+      // Hapus dari cloud Supabase
+      try {
+        if (targetItem?.supabaseId) {
+          await supabase.from("submissions").delete().eq("id", targetItem.supabaseId);
+        } else {
+          await supabase
+            .from("submissions")
+            .delete()
+            .eq("assignment_id", MAKTABAH_ASSIGNMENT_ID)
+            .ilike("answer_text", `%"id":"${id}"%`);
+        }
+      } catch (delErr) {
+        console.error("Gagal menghapus dari cloud:", delErr);
       }
     }
   };
@@ -284,12 +397,16 @@ export default function MaktabahBedahKitabPage() {
                   📚
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eee2cb] text-[#634224] border border-[#d8c3a1]">
                       PRIVAT KANG IMAN
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-800 border border-amber-500/30">
                       Tafsir Shawi • Kifayatul Akhyar • Al-Hikam
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-800 border border-emerald-500/30 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                      <span>☁️ Cloud Sinkron (Laptop ↔ HP)</span>
                     </span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-black font-kitab-title text-[#26150a] tracking-tight mt-1">
@@ -528,7 +645,16 @@ export default function MaktabahBedahKitabPage() {
                     <Bookmark className="w-3.5 h-3.5 text-[#8b1e1e]" />
                     <span>Arsip Diktat Ngaji ({arsipList.length})</span>
                   </h3>
-                  <span className="text-[10px] text-[#734822]">Privat di Browser</span>
+                  <button
+                    type="button"
+                    onClick={() => fetchAndSyncCloud(arsipList)}
+                    disabled={isSyncingCloud}
+                    className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#eee2cb] text-[#5e3d1c] hover:bg-[#dfcdab] border border-[#cbb38b] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                    title="Tarik & sinkronkan data kajian terbaru dari Cloud (Laptop / HP)"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isSyncingCloud ? "animate-spin text-amber-700" : "text-[#5e3d1c]"}`} />
+                    <span>{isSyncingCloud ? "Menyinkron..." : "Sinkron HP & Laptop"}</span>
+                  </button>
                 </div>
 
                 <div className="relative">
