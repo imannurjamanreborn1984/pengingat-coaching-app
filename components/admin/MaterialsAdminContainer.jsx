@@ -361,13 +361,32 @@ export default function MaterialsAdminContainer() {
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Tambah Materi NPT Level {selectedLevel}</span>
+              <span>{selectedLevel === 0 ? "+ Tambah Modul Materi EMT" : `+ Tambah Materi NPT Level ${selectedLevel}`}</span>
             </button>
           </div>
         </div>
 
-        {/* Level Tabs Selector (1 s/d 6) */}
+        {/* Level & EMT Tabs Selector */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {/* TAB EMT (LEVEL 0) */}
+          <button
+            onClick={() => setSelectedLevel(0)}
+            className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
+              selectedLevel === 0
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 border border-emerald-500"
+                : "bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30"
+            }`}
+          >
+            <span className="w-5 h-5 rounded-lg bg-slate-950/40 flex items-center justify-center text-[11px]">
+              🎓
+            </span>
+            <span>EMT (Pelatihan Emosi)</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-normal">
+              Khusus Guru & Umum
+            </span>
+          </button>
+
+          {/* TAB NPT LEVEL 1 s/d 6 */}
           {[1, 2, 3, 4, 5, 6].map((lvl) => (
             <button
               key={lvl}
@@ -396,7 +415,7 @@ export default function MaterialsAdminContainer() {
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-rose-400" />
-              <span>Daftar Materi: NPT Level {selectedLevel}</span>
+              <span>{selectedLevel === 0 ? "Daftar Materi & Modul: EMT (Pelatihan Emosi Guru)" : `Daftar Materi: NPT Level ${selectedLevel}`}</span>
             </h2>
             <span className="text-xs text-slate-400">{materials.length} Modul Terbit</span>
           </div>
@@ -411,7 +430,9 @@ export default function MaterialsAdminContainer() {
                 <FileText className="w-6 h-6" />
               </div>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                Belum ada materi yang diupload untuk <strong>NPT Level {selectedLevel}</strong>. Klik tombol di atas untuk menambahkan modul pertama!
+                {selectedLevel === 0
+                  ? "Belum ada materi modul yang diupload untuk EMT. Klik tombol di atas untuk menambahkan modul/video EMT pertama!"
+                  : `Belum ada materi yang diupload untuk NPT Level ${selectedLevel}. Klik tombol di atas untuk menambahkan modul pertama!`}
               </p>
               <button
                 onClick={handleOpenAdd}
@@ -550,10 +571,11 @@ export default function MaterialsAdminContainer() {
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500 font-semibold"
                   >
+                    <option value={0}>🎓 EMT (Pelatihan Emosi)</option>
                     {[1, 2, 3, 4, 5, 6].map((l) => (
-                      <option key={l} value={l}>Level {l}</option>
+                      <option key={l} value={l}>NPT Level {l} {l === 6 ? '(14 Akar)' : ''}</option>
                     ))}
                   </select>
                 </div>
