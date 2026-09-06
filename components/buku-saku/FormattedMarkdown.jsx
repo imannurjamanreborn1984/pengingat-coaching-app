@@ -4,10 +4,10 @@ import React from 'react';
 
 /**
  * Komponen FormattedMarkdown
- * Mengubah raw text / markdown (bold **, italic *, bullet lists, numbered lists, blockquote, line breaks)
- * menjadi tampilan tipografi ilmiah/kitab yang rapi dengan line-height nyaman (1.5 - 1.6) dan bebas "wall of text".
+ * Mengubah raw text / markdown (headings, bold, italic, lists, blockquote, teks Arab)
+ * menjadi tampilan tipografi kitab klasik yang mewah dengan teks Arab besar & bersyakal jelas.
  */
-export default function FormattedMarkdown({ content = "", className = "", isKitab = true }) {
+export default function FormattedMarkdown({ content = "", className = "", isKitab = true, arabicScale = "base" }) {
   if (!content) return null;
 
   // Split text menjadi paragraf berdasarkan double newline atau single newline yang signifikan
@@ -18,18 +18,13 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
 
   // Helper untuk memproses inline markdown: **bold**, *italic*, `code`
   const renderInline = (text) => {
-    // Pecah berdasarkan token markdown
     const parts = [];
-    let remaining = text;
     let keyIdx = 0;
-
-    // Regex untuk **bold**, *italic*, `code`
     const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
     let match;
     let lastIndex = 0;
 
     while ((match = regex.exec(text)) !== null) {
-      // Teks sebelum match
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index));
       }
@@ -49,7 +44,7 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
         );
       } else if (token.startsWith('`') && token.endsWith('`')) {
         parts.push(
-          <code key={`c-${keyIdx++}`} className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-800 text-[11px] font-mono">
+          <code key={`c-${keyIdx++}`} className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-900 text-[11px] font-mono">
             {token.slice(1, -1)}
           </code>
         );
@@ -64,18 +59,102 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
     return parts.length > 0 ? parts : text;
   };
 
-  return (
-    <div className={`space-y-3 leading-[1.65] text-xs sm:text-sm ${className}`}>
-      {rawParagraphs.map((para, pIdx) => {
-        // Cek jika seluruh baris adalah list (bullet point)
-        const lines = para.split('\n').map(l => l.trim()).filter(Boolean);
-        const isBulletList = lines.length > 0 && lines.every(l => /^[-*•]\s+/.test(l));
-        const isNumberedList = lines.length > 0 && lines.every(l => /^\d+[\.)]\s+/.test(l));
-        const isBlockquote = para.startsWith('>');
+  // Deteksi apakah teks mayoritas adalah huruf Arab
+  const isArabicBlock = (text) => {
+    const arabicMatches = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g);
+    if (!arabicMatches) return false;
+    // Jika jumlah karakter arab signifikan (> 25% dari total teks atau > 15 karakter arab)
+    const cleanText = text.replace(/[\s\d\W_]/g, '');
+    return arabicMatches.length >= 15 || (cleanText.length > 0 && arabicMatches.length / cleanText.length > 0.3);
+  };
 
+  // Ukuran font Arab berdasarkan scale
+  const getArabicFontSize = () => {
+    switch (arabicScale) {
+      case 'xl':
+      case '2xl':
+        return 'text-3xl sm:text-4xl md:text-5xl leading-[2.5] tracking-wide';
+      case 'lg':
+        return 'text-2xl sm:text-3xl md:text-4xl leading-[2.3] tracking-wide';
+      case 'base':
+      default:
+        return 'text-xl sm:text-2xl md:text-3xl leading-[2.2] tracking-wide';
+    }
+  };
+
+  return (
+    <div className={`space-y-4 leading-[1.7] text-xs sm:text-sm ${className}`}>
+      {rawParagraphs.map((para, pIdx) => {
+        const lines = para.split('\n').map(l => l.trim()).filter(Boolean);
+
+        // 1. HEADINGS (###, ####, ##, #)
+        if (para.startsWith('##### ')) {
+          return (
+            <h5 key={pIdx} className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#8b1e1e] pt-3 pb-1 border-b border-[#dfcfb0]/60">
+              {renderInline(para.replace(/^#####\s+/, ''))}
+            </h5>
+          );
+        }
+
+        if (para.startsWith('#### ')) {
+          return (
+            <h4 key={pIdx} className="text-sm sm:text-base font-bold text-[#3a2211] pt-3 pb-1 font-kitab-title">
+              {renderInline(para.replace(/^####\s+/, ''))}
+            </h4>
+          );
+        }
+
+        if (para.startsWith('### ')) {
+          return (
+            <h3 key={pIdx} className="text-base sm:text-lg font-black text-[#8b1e1e] pt-4 pb-2 border-b-2 border-[#cbb38b] font-kitab-title flex items-center gap-2">
+              {renderInline(para.replace(/^###\s+/, ''))}
+            </h3>
+          );
+        }
+
+        if (para.startsWith('## ')) {
+          return (
+            <h2 key={pIdx} className="text-lg sm:text-xl font-black text-[#26150a] pt-4 pb-2 border-b-2 border-[#8f632d] font-kitab-title">
+              {renderInline(para.replace(/^##\s+/, ''))}
+            </h2>
+          );
+        }
+
+        if (para.startsWith('# ')) {
+          return (
+            <h1 key={pIdx} className="text-xl sm:text-2xl font-black text-[#26150a] pt-4 pb-2 border-b-2 border-[#8f632d] font-kitab-title">
+              {renderInline(para.replace(/^#\s+/, ''))}
+            </h1>
+          );
+        }
+
+        if (para === '---' || para === '***') {
+          return <hr key={pIdx} className="border-t border-[#d8c3a1] my-4" />;
+        }
+
+        // 2. TEKS ARAB BLOK (Otomatis Diberi Frame Khusus Mushaf & Font Besar)
+        if (isArabicBlock(para)) {
+          return (
+            <div
+              key={pIdx}
+              dir="rtl"
+              className={`my-4 p-5 sm:p-7 rounded-2xl bg-[#fdfaf3] border-2 border-[#cbb38b] shadow-xs text-right font-serif text-[#26150a] selection:bg-amber-200 ${getArabicFontSize()}`}
+              style={{ fontFamily: "'Amiri', 'Traditional Arabic', 'Scheherazade New', 'Noto Naskh Arabic', serif" }}
+            >
+              {lines.map((line, lIdx) => (
+                <p key={lIdx} className="my-1">
+                  {line}
+                </p>
+              ))}
+            </div>
+          );
+        }
+
+        // 3. BULLET LIST
+        const isBulletList = lines.length > 0 && lines.every(l => /^[-*•]\s+/.test(l));
         if (isBulletList) {
           return (
-            <ul key={pIdx} className="space-y-1.5 pl-4 list-disc list-outside my-2">
+            <ul key={pIdx} className="space-y-2 pl-5 list-disc list-outside my-2 text-[#3d2514]">
               {lines.map((line, lIdx) => (
                 <li key={lIdx} className="pl-1">
                   {renderInline(line.replace(/^[-*•]\s+/, ''))}
@@ -85,9 +164,11 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
           );
         }
 
+        // 4. NUMBERED LIST
+        const isNumberedList = lines.length > 0 && lines.every(l => /^\d+[\.)]\s+/.test(l));
         if (isNumberedList) {
           return (
-            <ol key={pIdx} className="space-y-1.5 pl-4 list-decimal list-outside my-2 font-medium">
+            <ol key={pIdx} className="space-y-2 pl-5 list-decimal list-outside my-2 font-medium text-[#3d2514]">
               {lines.map((line, lIdx) => (
                 <li key={lIdx} className="pl-1">
                   {renderInline(line.replace(/^\d+[\.)]\s+/, ''))}
@@ -97,25 +178,29 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
           );
         }
 
-        if (isBlockquote) {
+        // 5. BLOCKQUOTE
+        if (para.startsWith('>')) {
           const quoteText = para.replace(/^>\s*/gm, '');
+          const isQuoteArabic = isArabicBlock(quoteText);
           return (
             <blockquote
               key={pIdx}
-              className={`my-3 p-3.5 rounded-xl border-l-4 italic ${
-                isKitab
-                  ? 'bg-[#faf2e3] border-[#b38b42] text-[#3d2514]'
-                  : 'bg-slate-900 border-emerald-500 text-slate-300'
+              dir={isQuoteArabic ? "rtl" : "ltr"}
+              className={`my-3 p-4 rounded-xl border-l-4 ${
+                isQuoteArabic
+                  ? `text-right bg-[#fdfaf3] border-[#8b1e1e] text-[#26150a] font-serif ${getArabicFontSize()}`
+                  : `italic bg-[#faf2e3] border-[#b38b42] text-[#3d2514]`
               }`}
+              style={isQuoteArabic ? { fontFamily: "'Amiri', 'Traditional Arabic', serif" } : {}}
             >
               {renderInline(quoteText)}
             </blockquote>
           );
         }
 
-        // Paragraf biasa
+        // 6. PARAGRAF BIASA
         return (
-          <p key={pIdx} className="leading-relaxed">
+          <p key={pIdx} className="leading-relaxed text-[#3d2514]">
             {lines.map((line, lIdx) => (
               <React.Fragment key={lIdx}>
                 {renderInline(line)}

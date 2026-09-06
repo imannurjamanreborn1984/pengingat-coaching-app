@@ -598,10 +598,36 @@ export default function MaktabahBedahKitabPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
+                    {/* Ukuran Font Arab & Teks */}
+                    <div className="flex items-center gap-1 bg-[#eee2cb] p-1 rounded-xl border border-[#d8c3a1]">
+                      <Type className="w-3.5 h-3.5 text-[#634224] ml-1" />
+                      <button
+                        onClick={() => setFontSizeLevel("base")}
+                        className={`px-2 py-0.5 rounded-lg text-xs font-bold transition cursor-pointer ${fontSizeLevel === "base" ? "bg-[#3a2211] text-amber-300 shadow-xs" : "text-[#634224] hover:bg-[#dfcdab]"}`}
+                        title="Ukuran Font Sedang (24px Arab)"
+                      >
+                        Sedang
+                      </button>
+                      <button
+                        onClick={() => setFontSizeLevel("lg")}
+                        className={`px-2 py-0.5 rounded-lg text-xs font-bold transition cursor-pointer ${fontSizeLevel === "lg" ? "bg-[#3a2211] text-amber-300 shadow-xs" : "text-[#634224] hover:bg-[#dfcdab]"}`}
+                        title="Ukuran Font Besar (32px Arab)"
+                      >
+                        Besar
+                      </button>
+                      <button
+                        onClick={() => setFontSizeLevel("xl")}
+                        className={`px-2 py-0.5 rounded-lg text-xs font-bold transition cursor-pointer ${fontSizeLevel === "xl" ? "bg-[#3a2211] text-amber-300 shadow-xs" : "text-[#634224] hover:bg-[#dfcdab]"}`}
+                        title="Ukuran Font Sangat Besar (40px Arab)"
+                      >
+                        Sangat Besar
+                      </button>
+                    </div>
+
                     {/* Mode Mimbar Fullscreen */}
                     <button
                       onClick={() => setIsMimbarMode(!isMimbarMode)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#3a2211] text-amber-300 border border-[#8f632d] flex items-center gap-1.5 shadow-xs hover:bg-[#2c1a0d]"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#3a2211] text-amber-300 border border-[#8f632d] flex items-center gap-1.5 shadow-xs hover:bg-[#2c1a0d] cursor-pointer"
                       title="Buka Mode Layar Penuh untuk Mengajar"
                     >
                       {isMimbarMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -611,7 +637,7 @@ export default function MaktabahBedahKitabPage() {
                     {/* Salin Rangkuman */}
                     <button
                       onClick={handleCopyResult}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ede1c7] text-[#5e3d1c] border border-[#cbb38b] hover:bg-[#dfcdab] flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ede1c7] text-[#5e3d1c] border border-[#cbb38b] hover:bg-[#dfcdab] flex items-center gap-1 cursor-pointer"
                       title="Salin Naskah untuk Dibagikan ke Jamaah"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
@@ -621,7 +647,7 @@ export default function MaktabahBedahKitabPage() {
                     {/* Ekspor Word */}
                     <button
                       onClick={handleExportWord}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1b6b55] hover:bg-[#155644] text-white flex items-center gap-1 shadow-xs"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1b6b55] hover:bg-[#155644] text-white flex items-center gap-1 shadow-xs cursor-pointer"
                       title="Download Diktat Word (.doc)"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -634,7 +660,7 @@ export default function MaktabahBedahKitabPage() {
                 <div className={`prose-kitab leading-relaxed ${
                   fontSizeLevel === "lg" ? "text-base leading-loose" : fontSizeLevel === "xl" ? "text-lg leading-loose" : "text-sm"
                 }`}>
-                  <FormattedMarkdown content={currentResult} isKitab={true} />
+                  <FormattedMarkdown content={currentResult} isKitab={true} arabicScale={fontSizeLevel} />
                 </div>
 
                 {/* FOOTER HASIL */}
