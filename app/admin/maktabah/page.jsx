@@ -44,20 +44,12 @@ const KITAB_OPTIONS = [
     defaultMajlis: "Majlis Fiqh Kifayatul Akhyar"
   },
   {
-    id: "hikam-selasa",
-    nama: "Kitab Al-Hikam (Rutinan Malam Selasa)",
+    id: "al-hikam",
+    nama: "Kitab Al-Hikam (Syarah KH. Sholeh Darat)",
     icon: "🌙",
-    kategori: "Tasawuf & Makrifat",
-    deskripsi: "Kajian maqolah hikmah tasawuf karya Syekh Ibnu Atha'illah As-Sakandari",
-    defaultMajlis: "Rutinan Malam Selasa (Al-Hikam)"
-  },
-  {
-    id: "hikam-jumat",
-    nama: "Kitab Al-Hikam (Rutinan Malam Jumat)",
-    icon: "🌟",
-    kategori: "Tasawuf & Makrifat",
-    deskripsi: "Kajian maqolah hikmah tasawuf karya Syekh Ibnu Atha'illah As-Sakandari",
-    defaultMajlis: "Rutinan Malam Jumat (Al-Hikam)"
+    kategori: "Tasawuf Nusantara & Makrifat",
+    deskripsi: "Kajian maqolah Al-Hikam dengan pendekatan syarah & laku batin KH. Sholeh Darat Semarang (Malam Selasa & Malam Jumat)",
+    defaultMajlis: "Rutinan Kitab Al-Hikam (Malam Selasa & Malam Jumat)"
   },
   {
     id: "tuhfatul-murid",
