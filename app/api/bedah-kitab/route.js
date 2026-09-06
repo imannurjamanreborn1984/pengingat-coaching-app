@@ -75,11 +75,16 @@ FORMAT OUTPUT WAJIB TERSTRUKTUR SEPERTI BERIKUT (Gunakan Markdown rapi dengan hi
 ---
 
 ### 4. 💎 HIKMAH MAKRIFAT, PENCARIAN JATI DIRI & KORELASI AL-HIKAM
-- **Korelasi dengan ${targetMaqolahHikam || "Maqolah Al-Hikam"}:**
-  Jelaskan secara mendalam bagaimana ayat/teks kajian ini berlabuh pada mutiara maqolah Al-Hikam tersebut.
-- **Pesan Pencarian Jati Diri & Transformasi Jiwa:**
-  Kupas pesan tersembunyi bagi praktisi spiritual yang sedang berjalan menuju mengenal Allah dan melepaskan ilusi ego (fana' menuju baqa').
-- **Pesan Aplikatif untuk Jama'ah:** 2-3 poin praktis untuk batin dan amalan sehari-hari.
+(Khusus jika mengkaji Kitab Al-Hikam atau menghubungkan ke Al-Hikam, WAJIB sajikan DUA LAPIS MAQOLAH BERPASANGAN pada nomor yang sama):
+- **A. MAQOLAH UTAMA (SYEKH IBNU ATHA'ILLAH AS-SAKANDARI):**
+  * Teks Arab Asli Maqolah (misal Maqolah ke-36).
+  * Terjemah & Esensi Universal (Kalam Hikmah Inti).
+- **B. SYARAH & PENJELASAN LAKU BATIN KH. SHOLEH DARAT SEMARANG (PADA NOMOR MAQOLAH YANG SAMA):**
+  * Uraian syarah, dialektika roso, dan tamsil/perumpamaan khas KH. Sholeh Darat.
+  * Aplikasi praktis laku batin (*sulûk*) di kehidupan sehari-hari (bagaimana mempraktikkan maqolah ini di tengah keluarga, majlis, dan masyarakat Nusantara).
+  * Peringatan bahaya tipu daya nafsu (*jebakan riya' & ujub*) terkait maqolah ini.
+- **C. BENANG MERAH DENGAN PENCARIAN JATI DIRI & HANCA DERESAN SEBELUMNYA:**
+  * Hubungan antara maqolah ini dengan perjalanan mengenal Allah (fana' ilal baqa') serta sambungannya dengan maqolah-maqolah deresan sebelumnya/berikutnya.
 
 ---
 
