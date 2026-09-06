@@ -78,7 +78,7 @@ export default function MaterialsAdminContainer() {
           .from("npt_materials")
           .select("*")
           .eq("level", selectedLevel)
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: false });
 
         if (!error && data) {
           setMaterials(data);

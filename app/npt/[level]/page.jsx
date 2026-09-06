@@ -134,6 +134,7 @@ export default function NPTLevelDetailPage() {
   const [activeLightbox, setActiveLightbox] = useState(null); // { url, title }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [materials, setMaterials] = useState([]);
+  const [expandedIds, setExpandedIds] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isKitabTheme, setIsKitabTheme] = useState(true);
 
@@ -175,10 +176,17 @@ export default function NPTLevelDetailPage() {
           .select("*")
           .eq("level", levelNum)
           .eq("is_published", true)
-          .order("order_index", { ascending: true });
+          .order("created_at", { ascending: false });
 
-        if (!error && data) {
+        if (!error && data && data.length > 0) {
           setMaterials(data);
+          // Default: Hanya materi terupdate/teratas (index 0) yang terbuka
+          setExpandedIds(new Set([data[0].id]));
+          setIsLoading(false);
+          return;
+        } else if (!error && data && data.length === 0) {
+          setMaterials([]);
+          setExpandedIds(new Set());
           setIsLoading(false);
           return;
         }
@@ -189,12 +197,41 @@ export default function NPTLevelDetailPage() {
     try {
       const localData = localStorage.getItem(`npt_materials_level_${levelNum}`);
       if (localData) {
-        setMaterials(JSON.parse(localData));
+        const parsed = JSON.parse(localData);
+        parsed.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+        setMaterials(parsed);
+        if (parsed.length > 0) {
+          setExpandedIds(new Set([parsed[0].id || 0]));
+        }
       } else {
         setMaterials([]);
       }
     } catch (e) {}
     setIsLoading(false);
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    setExpandedIds(new Set(materials.map((m, i) => m.id || i)));
+  };
+
+  const collapseOlder = () => {
+    if (materials.length > 0) {
+      setExpandedIds(new Set([materials[0].id || 0]));
+    } else {
+      setExpandedIds(new Set());
+    }
   };
 
   const handleLoginSubmit = async (e) => {
@@ -443,158 +480,299 @@ export default function NPTLevelDetailPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {materials.map((mat, idx) => (
-              <div
-                key={mat.id || idx}
-                className={`p-6 rounded-3xl transition space-y-4 text-left ${
-                  isKitabTheme
-                    ? 'card-kitab-frame shadow-md'
-                    : 'bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-xl'
-                }`}
-              >
-                <div className={`flex flex-wrap items-center justify-between gap-2 border-b pb-3 ${
-                  isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+            {/* Header Toolbar Info & Toggle All */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-bold ${isKitabTheme ? 'text-[#4a2e12]' : 'text-slate-300'}`}>
+                  📚 {materials.length} Topik Pembelajaran
+                </span>
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+                  isKitabTheme ? 'bg-[#eee2cb] text-[#634224] border border-[#d8c3a1]' : 'bg-slate-800 text-slate-300 border border-slate-700'
                 }`}>
-                  <div>
-                    <h2 className={`text-base font-extrabold ${
-                      isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
-                    }`}>
-                      {mat.title}
-                    </h2>
-                    {mat.subtitle && (
-                      <p className={`text-xs font-medium mt-0.5 ${
-                        isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'
-                      }`}>
-                        {mat.subtitle}
-                      </p>
-                    )}
-                  </div>
-                  {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
+                  Urutan: Terbaru di Paling Atas
+                </span>
+              </div>
+              {materials.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={expandAll}
+                    className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
+                      isKitabTheme
+                        ? 'bg-[#ede1c7] text-[#5e3d1c] hover:bg-[#dfcdab] border-[#cbb38b]'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border-slate-700'
+                    }`}
+                  >
+                    Buka Semua
+                  </button>
+                  <button
+                    type="button"
+                    onClick={collapseOlder}
+                    className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
+                      isKitabTheme
+                        ? 'bg-[#ede1c7] text-[#5e3d1c] hover:bg-[#dfcdab] border-[#cbb38b]'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border-slate-700'
+                    }`}
+                  >
+                    Tutup Yang Lama
+                  </button>
                 </div>
+              )}
+            </div>
 
-                {mat.content && <ExpandableContent content={mat.content} isKitabTheme={isKitabTheme} />}
+            {/* List Materi */}
+            {materials.map((mat, idx) => {
+              const isExpanded = expandedIds.has(mat.id || idx);
+              const isLatest = idx === 0;
 
-                {/* MEMBER LOCK VS FULL ACCESS */}
-                {isApproved ? (
-                  /* MEMBER APPROVED: FULL VIDEO, IMAGE & FILE DOWNLOAD ACCESS */
-                  <div className="space-y-4 pt-2">
-                    {mat.image_url && (
-                      <div className="space-y-2">
-                        <div
-                          onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                          className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
-                            isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
-                          }`}
-                          title="Klik untuk Perbesar Gambar (Zoom In / Out)"
-                        >
-                          <img
-                            src={mat.image_url}
-                            alt={mat.title}
-                            className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-                          />
-                          <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
-                            isKitabTheme
-                              ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
-                              : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
-                          }`}>
-                            <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
-                            <span>Perbesar / Zoom</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {mat.youtube_url && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs font-bold flex items-center gap-1.5 ${
-                            isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-                          }`}>
-                            <Film className="w-4 h-4 text-red-500" />
-                            <span>Video Penjelasan Resmi:</span>
-                          </span>
-                          <a
-                            href={mat.youtube_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
-                              isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
-                            }`}
-                          >
-                            <span>Buka di YouTube</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
-                          <iframe
-                            src={formatYouTubeEmbedUrl(mat.youtube_url)}
-                            title={mat.title}
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {mat.file_url && (
-                      <div className="pt-2">
-                        <a
-                          href={mat.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
-                            isKitabTheme
-                              ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
-                              : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
-                          }`}
-                        >
-                          <Download className="w-4 h-4" />
-                          <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
-                          <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* NON-MEMBER / GUEST: PROTECTED LOCK CARD */
-                  <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              return (
+                <div
+                  key={mat.id || idx}
+                  className={`rounded-3xl transition duration-200 overflow-hidden text-left ${
                     isKitabTheme
-                      ? 'bg-[#f5ebd7] border-[#d8c3a1]'
-                      : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                        isKitabTheme
-                          ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      ? isLatest && isExpanded
+                        ? 'card-kitab-frame shadow-md ring-1 ring-[#8f632d]/40'
+                        : 'card-kitab-frame shadow-xs'
+                      : isLatest && isExpanded
+                        ? 'bg-slate-900 border border-rose-500/40 shadow-xl'
+                        : 'bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md'
+                  }`}
+                >
+                  {/* BARIS JUDUL / ACCORDION HEADER */}
+                  <div
+                    onClick={() => toggleExpand(mat.id || idx)}
+                    className={`p-5 sm:p-6 transition cursor-pointer select-none flex items-center justify-between gap-3 ${
+                      isExpanded
+                        ? isKitabTheme
+                          ? 'border-b border-[#dfcfb0] bg-[#f7eedc]/50'
+                          : 'border-b border-slate-800 bg-slate-950/40'
+                        : isKitabTheme
+                          ? 'hover:bg-[#f5ebd7]/60'
+                          : 'hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg border shadow-xs ${
+                        isLatest
+                          ? isKitabTheme
+                            ? 'bg-[#3a2211] text-amber-300 border-[#8f632d]'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          : isKitabTheme
+                            ? 'bg-[#ede1c7] text-[#634224] border-[#d8c3a1]'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}>
-                        <Lock className="w-5 h-5" />
+                        {isLatest ? '✨' : '📖'}
                       </div>
-                      <div>
-                        <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
-                          Lampiran Dokumen & Video Terkunci
-                        </h4>
-                        <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-                          Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong> dan memutar video.
-                        </p>
+
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {isLatest && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-700 text-white shadow-xs">
+                              TERBARU / TERUPDATE
+                            </span>
+                          )}
+                          {mat.created_at && (
+                            <span className={`text-[10px] font-medium flex items-center gap-1 ${
+                              isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
+                            }`}>
+                              <Clock className="w-3 h-3" />
+                              {new Date(mat.created_at).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric"
+                              })}
+                            </span>
+                          )}
+                          {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
+                        </div>
+
+                        <h2 className={`text-base sm:text-lg font-black leading-snug tracking-tight ${
+                          isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                        }`}>
+                          {mat.title}
+                        </h2>
+
+                        {mat.subtitle && (
+                          <p className={`text-xs font-medium truncate ${
+                            isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'
+                          }`}>
+                            {mat.subtitle}
+                          </p>
+                        )}
+
+                        {!isExpanded && (
+                          <p className={`text-[11px] font-semibold flex items-center gap-1 pt-0.5 ${
+                            isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
+                          }`}>
+                            <span>👉 Klik judul untuk membuka & mengakses materi lengkap...</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => setIsAuthModalOpen(true)}
-                      className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
-                        isKitabTheme
-                          ? 'bg-[#9e2a2b] hover:bg-[#852324]'
-                          : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
-                      }`}
-                    >
-                      🔓 Masuk / Buka Akses
-                    </button>
+                    {/* Tombol Chevron */}
+                    <div className="shrink-0 flex items-center gap-2">
+                      <div
+                        className={`p-2 rounded-xl border transition flex items-center justify-center ${
+                          isExpanded
+                            ? isKitabTheme
+                              ? 'bg-[#3a2211] text-amber-300 border-[#8f632d]'
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : isKitabTheme
+                              ? 'bg-[#ebdcc4] text-[#5e3d1c] border-[#cbb38b]'
+                              : 'bg-slate-800 text-slate-300 border-slate-700'
+                        }`}
+                      >
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* KONTEN LENGKAP HANYA JIKA TERBUKA / EXPANDED */}
+                  {isExpanded && (
+                    <div className="p-6 space-y-4 animate-in fade-in duration-200">
+                      {mat.content && <ExpandableContent content={mat.content} isKitabTheme={isKitabTheme} />}
+
+                      {/* MEMBER LOCK VS FULL ACCESS */}
+                      {isApproved ? (
+                        /* MEMBER APPROVED: FULL VIDEO, IMAGE & FILE DOWNLOAD ACCESS */
+                        <div className="space-y-4 pt-2">
+                          {mat.image_url && (
+                            <div className="space-y-2">
+                              <div
+                                onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
+                                className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
+                                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
+                                }`}
+                                title="Klik untuk Perbesar Gambar (Zoom In / Out)"
+                              >
+                                <img
+                                  src={mat.image_url}
+                                  alt={mat.title}
+                                  className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+                                />
+                                <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
+                                  isKitabTheme
+                                    ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
+                                    : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
+                                }`}>
+                                  <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
+                                  <span>Perbesar / Zoom</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {mat.youtube_url && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                                }`}>
+                                  <Film className="w-4 h-4 text-red-500" />
+                                  <span>Video Penjelasan Resmi:</span>
+                                </span>
+                                <a
+                                  href={mat.youtube_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
+                                    isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
+                                  }`}
+                                >
+                                  <span>Buka di YouTube</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </div>
+                              <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
+                                <iframe
+                                  src={formatYouTubeEmbedUrl(mat.youtube_url)}
+                                  title={mat.title}
+                                  className="w-full h-full border-0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {mat.file_url && (
+                            <div className="pt-2">
+                              <a
+                                href={mat.file_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
+                                  isKitabTheme
+                                    ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
+                                    : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
+                                }`}
+                              >
+                                <Download className="w-4 h-4" />
+                                <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
+                                <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* NON-MEMBER / GUEST: PROTECTED LOCK CARD */
+                        <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          isKitabTheme
+                            ? 'bg-[#f5ebd7] border-[#d8c3a1]'
+                            : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
+                        }`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isKitabTheme
+                                ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
+                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            }`}>
+                              <Lock className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
+                                Lampiran Dokumen & Video Terkunci
+                              </h4>
+                              <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                                Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong> dan memutar video.
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setIsAuthModalOpen(true)}
+                            className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
+                              isKitabTheme
+                                ? 'bg-[#9e2a2b] hover:bg-[#852324]'
+                                : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
+                            }`}
+                          >
+                            🔓 Masuk / Buka Akses
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Tombol Tutup / Lipat Materi */}
+                      <div className="pt-2 flex justify-end border-t border-[#dfcfb0]/40">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(mat.id || idx)}
+                          className={`text-xs font-bold flex items-center gap-1.5 py-1.5 px-3 rounded-xl transition cursor-pointer ${
+                            isKitabTheme
+                              ? 'text-[#9e2a2b] hover:bg-[#ebdcc4]'
+                              : 'text-amber-400 hover:bg-amber-500/10'
+                          }`}
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                          <span>Tutup / Lipat Materi Ini</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
