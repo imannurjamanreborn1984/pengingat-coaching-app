@@ -321,8 +321,12 @@ export default function HakekatCintaContainer() {
         if (tokenHalaman === '') {
           setSemuaVideo(listVideoMapped);
           if (listVideoMapped.length > 0) {
-            setVideoAktif(listVideoMapped[0]);
+            setVideoAktif((prev) => prev || listVideoMapped[0]);
           }
+          // Simpan ke cache lokal agar pembukaan berikutnya 0 ms
+          try {
+            localStorage.setItem(`hakekat_cinta_cached_${kategoriAktif}`, JSON.stringify(listVideoMapped));
+          } catch (e) {}
         } else {
           setSemuaVideo((prev) => [...prev, ...listVideoMapped]);
         }
@@ -340,8 +344,20 @@ export default function HakekatCintaContainer() {
   useEffect(() => {
     if (currentUser) {
       setNextPageToken('');
-      setSemuaVideo([]);
-      setVideoAktif(null);
+      
+      // Fast Cache First: Langsung tampilkan video dari cache dalam 0 ms
+      try {
+        const cached = localStorage.getItem(`hakekat_cinta_cached_${kategoriAktif}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSemuaVideo(parsed);
+            setVideoAktif(parsed[0]);
+          }
+        }
+      } catch (e) {}
+
+      // Lakukan revalidasi / update terbaru di latar belakang
       ambilDataPlaylistYouTube('');
     }
   }, [kategoriAktif, currentUser]);
