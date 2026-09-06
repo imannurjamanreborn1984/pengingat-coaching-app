@@ -84,6 +84,7 @@ export default function MaktabahBedahKitabPage() {
   const [lokasiMajlis, setLokasiMajlis] = useState("Majlis Tafsir Shawi (4 Titik Rutinan)");
   const [teksArab, setTeksArab] = useState("");
   const [targetMaqolahHikam, setTargetMaqolahHikam] = useState("Maqolah ke-36: مَا اسْتُودِعَ فِي غَيْبِ السَّرَائِرِ ظَهَرَ فِي شَهَادَةِ الظَّوَاهِرِ");
+  const [pilihanBahasa, setPilihanBahasa] = useState("Basa Sunda Pesantren (Lemes/Merenah) & Indonesia");
   const [catatanKonteks, setCatatanKonteks] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -151,6 +152,7 @@ export default function MaktabahBedahKitabPage() {
           lokasiMajlis,
           teksArab,
           targetMaqolahHikam,
+          pilihanBahasa,
           catatanKonteks,
         }),
       });
@@ -438,10 +440,33 @@ export default function MaktabahBedahKitabPage() {
                   </p>
                 </div>
 
+                {/* PILIHAN BAHASA PENGANTAR / POINTER */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#4a2e12] flex items-center justify-between">
+                    <span>4. Bahasa Pengantar & Pointer Ceramah:</span>
+                    <span className="text-[10px] text-emerald-800 font-bold">Urang Sunda 🌾</span>
+                  </label>
+                  <select
+                    value={pilihanBahasa}
+                    onChange={(e) => setPilihanBahasa(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-[#fcf7ec] border border-[#d8c3a1] text-[#26150a] focus:ring-2 focus:ring-amber-500 focus:outline-none font-semibold cursor-pointer"
+                  >
+                    <option value="Basa Sunda Pesantren (Lemes/Merenah) & Indonesia">
+                      🌾 Basa Sunda Pesantren (Lemes/Merenah) & Indonesia (Rekomendasi)
+                    </option>
+                    <option value="Basa Sunda Pinuh (Sunda Salaf)">
+                      🌾 Basa Sunda Pinuh (Sunda Salaf Pasundan)
+                    </option>
+                    <option value="Bahasa Indonesia Baku & Anggun">
+                      🇮🇩 Bahasa Indonesia Baku & Anggun
+                    </option>
+                  </select>
+                </div>
+
                 {/* TEXTAREA TEKS ARAB GUNDUL / MATAN / AYAT */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[#4a2e12] flex items-center justify-between">
-                    <span>4. Teks Arab Gundul / Matan / Ayat:</span>
+                    <span>5. Teks Arab Gundul / Matan / Ayat:</span>
                     <span className="text-[10px] text-[#734822]">Otomatis Disyakkal</span>
                   </label>
                   <textarea
@@ -457,7 +482,7 @@ export default function MaktabahBedahKitabPage() {
                 {/* CATATAN TAMBAHAN */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[#4a2e12]">
-                    5. Catatan / Konteks Khusus (Opsional):
+                    6. Catatan / Konteks Khusus (Opsional):
                   </label>
                   <input
                     type="text"

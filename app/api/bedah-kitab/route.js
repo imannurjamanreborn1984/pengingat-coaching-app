@@ -18,7 +18,7 @@ function getValidApiKey() {
 
 export async function POST(req) {
   try {
-    const { kitabRujukan, lokasiMajlis, teksArab, targetMaqolahHikam, catatanKonteks } = await req.json();
+    const { kitabRujukan, lokasiMajlis, teksArab, targetMaqolahHikam, catatanKonteks, pilihanBahasa } = await req.json();
 
     if (!teksArab && !catatanKonteks) {
       return NextResponse.json(
@@ -42,7 +42,14 @@ TUGAS ANDA ADALAH MEMBEDAH TEKS KAJIAN DI BAWAH INI UNTUK PEDOMAN MENGAJAR DI MA
 - Kitab Rujukan: ${kitabRujukan || "Tafsir Ash-Shawi & Jalalain"}
 - Lokasi / Majlis: ${lokasiMajlis || "Majlis Pengajian"}
 - Target Maqolah Al-Hikam yang dihubungkan: ${targetMaqolahHikam || "Maqolah ke-36 Al-Hikam"}
+- Pilihan Bahasa Pengantar / Pointer: ${pilihanBahasa || "Basa Sunda Pesantren & Bahasa Indonesia"}
 - Catatan / Konteks Tambahan: ${catatanKonteks || "Pengajian Rutin"}
+
+⚠️ ATURAN BAHASA SANGAT PENTING (KANG IMAN URANG SUNDA):
+- Kang Iman adalah Ajengan / Asatidz dari Tanah Sunda (Jawa Barat). Seluruh jama'ah pengajiannya adalah masyarakat Sunda.
+- JANGAN PERNAH menggunakan Bahasa Jawa (krama/ngoko)!
+- Gunakan BAHASA SUNDA PESANTREN YANG MERENAH, LEMES, DAN ADEM (untuk pointer ceramah dan dialog hikmah) serta BAHASA INDONESIA YANG ANGGUN DAN BERWIBAWA untuk uraian tafsir, fiqh, dan terjemahan.
+- Pendekatan KH. Sholeh Darat yang diambil adalah SUBSTANSI LAKU BATIN & METODOLOGI HIKMAHNYA, tetapi WAJIB disampaikan dalam cita rasa BASA SUNDA PESANTREN / BAHASA INDONESIA!
 
 ⚠️ ATURAN MUTLAK PENOMORAN AL-HIKAM VERSI KANG IMAN:
 Penomoran Kitab Al-Hikam yang dipegang Kang Iman mengikuti versi Kitab Syarah Al-Hikam KH. Sholeh Darat / Pesantren Salaf Nusantara (misal: Maqolah 36 adalah: «مَا اسْتُودِعَ فِي غَيْبِ السَّرَائِرِ ظَهَرَ فِي شَهَادَةِ الظَّوَاهِرِ»).
