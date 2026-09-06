@@ -30,7 +30,8 @@ import {
   ChevronUp,
   X,
   Lock,
-  Crown
+  Crown,
+  Trash2
 } from "lucide-react";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { saveAs } from "file-saver";
@@ -87,19 +88,21 @@ export default function AdminEMTRoom() {
     try {
       setIsLoading(true);
 
-      // 1. Fetch Profiles dari Supabase
-      let profilesData = [];
-      if (supabase) {
-        const { data: profs, error: pErr } = await supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (!pErr && profs) {
-          profilesData = profs;
-        }
-      }
+      // 1. Ambil pendaftar lokal EMT
+      let localRegs = [];
+      try {
+        const saved = localStorage.getItem("emt_registered_members");
+        if (saved) localRegs = JSON.parse(saved);
+      } catch (e) {}
 
-      // 2. Fetch Submissions (khususnya Jurnal EMT) dari Supabase
+      // 2. Ambil jurnal lokal EMT
+      let localJournals = [];
+      try {
+        const saved = localStorage.getItem("emt_journal_entries");
+        if (saved) localJournals = JSON.parse(saved);
+      } catch (e) {}
+
+      // 3. Ambil submissions dari Supabase yang KHUSUS JURNAL EMT
       let subsData = [];
       if (supabase) {
         const { data: subs, error: sErr } = await supabase
@@ -107,22 +110,26 @@ export default function AdminEMTRoom() {
           .select("*")
           .order("created_at", { ascending: false });
         if (!sErr && subs) {
-          subsData = subs;
+          subsData = subs.filter(s => s.answer_text?.includes("[JURNAL EMT") || s.answer_text?.toLowerCase().includes("jurnal emt"));
         }
       }
 
-      // 3. Ambil data lokal jurnal EMT
-      let localJournals = [];
-      try {
-        const saved = localStorage.getItem("emt_journal_entries");
-        if (saved) localJournals = JSON.parse(saved);
-      } catch (e) {}
+      // 4. Ambil profiles dari Supabase
+      let profilesData = [];
+      if (supabase) {
+        const { data: profs, error: pErr } = await supabase
+          .from("profiles")
+          .select("*");
+        if (!pErr && profs) {
+          profilesData = profs;
+        }
+      }
 
-      // Gabungkan submissions
-      const allSubmissions = [...subsData];
+      // Gabungkan submissions EMT
+      const allEMTSubmissions = [...subsData];
       localJournals.forEach(lj => {
-        if (!allSubmissions.some(s => s.id === lj.id)) {
-          allSubmissions.push({
+        if (!allEMTSubmissions.some(s => s.id === lj.id)) {
+          allEMTSubmissions.push({
             id: lj.id,
             user_name: lj.nama,
             answer_text: `[JURNAL EMT - ${(lj.batchId || 'BATCH-1').toUpperCase()}]\nKondisi Emosi: ${lj.kondisiEmosi}\nTrigger: ${lj.triggerEmosi}\nRespon Tubuh: ${lj.responTubuh}\nTeknik: ${lj.teknikPraktik}\nHikmah/Kesadaran Baru:\n${lj.kesadaranBaru}`,
@@ -133,54 +140,62 @@ export default function AdminEMTRoom() {
         }
       });
 
-      setSubmissions(allSubmissions);
+      setSubmissions(allEMTSubmissions);
 
-      // 4. Auto-Aggregasi Member EMT dari Profiles & Submissions
+      // 5. BANGUN DIREKTORI MEMBER EMT (HANYA PESERTA EMT, KELUARGA NPT TIDAK DIMASUKKAN)
       const memberMap = new Map();
 
-      // Masukkan profil yang ada
-      profilesData.forEach(p => {
-        const phoneKey = p.phone_number ? p.phone_number.replace(/[^0-9]/g, "") : `no-phone-${p.id}`;
-        memberMap.set(phoneKey, {
-          id: p.id,
-          nama: p.full_name || "Peserta EMT",
-          email: p.email || "",
-          wa: p.phone_number || "",
-          role: p.role || "member",
-          status: p.status || "approved",
-          batch: p.batch || "batch-1",
-          sekolah: p.school || "Instansi Pendidikan",
-          jabatan: p.position || "Guru / Pendidik",
-          createdAt: p.created_at || new Date().toISOString(),
-          isProfile: true
+      // A. Masukkan pendaftar EMT resmi dari formulir / input manual
+      localRegs.forEach(reg => {
+        const key = (reg.nama || "").toLowerCase().trim();
+        if (!key) return;
+
+        // Cek apakah ada profil di Supabase yang cocok
+        const matchedProfile = profilesData.find(p => 
+          (p.email && reg.email && p.email.toLowerCase().trim() === reg.email.toLowerCase().trim()) ||
+          (p.full_name && p.full_name.toLowerCase().trim() === key)
+        );
+
+        memberMap.set(key, {
+          id: matchedProfile?.id || reg.id,
+          nama: matchedProfile?.full_name || reg.nama,
+          email: matchedProfile?.email || reg.email || "",
+          wa: matchedProfile?.phone_number || reg.wa || "",
+          role: "member",
+          status: matchedProfile?.status || "approved",
+          batch: reg.batch || "batch-1",
+          sekolah: reg.sekolah || "Instansi Pendidikan",
+          jabatan: reg.jabatan || "Guru / Pendidik",
+          createdAt: matchedProfile?.created_at || reg.createdAt || new Date().toISOString(),
+          isProfile: !!matchedProfile,
+          isLocalReg: true
         });
       });
 
-      // Scan submissions untuk peserta yang menyetor tapi belum ada di profiles
-      allSubmissions.forEach(sub => {
-        const name = sub.user_name || "Peserta Anonymous";
-        // Cek jika ada kecocokan nama atau identitas
-        let found = false;
-        for (let [key, val] of memberMap.entries()) {
-          if (val.nama.toLowerCase() === name.toLowerCase()) {
-            found = true;
-            break;
-          }
-        }
-        if (!found && name !== "Peserta Anonymous") {
-          const pseudoKey = `auto-${name.toLowerCase().replace(/\s+/g, "_")}`;
-          memberMap.set(pseudoKey, {
-            id: pseudoKey,
-            nama: name,
-            email: "",
-            wa: "",
+      // B. Masukkan peserta yang sudah pernah menyetor jurnal EMT
+      allEMTSubmissions.forEach(sub => {
+        const name = (sub.user_name || "").trim();
+        if (!name || name === "Peserta Anonymous") return;
+        const key = name.toLowerCase();
+
+        if (!memberMap.has(key)) {
+          const matchedProfile = profilesData.find(p => 
+            p.full_name && p.full_name.toLowerCase().trim() === key
+          );
+
+          memberMap.set(key, {
+            id: matchedProfile?.id || `auto-${key.replace(/\s+/g, "_")}`,
+            nama: matchedProfile?.full_name || name,
+            email: matchedProfile?.email || "",
+            wa: matchedProfile?.phone_number || "",
             role: "member",
-            status: "pending",
-            batch: "batch-1",
-            sekolah: "Peserta Terdata dari Setoran Jurnal",
+            status: matchedProfile?.status || "approved",
+            batch: sub.rawJournal?.batchId || "batch-1",
+            sekolah: "Peserta Terdata dari Setoran Jurnal EMT",
             jabatan: "Peserta EMT",
-            createdAt: sub.created_at || new Date().toISOString(),
-            isAutoGenerated: true
+            createdAt: matchedProfile?.created_at || sub.created_at || new Date().toISOString(),
+            isProfile: !!matchedProfile,
+            isAutoGenerated: !matchedProfile
           });
         }
       });
@@ -267,6 +282,25 @@ export default function AdminEMTRoom() {
     if (formattedPhone.startsWith("0")) formattedPhone = "62" + formattedPhone.slice(1);
 
     try {
+      // 1. Update ke local storage emt_registered_members
+      try {
+        const existing = JSON.parse(localStorage.getItem('emt_registered_members') || '[]');
+        const updated = existing.map(item => {
+          if (item.nama.toLowerCase().trim() === editingMember.nama.toLowerCase().trim()) {
+            return {
+              ...item,
+              nama: editName.trim(),
+              email: cleanEmail,
+              wa: formattedPhone || item.wa,
+              batch: editBatch
+            };
+          }
+          return item;
+        });
+        localStorage.setItem('emt_registered_members', JSON.stringify(updated));
+      } catch (e) {}
+
+      // 2. Simpan ke Supabase jika ada profile
       if (supabase && editingMember.isProfile) {
         const { error } = await supabase
           .from("profiles")
@@ -280,7 +314,6 @@ export default function AdminEMTRoom() {
 
         if (error) throw error;
       } else if (supabase && editingMember.isAutoGenerated) {
-        // Insert profile baru ke Supabase jika sebelumnya hanya auto-generated
         const { error } = await supabase
           .from("profiles")
           .insert([
@@ -315,6 +348,25 @@ export default function AdminEMTRoom() {
     if (formattedPhone.startsWith("0")) formattedPhone = "62" + formattedPhone.slice(1);
 
     try {
+      // 1. Simpan ke localStorage emt_registered_members
+      const newReg = {
+        id: `emt-reg-${Date.now()}`,
+        nama: newMemberData.nama.trim(),
+        email: newMemberData.email ? newMemberData.email.trim().toLowerCase() : "",
+        wa: formattedPhone || "",
+        sekolah: newMemberData.sekolah || "Instansi Pendidikan",
+        jabatan: newMemberData.jabatan || "Guru / Pendidik",
+        batch: newMemberData.batch || "batch-1",
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem('emt_registered_members') || '[]');
+        const updated = [newReg, ...existing.filter(i => i.nama.toLowerCase() !== newReg.nama.toLowerCase())];
+        localStorage.setItem('emt_registered_members', JSON.stringify(updated));
+      } catch (e) {}
+
+      // 2. Simpan ke Supabase jika online
       if (supabase) {
         await supabase.from("profiles").insert([
           {
@@ -335,6 +387,32 @@ export default function AdminEMTRoom() {
       alert("Gagal menambahkan peserta: " + err.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Hapus Peserta dari Ruang EMT
+  const handleDeleteMember = (member) => {
+    if (!confirm(`Hapus peserta "${member.nama}" dari Ruang EMT?`)) return;
+
+    try {
+      // 1. Hapus dari localStorage emt_registered_members
+      try {
+        const existing = JSON.parse(localStorage.getItem('emt_registered_members') || '[]');
+        const updated = existing.filter(i => i.nama.toLowerCase().trim() !== member.nama.toLowerCase().trim());
+        localStorage.setItem('emt_registered_members', JSON.stringify(updated));
+      } catch (e) {}
+
+      // 2. Hapus dari jurnal lokal
+      try {
+        const existingJ = JSON.parse(localStorage.getItem('emt_journal_entries') || '[]');
+        const updatedJ = existingJ.filter(i => i.nama.toLowerCase().trim() !== member.nama.toLowerCase().trim());
+        localStorage.setItem('emt_journal_entries', JSON.stringify(updatedJ));
+      } catch (e) {}
+
+      alert(`Peserta "${member.nama}" telah dihapus dari Ruang EMT.`);
+      fetchData();
+    } catch (err) {
+      alert("Gagal menghapus peserta: " + err.message);
     }
   };
 
@@ -732,6 +810,18 @@ export default function AdminEMTRoom() {
                         >
                           <Send className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Feedback WA</span>
+                        </button>
+
+                        {/* Tombol Hapus Member EMT */}
+                        <button
+                          onClick={() => handleDeleteMember(member)}
+                          className={`p-2 rounded-xl border text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                            isKitabTheme ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-rose-950/40 text-rose-300 border-rose-800'
+                          }`}
+                          title="Hapus Peserta dari Ruang EMT"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          <span className="hidden sm:inline">Hapus</span>
                         </button>
 
                         {/* Tombol Buka Detail Dossier */}

@@ -326,6 +326,24 @@ export default function EMTContainer() {
     if (formattedPhone.startsWith("0")) formattedPhone = "62" + formattedPhone.slice(1);
 
     try {
+      // Simpan ke daftar lokal peserta EMT
+      const newReg = {
+        id: `emt-reg-${Date.now()}`,
+        nama: formData.nama,
+        email: formData.email ? formData.email.trim().toLowerCase() : "",
+        wa: formattedPhone || "",
+        sekolah: formData.sekolah || "Pendidik",
+        jabatan: formData.jabatan || "Guru",
+        batch: "batch-1",
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem('emt_registered_members') || '[]');
+        const updated = [newReg, ...existing.filter(item => item.nama !== newReg.nama)];
+        localStorage.setItem('emt_registered_members', JSON.stringify(updated));
+      } catch (e) {}
+
       if (supabase) {
         await supabase.from("profiles").insert([
           {
