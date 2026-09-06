@@ -60,6 +60,22 @@ const KITAB_OPTIONS = [
     defaultMajlis: "Rutinan Malam Jumat (Al-Hikam)"
   },
   {
+    id: "tuhfatul-murid",
+    nama: "Tuhfatul Murid 'ala Jauharatit Tauhid",
+    icon: "💎",
+    kategori: "Aqidah & Ilmu Tauhid",
+    deskripsi: "Syarah Tauhid Asy'ariyah karya Imam Ibrahim Al-Baijuri atas Matan Jauharatut Tauhid (Bulanan)",
+    defaultMajlis: "Rutinan Bulanan (Tuhfatul Murid / Jauharah)"
+  },
+  {
+    id: "nurul-yaqin",
+    nama: "Nurul Yaqin fi Sirati Sayyidil Mursalin",
+    icon: "🌹",
+    kategori: "Sirah Nabawiyah & Tarikh",
+    deskripsi: "Perjalanan hidup & keluhuran akhlaq Nabi Muhammad SAW karya Syekh Muhammad Al-Khudhari (Bulanan)",
+    defaultMajlis: "Rutinan Bulanan (Sirah Nurul Yaqin)"
+  },
+  {
     id: "umum",
     nama: "Kitab Kuning / Ayat Tematik Lainnya",
     icon: "📜",

@@ -31,10 +31,12 @@ export async function POST(req) {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const instruksiPrompt = `
-Anda adalah seorang Ulama Ahli Tafsir, Muhaddits, Faqih, dan Mursyid Ahli Hikmah Tasawuf yang sangat menguasai tradisi Pesantren Salaf Nusantara, khususnya kitab:
+Anda adalah seorang Ulama Ahli Tafsir, Muhaddits, Faqih, Mutakallim (Ahli Tauhid Asy'ariyah), Ahli Sirah Nabawiyah, dan Mursyid Ahli Hikmah Tasawuf yang sangat menguasai tradisi Pesantren Salaf Nusantara, khususnya kitab-kitab garapan Kang Iman:
 1. Hasyiyah Ash-Shawi 'ala Tafsir Al-Jalalain (Syekh Ahmad Ash-Shawi Al-Maliki) & Matan Tafsir Al-Jalalain (Imam Al-Mahalli & As-Suyuthi).
-2. Kifayatul Akhyar fi Halli Ghoyatil Ikhtishor (Imam Taqiyuddin Al-Hishni).
-3. Kitab Al-Hikam (Syekh Ibnu Atha'illah As-Sakandari) beserta syarah-syarahnya.
+2. Kifayatul Akhyar fi Halli Ghoyatil Ikhtishor (Imam Taqiyuddin Al-Hishni) - Fiqh Syafi'i.
+3. Tuhfatul Murid 'ala Jauharatit Tauhid (Imam Ibrahim Al-Baijuri / Syekh Ibrahim Al-Laqqani) - Aqidah & Tauhid Asy'ariyah.
+4. Nurul Yaqin fi Sirati Sayyidil Mursalin (Syekh Muhammad Al-Khudhari Bek) - Sirah Nabawiyah & Ibrah Tarikh.
+5. Kitab Al-Hikam (Syekh Ibnu Atha'illah As-Sakandari) beserta syarah-syarahnya.
 
 TUGAS ANDA ADALAH MEMBEDAH TEKS KAJIAN DI BAWAH INI UNTUK PEDOMAN MENGAJAR DI MAJLIS KANG IMAN:
 - Kitab Rujukan: ${kitabRujukan || "Tafsir Ash-Shawi & Jalalain"}
