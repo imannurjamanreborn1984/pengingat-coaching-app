@@ -59,13 +59,19 @@ export default function FormattedMarkdown({ content = "", className = "", isKita
     return parts.length > 0 ? parts : text;
   };
 
-  // Deteksi apakah teks mayoritas adalah huruf Arab
+  // Deteksi apakah teks mayoritas adalah huruf Arab murni (bukan teks Sunda/Indonesia yang memuat istilah Arab)
   const isArabicBlock = (text) => {
-    const arabicMatches = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g);
-    if (!arabicMatches) return false;
-    // Jika jumlah karakter arab signifikan (> 25% dari total teks atau > 15 karakter arab)
-    const cleanText = text.replace(/[\s\d\W_]/g, '');
-    return arabicMatches.length >= 15 || (cleanText.length > 0 && arabicMatches.length / cleanText.length > 0.3);
+    const arabicMatches = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || [];
+    const latinMatches = text.match(/[a-zA-Z]/g) || [];
+
+    // Jika huruf Latin lebih banyak daripada huruf Arab, sudah pasti ini penjelasan (Sunda/Indonesia)
+    if (latinMatches.length >= arabicMatches.length) return false;
+
+    const totalLetters = arabicMatches.length + latinMatches.length;
+    if (totalLetters < 6) return false;
+
+    // Harus mayoritas mutlak (> 65%) berupa huruf Arab
+    return (arabicMatches.length / totalLetters) > 0.65;
   };
 
   // Ukuran font Arab berdasarkan scale
