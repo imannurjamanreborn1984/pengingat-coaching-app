@@ -40,7 +40,8 @@ import {
   ChevronDown,
   ChevronUp,
   ZoomIn,
-  Film
+  Film,
+  Share2
 } from 'lucide-react';
 import ImageLightboxModal from '../ui/ImageLightboxModal';
 
