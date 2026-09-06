@@ -381,6 +381,24 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                 </span>
               </Link>
 
+              {/* RUANG KONTROL & EVALUASI EMT KHUSUS KANG IMAN */}
+              <Link
+                href="/admin/emt"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all cursor-pointer ${
+                  activePath === '/admin/emt' ? 'ring-2 ring-emerald-400 bg-emerald-950/50' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <GraduationCap className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <p className="leading-tight">Ruang Kontrol & Evaluasi EMT</p>
+                    <span className="text-[9px] text-emerald-400/80 font-normal">Laporan Orang Perorang & Login</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </Link>
+
               <Link
                 href="/admin/members"
                 onClick={onClose}

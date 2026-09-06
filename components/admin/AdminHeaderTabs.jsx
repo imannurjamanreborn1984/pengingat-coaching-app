@@ -2,13 +2,20 @@
 
 import React from "react";
 import Link from "next/link";
-import { ShieldCheck, Users, BookOpen, Crown, ArrowLeft } from "lucide-react";
+import { ShieldCheck, Users, BookOpen, Crown, ArrowLeft, GraduationCap } from "lucide-react";
 
 export default function AdminHeaderTabs({ activeTab, isKitabTheme = true, onToggleTheme }) {
   const tabs = [
     {
+      id: "emt",
+      label: "Ruang Kontrol & Evaluasi EMT",
+      href: "/admin/emt",
+      icon: GraduationCap,
+      color: isKitabTheme ? "text-[#9e2a2b]" : "text-emerald-400"
+    },
+    {
       id: "members",
-      label: "Persetujuan Anggota",
+      label: "Persetujuan Anggota NPT",
       href: "/admin/members",
       icon: ShieldCheck,
       color: isKitabTheme ? "text-[#9e2a2b]" : "text-amber-400"

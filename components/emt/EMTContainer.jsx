@@ -314,7 +314,7 @@ export default function EMTContainer() {
       }
     });
 
-    const noMentor = "6289658496343"; // Kontak Mentor / Admin EMT
+    const noMentor = "6281324262633"; // Kontak Kang Iman (Mentor / Founder EMT)
     window.open(`https://wa.me/${noMentor}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -343,8 +343,8 @@ export default function EMTContainer() {
       setIsSubmitting(false);
       setSubmitSuccess(true);
 
-      const noAdmin = "6289658496343";
-      const pesan = `Halo Teh Al Hanifah (Admin EMT NPT),
+      const noAdmin = "6281324262633"; // Kang Iman (081324262633)
+      const pesan = `Halo Kang Iman (Mentor & Founder EMT),
 
 Saya ingin mendaftar Program *EMT For Teacher* (Sabtu, 5 Sept 2026).
 

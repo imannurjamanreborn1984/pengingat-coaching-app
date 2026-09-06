@@ -15,7 +15,9 @@ import {
   Timer,
   CheckCircle2,
   Bookmark,
+  ExternalLink,
 } from 'lucide-react';
+import FormattedMarkdown from './FormattedMarkdown';
 
 export const MultiPerspectiveView = ({
   root,
@@ -248,22 +250,36 @@ export const MultiPerspectiveView = ({
                   key={item.id}
                   className="card-kitab-frame rounded-2xl p-5 shadow-xs flex flex-col justify-between"
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 border border-blue-300">
                         {item.field}
                       </span>
+
+                      {(item.doiUrl || item.doi_url) && (
+                        <a
+                          href={item.doiUrl || item.doi_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-[#1b6b55] hover:bg-[#155644] text-white shadow-xs transition-colors cursor-pointer"
+                          title="Buka publikasi / jurnal ilmiah asli"
+                        >
+                          <span>Buka Jurnal Asli</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
                     </div>
 
-                    <h4 className="text-base font-bold text-[#26150a] font-serif">
+                    <h4 className="text-base font-bold text-[#26150a] font-serif leading-snug">
                       {item.title}
                     </h4>
-                    <p className="text-xs text-[#3d2514] mt-2 leading-relaxed">
-                      {item.summary}
-                    </p>
+
+                    <div className="text-xs text-[#3d2514]">
+                      <FormattedMarkdown content={item.summary} isKitab={isKitabTheme} />
+                    </div>
 
                     {item.mechanism && (
-                      <div className="mt-3 p-3 rounded-xl bg-[#eee2cb] border border-[#d8c3a1] text-[11px]">
+                      <div className="mt-3 p-3 rounded-xl bg-[#eee2cb] border border-[#d8c3a1] text-[11px] leading-relaxed">
                         <span className="font-bold text-[#26150a]">Jalur Mekanisme: </span>
                         <span className="text-[#543516]">{item.mechanism}</span>
                       </div>
@@ -271,8 +287,10 @@ export const MultiPerspectiveView = ({
                   </div>
 
                   {item.sourceCitation && (
-                    <div className="mt-4 pt-3 border-t border-[#dfcfb0] text-[10px] text-[#734822] flex items-center justify-between">
-                      <span className="truncate font-semibold">Sumber: {item.sourceCitation}</span>
+                    <div className="mt-4 pt-3 border-t border-[#dfcfb0] text-[10px] text-[#734822] flex items-center justify-between gap-2">
+                      <span className="font-semibold leading-tight">
+                        📚 {item.sourceCitation}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -334,11 +352,11 @@ export const MultiPerspectiveView = ({
                     </div>
                   )}
 
-                  <div className="mt-3 text-xs sm:text-sm text-[#3d2514] leading-relaxed">
-                    <p className="font-bold text-[#26150a] text-xs mb-1 font-serif">
+                  <div className="mt-3 text-xs sm:text-sm text-[#3d2514]">
+                    <p className="font-bold text-[#26150a] text-xs mb-1.5 font-serif">
                       Tafsir / Ulasan Filosofis:
                     </p>
-                    {item.commentary}
+                    <FormattedMarkdown content={item.commentary} isKitab={isKitabTheme} />
                   </div>
                 </div>
               ))}
@@ -393,9 +411,9 @@ export const MultiPerspectiveView = ({
                       Karakter / Simbol: {item.characterOrSymbol}
                     </p>
 
-                    <p className="text-xs text-[#3d2514] mt-3 leading-relaxed">
-                      {item.analysis}
-                    </p>
+                    <div className="text-xs text-[#3d2514] mt-3">
+                      <FormattedMarkdown content={item.analysis} isKitab={isKitabTheme} />
+                    </div>
                   </div>
                 </div>
               ))}
