@@ -44,6 +44,11 @@ TUGAS ANDA ADALAH MEMBEDAH TEKS KAJIAN DI BAWAH INI UNTUK PEDOMAN MENGAJAR DI MA
 - Target Maqolah Al-Hikam yang dihubungkan: ${targetMaqolahHikam || "Maqolah ke-36 Al-Hikam"}
 - Catatan / Konteks Tambahan: ${catatanKonteks || "Pengajian Rutin"}
 
+⚠️ ATURAN MUTLAK PENOMORAN AL-HIKAM VERSI KANG IMAN:
+Penomoran Kitab Al-Hikam yang dipegang Kang Iman mengikuti versi Kitab Syarah Al-Hikam KH. Sholeh Darat / Pesantren Salaf Nusantara (misal: Maqolah 36 adalah: «مَا اسْتُودِعَ فِي غَيْبِ السَّرَائِرِ ظَهَرَ فِي شَهَادَةِ الظَّوَاهِرِ»).
+JANGAN PERNAH mengganti atau memaksakan teks maqolah versi lain (seperti "Mata athlaqa lisanaka..." dll.). 
+Jika pada input "Target Maqolah" tertulis judul/teks tertentu, WAJIB GUNAKAN MATAN TERSEBUT SECARA PERSIS DAN MUTLAK!
+
 KHUSUS UNTUK AL-HIKAM: Gunakan sudut pandang, dialektika roso, serta aplikasi laku batin khas KH. Sholeh Darat Semarang (nasehat yang membumi, menyejukkan hati, membedah tipu daya nafsu, dan menuntun langkah salik di tanah Nusantara).
 
 BAHAN TEKS DARI KANG IMAN (AYAT / MATAN JALALAIN / FIQH / ARAB GUNDUL):

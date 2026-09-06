@@ -83,7 +83,7 @@ export default function MaktabahBedahKitabPage() {
   const [selectedKitab, setSelectedKitab] = useState("shawi-jalalain");
   const [lokasiMajlis, setLokasiMajlis] = useState("Majlis Tafsir Shawi (4 Titik Rutinan)");
   const [teksArab, setTeksArab] = useState("");
-  const [targetMaqolahHikam, setTargetMaqolahHikam] = useState("Maqolah ke-36 Al-Hikam");
+  const [targetMaqolahHikam, setTargetMaqolahHikam] = useState("Maqolah ke-36: مَا اسْتُودِعَ فِي غَيْبِ السَّرَائِرِ ظَهَرَ فِي شَهَادَةِ الظَّوَاهِرِ");
   const [catatanKonteks, setCatatanKonteks] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -423,16 +423,19 @@ export default function MaktabahBedahKitabPage() {
                 {/* TARGET MAQOLAH AL-HIKAM */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[#4a2e12] flex items-center justify-between">
-                    <span>3. Target Sambungan Maqolah Al-Hikam:</span>
+                    <span>3. Target Sambungan Maqolah Al-Hikam (Versi Kitab Kami):</span>
                     <span className="text-[10px] text-[#8b1e1e] font-semibold">Pencarian Jati Diri</span>
                   </label>
                   <input
                     type="text"
                     value={targetMaqolahHikam}
                     onChange={(e) => setTargetMaqolahHikam(e.target.value)}
-                    placeholder="Contoh: Maqolah ke-36 Al-Hikam (Syua'ul Bashirah...)"
+                    placeholder="Contoh: Maqolah ke-36: مَا اسْتُودِعَ فِي غَيْبِ السَّرَائِرِ ظَهَرَ فِي شَهَادَةِ الظَّوَاهِرِ"
                     className="w-full px-3 py-2 rounded-xl text-xs bg-[#fcf7ec] border border-[#d8c3a1] text-[#26150a] focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   />
+                  <p className="text-[10px] text-[#734822]">
+                    💡 <em>Tip: Tuliskan nomor & potongan teks Arab maqolah Al-Hikam agar AI mengunci persis naskah versi pengajian Kang Iman.</em>
+                  </p>
                 </div>
 
                 {/* TEXTAREA TEKS ARAB GUNDUL / MATAN / AYAT */}
