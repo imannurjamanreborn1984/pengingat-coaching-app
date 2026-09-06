@@ -152,14 +152,16 @@ export default function AdminSubmissions() {
           isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
         }`}>
           <div>
-            <h1 className={`text-xl sm:text-2xl font-bold flex items-center gap-2 ${
-              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
-            }`}>
-              <Users className={`w-6 h-6 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'}`} />
-              <span>Periksa Jawaban & Evaluasi Peserta</span>
-            </h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🏛️</span>
+              <h1 className={`text-xl sm:text-2xl font-bold ${
+                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+              }`}>
+                Rekap Tugas Rumah NPT (Asuhan Sang Guru)
+              </h1>
+            </div>
             <p className={`text-xs mt-1 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-              Jawaban otomatis dikelompokkan berdasarkan klaster tugas untuk dievaluasi atau di-export ke Word (.docx).
+              Evaluasi jawaban tugas modul Level 1–6 peserta NPT. Setoran otomatis terkelompok berdasarkan judul tugas.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -177,6 +179,31 @@ export default function AdminSubmissions() {
               <span className="hidden sm:inline">Refresh Data</span>
             </button>
           </div>
+        </div>
+
+        {/* Banner Pemisah Rumah EMT & NPT */}
+        <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+          isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-900 border-slate-800'
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏫</span>
+            <div>
+              <h4 className="text-xs font-bold text-[#26150a] dark:text-white">
+                Mencari Setoran Jurnal Refleksi EMT (Asuhan Kang Iman)?
+              </h4>
+              <p className="text-[11px] text-slate-500">
+                Jurnal refleksi 5 emosi & checklist 21 hari peserta EMT dikelola terpisah di Ruang Kontrol EMT.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/admin/emt"
+            className="px-3.5 py-1.5 rounded-xl bg-[#1b6b55] hover:bg-[#155644] text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+          >
+            <span>Buka Ruang Kontrol EMT</span>
+            <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+          </Link>
         </div>
 
         {loading ? (

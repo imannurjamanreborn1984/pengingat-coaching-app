@@ -590,6 +590,85 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                 ))}
               </div>
             </section>
+
+            {/* JEMBATAN TRANSMISI: DARI ASUHAN KANG IMAN MENUJU SANG GURU NPT */}
+            <section className={`p-6 sm:p-7 rounded-3xl border space-y-4 shadow-sm ${
+              isKitabTheme ? 'card-kitab-frame border-[#cbb38b]' : 'bg-slate-900 border-slate-800'
+            }`}>
+              <div className="flex items-center gap-3 border-b pb-3">
+                <span className="w-10 h-10 rounded-2xl bg-[#3a2211] text-amber-400 font-bold flex items-center justify-center border border-[#8f632d]">
+                  🏛️
+                </span>
+                <div>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isKitabTheme ? 'text-[#8f632d]' : 'text-emerald-400'
+                  }`}>
+                    Silsilah & Jenjang Pembinaan
+                  </span>
+                  <h3 className={`text-base sm:text-lg font-bold ${
+                    isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                  }`}>
+                    Alur Dua Rumah: Dari Asuhan Kang Iman Menuju Asuhan Sang Guru NPT
+                  </h3>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">TAHAP 1</span>
+                    <span className="text-[11px] font-bold text-emerald-700">Asuhan Kang Iman</span>
+                  </div>
+                  <h4 className="font-bold text-xs sm:text-sm text-[#26150a]">Regulasi Emosi & Somatik EMT</h4>
+                  <p className="text-xs text-[#543516] leading-relaxed">
+                    Pembersihan pemicu stres, detoks amarah/kecewa, dan penyelarasan ritme nafas dada serta saraf vagus.
+                  </p>
+                </div>
+
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-950 border-slate-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-extrabold">TAHAP 2</span>
+                    <span className="text-[11px] font-bold text-amber-700">Pendalaman Mandiri</span>
+                  </div>
+                  <h4 className="font-bold text-xs sm:text-sm text-[#26150a]">Disiplin 21 Hari Self-Healing</h4>
+                  <p className="text-xs text-[#543516] leading-relaxed">
+                    Mencatat refleksi harian ke Kang Iman dan menuntaskan habit rewiring batin agar fondasi jiwa kokoh.
+                  </p>
+                </div>
+
+                <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                  isKitabTheme ? 'bg-[#ebdcc4] border-[#cbb38b]' : 'bg-rose-950/30 border-rose-500/30'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded-full bg-[#9e2a2b] text-white text-[10px] font-extrabold">TAHAP 3</span>
+                    <span className="text-[11px] font-bold text-rose-700">Asuhan Sang Guru</span>
+                  </div>
+                  <h4 className="font-bold text-xs sm:text-sm text-[#26150a]">Transmisi 14 Akar NPT</h4>
+                  <p className="text-xs text-[#543516] leading-relaxed">
+                    Setelah emosi stabil, peserta dihantarkan Kang Iman melangkah ke kurikulum spiritual luhur bersama Sang Guru NPT.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between">
+                <p className="text-xs text-slate-500 italic">
+                  💡 Ruang member EMT dan ruang member NPT terpisah secara rapi dengan tugas yang independen.
+                </p>
+                <Link
+                  href="/buku-saku"
+                  className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 ${
+                    isKitabTheme ? 'bg-[#eee3cb] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#dfcdab]' : 'bg-slate-800 text-rose-300'
+                  }`}
+                >
+                  <span>Lihat 14 Akar NPT (Sang Guru)</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </section>
           </div>
         )}
 

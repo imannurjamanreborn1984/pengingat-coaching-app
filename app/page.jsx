@@ -384,56 +384,98 @@ export default function CosmicGatewayPage() {
               </button>
             </div>
 
-            {/* TAB 1: PILIHAN UTAMA (PENGUNJUNG ATAU MEMBER) */}
+            {/* TAB 1: PILIHAN DUA RUMAH UTAMA (NPT & EMT) */}
             {activeModalTab === 'menu' && (
               <div className="space-y-4 text-left">
                 <div className="text-center space-y-1">
-                  <h3 className="text-base font-bold text-white">Selamat Datang di NPT Centre</h3>
-                  <p className="text-xs text-slate-400">Silakan pilih cara Anda menjelajahi portal:</p>
+                  <h3 className="text-base font-bold text-white">Selamat Datang di Portal Terpadu</h3>
+                  <p className="text-xs text-slate-400">Pilih gerbang rumah pembelajaran yang Anda tuju:</p>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  {/* Opsi 1: Pengunjung Umum */}
-                  <button
-                    onClick={handleEnterAsGuest}
-                    className="w-full p-4 rounded-2xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 group-hover:bg-slate-700 text-slate-200 flex items-center justify-center shrink-0">
-                        <Compass className="w-5 h-5 text-sky-400" />
+                <div className="space-y-3 pt-1">
+                  {/* RUMAH 1: RUMAH NPT (ASUHAN SANG GURU) */}
+                  <div className="p-4 rounded-3xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-950 border border-rose-500/30 hover:border-rose-500/60 transition shadow-lg space-y-2.5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-600/30">
+                        <span className="text-lg">🏛️</span>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors">
-                          Hanya Pengunjung Umum
-                        </h4>
-                        <p className="text-[11px] text-slate-400">
-                          Jelajahi info NPT, EMT Guru, & Kajian Al-Hikam bebas tanpa login.
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                            Rumah 1: NPT Centre
+                          </h4>
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            ASUHAN SANG GURU
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                          14 Akar Spiritualitas, Modul Level 1–6, Hakikat Cinta & Portal Tugas NPT.
                         </p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-transform" />
-                  </button>
 
-                  {/* Opsi 2: Member Terdaftar */}
-                  <button
-                    onClick={() => setActiveModalTab('member_login')}
-                    className="w-full p-4 rounded-2xl bg-gradient-to-r from-rose-950/40 to-slate-950 hover:from-rose-900/40 hover:to-slate-900 border border-rose-500/30 hover:border-rose-500/50 transition flex items-center justify-between group cursor-pointer shadow-lg shadow-rose-950/30"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-600/30">
-                        <ShieldCheck className="w-5 h-5" />
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={handleEnterAsGuest}
+                        className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Masuk NPT</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveModalTab('member_login')}
+                        className="py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Login Member NPT</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* RUMAH 2: RUMAH EMT (ASUHAN KANG IMAN) */}
+                  <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 border border-emerald-500/30 hover:border-emerald-500/60 transition shadow-lg space-y-2.5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/30">
+                        <span className="text-lg">🏫</span>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-rose-300 transition-colors">
-                          Masuk Sebagai Member NPT (1x Login)
-                        </h4>
-                        <p className="text-[11px] text-slate-400">
-                          Cukup login 1x, perangkat Anda langsung diingat selamanya.
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-black text-emerald-300 uppercase tracking-wider">
+                            Rumah 2: EMT (For Teacher & Reguler)
+                          </h4>
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            ASUHAN KANG IMAN
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                          Pelatihan Kesadaran Emosi Guru, 21 Hari Self-Healing & Lembar Jurnal Refleksi.
                         </p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-rose-400 group-hover:translate-x-1 transition-transform" />
-                  </button>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={() => {
+                          setIsGatewayModalOpen(false);
+                          router.push('/emt');
+                        }}
+                        className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Ruang Kelas EMT</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsGatewayModalOpen(false);
+                          router.push('/emt?tab=selfhealing');
+                        }}
+                        className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                      >
+                        <Activity className="w-3.5 h-3.5" />
+                        <span>Self-Healing 21 Hari</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

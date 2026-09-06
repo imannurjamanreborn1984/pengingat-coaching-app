@@ -118,237 +118,154 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
             </Link>
           </div>
 
-          {/* Navigasi 3 Cabang Utama NPT */}
+          {/* NAVIGASI DUA RUMAH UTAMA (NPT & EMT) */}
           <div className="space-y-4">
             
-            {/* CABANG 1: NPT MULTI-LEVEL (LEVEL 1 – 6) */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-3 py-1">
-                <span className="text-[10px] font-black tracking-wider uppercase text-rose-400">
-                  1. NPT (Level 1 – 6)
+            {/* ========================================================================= */}
+            {/* RUMAH 1: NPT CENTRE (DI BAWAH ASUHAN SANG GURU)                           */}
+            {/* ========================================================================= */}
+            <div className="space-y-2 p-3 rounded-2xl bg-rose-950/20 border border-rose-500/20">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🏛️</span>
+                  <span className="text-[10px] font-black tracking-wider uppercase text-rose-300">
+                    RUMAH NPT (ASUHAN SANG GURU)
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  SPIRITUAL
                 </span>
-                <span className="text-[9px] font-bold text-slate-500">Multi-Level</span>
               </div>
 
               {/* Sub-menu Tree NPT 1 s/d NPT 6 */}
-              <div className="space-y-1.5 pl-1">
-                {/* NPT 1 */}
-                <Link
-                  href="/npt/1"
-                  onClick={onClose}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activePath === '/npt/1'
-                      ? 'bg-rose-600 text-white font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">1</span>
-                    <span>NPT Level 1</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                </Link>
-
-                {/* NPT 2 */}
-                <Link
-                  href="/npt/2"
-                  onClick={onClose}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activePath === '/npt/2'
-                      ? 'bg-rose-600 text-white font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">2</span>
-                    <span>NPT Level 2</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                </Link>
-
-                {/* NPT 3 */}
-                <Link
-                  href="/npt/3"
-                  onClick={onClose}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activePath === '/npt/3'
-                      ? 'bg-rose-600 text-white font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">3</span>
-                    <span>NPT Level 3</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                </Link>
-
-                {/* NPT 4 */}
-                <Link
-                  href="/npt/4"
-                  onClick={onClose}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activePath === '/npt/4'
-                      ? 'bg-rose-600 text-white font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">4</span>
-                    <span>NPT Level 4</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                </Link>
-
-                {/* NPT 5 */}
-                <Link
-                  href="/npt/5"
-                  onClick={onClose}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activePath === '/npt/5'
-                      ? 'bg-rose-600 text-white font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80 bg-slate-950/40 border border-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center">5</span>
-                    <span>NPT Level 5</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                </Link>
+              <div className="space-y-1 pl-0.5">
+                <div className="grid grid-cols-5 gap-1 pt-1 pb-1.5">
+                  {[1, 2, 3, 4, 5].map((lvl) => (
+                    <Link
+                      key={lvl}
+                      href={`/npt/${lvl}`}
+                      onClick={onClose}
+                      className={`py-1.5 rounded-lg text-center text-xs font-bold transition-all border ${
+                        activePath === `/npt/${lvl}`
+                          ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                          : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800 border-slate-800'
+                      }`}
+                    >
+                      Lvl {lvl}
+                    </Link>
+                  ))}
+                </div>
 
                 {/* NPT 6: ROAD TO LEVEL 6 (14 AKAR SPIRITUAL & TUGAS) */}
-                <div className="p-2.5 rounded-2xl bg-rose-950/30 border border-rose-500/30 space-y-1.5">
-                  <div className="flex items-center justify-between px-1">
+                <div className="p-2 rounded-xl bg-slate-950/80 border border-rose-500/20 space-y-1">
+                  <Link
+                    href="/npt/6"
+                    onClick={onClose}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activePath === '/npt/6' ? 'bg-rose-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-lg bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">6</span>
-                      <span className="text-xs font-bold text-rose-200">NPT Level 6 (Aktif)</span>
+                      <FileText className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Modul & Video NPT 6</span>
                     </div>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      LIVE
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </Link>
+
+                  <Link
+                    href="/buku-saku"
+                    onClick={onClose}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activePath === '/buku-saku' ? 'bg-rose-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                      <span>14 Akar Spiritualitas</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </Link>
+
+                  <Link
+                    href="/dashboard"
+                    onClick={onClose}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activePath === '/dashboard' ? 'bg-rose-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Tugas & Setoran NPT</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </Link>
+
+                  <Link
+                    href="/hakekat-cinta"
+                    onClick={onClose}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activePath === '/hakekat-cinta' ? 'bg-rose-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Film className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Hakikat Cinta (Al-Hikam)</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* RUMAH 2: EMT (DI BAWAH ASUHAN KANG IMAN)                                  */}
+            {/* ========================================================================= */}
+            <div className="space-y-2 p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/20">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🏫</span>
+                  <span className="text-[10px] font-black tracking-wider uppercase text-emerald-300">
+                    RUMAH EMT (ASUHAN KANG IMAN)
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  GURU & EMOSI
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <Link
+                  href="/emt"
+                  onClick={onClose}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activePath === '/emt'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                      : 'bg-slate-950/60 hover:bg-slate-800 text-emerald-300 border border-emerald-500/20'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <GraduationCap className="w-4 h-4 text-amber-400" />
+                    <div>
+                      <p className="leading-tight">Ruang Kelas & Jurnal EMT</p>
+                      <span className="text-[9px] text-emerald-400/80 font-normal">Setor Refleksi & Evaluasi Batin</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                </Link>
+
+                <div className="p-2 rounded-xl bg-slate-950/80 border border-emerald-500/20 space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1">
+                    <span className="flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Self-Healing 21 Hari</span>
                     </span>
+                    <span className="text-[9px] text-amber-400 font-bold">Protokol Batin</span>
                   </div>
-
-                  <div className="space-y-1 pt-1">
-                    <Link
-                      href="/npt/6"
-                      onClick={onClose}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        activePath === '/npt/6'
-                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                          : 'text-slate-300 hover:bg-slate-800/90'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <FileText className="w-3.5 h-3.5 text-sky-400" />
-                        <div>
-                          <p className="leading-tight">Materi & Modul NPT 6</p>
-                          <span className="text-[9px] text-sky-300/80 font-normal">Modul, Dokumen & Video</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3 h-3 opacity-60" />
-                    </Link>
-
-                    <Link
-                      href="/buku-saku"
-                      onClick={onClose}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        activePath === '/buku-saku'
-                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                          : 'text-slate-300 hover:bg-slate-800/90'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                        <div>
-                          <p className="leading-tight">14 Akar Spiritualitas</p>
-                          <span className="text-[9px] text-rose-300/80 font-normal">Buku Saku Digital</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3 h-3 opacity-60" />
-                    </Link>
-
-                    <Link
-                      href="/dashboard"
-                      onClick={onClose}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        activePath === '/dashboard'
-                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                          : 'text-slate-300 hover:bg-slate-800/90'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Bell className="w-3.5 h-3.5 text-rose-400" />
-                        <div>
-                          <p className="leading-tight">Reminder & Penugasan</p>
-                          <span className="text-[9px] text-rose-300/80 font-normal">Portal Tugas Peserta</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3 h-3 opacity-60" />
-                    </Link>
-                  </div>
+                  <p className="text-[10px] text-slate-400 px-1 leading-relaxed">
+                    Diasuh langsung oleh Kang Iman sebelum melangkah ke asuhan Sang Guru NPT.
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* CABANG 2: EMT (EMOTION MANAGEMENT TRAINING) */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-3 py-1">
-                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400">
-                  2. EMT for Teacher
-                </span>
-                <span className="text-[9px] font-bold text-slate-500">Sayap Pendidik</span>
-              </div>
-
-              <Link
-                href="/emt"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activePath === '/emt'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                    : 'bg-emerald-950/20 hover:bg-emerald-950/50 text-emerald-300 border border-emerald-500/20'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <GraduationCap className="w-4 h-4 text-amber-400" />
-                  <div>
-                    <p className="leading-tight">EMT (Pelatihan Emosi Guru)</p>
-                    <span className="text-[10px] text-emerald-400/80 font-medium">Level 1, 2, 3 & Workshop</span>
-                  </div>
-                </div>
-                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  GURU
-                </span>
-              </Link>
-            </div>
-
-            {/* CABANG 3: HAKIKAT CINTA */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-3 py-1">
-                <span className="text-[10px] font-black tracking-wider uppercase text-purple-400">
-                  3. Hakikat Cinta
-                </span>
-                <span className="text-[9px] font-bold text-slate-500">Kajian & AI Book</span>
-              </div>
-
-              <Link
-                href="/hakekat-cinta"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activePath === '/hakekat-cinta'
-                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                    : 'text-slate-300 hover:bg-slate-800'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Film className="w-4 h-4 text-purple-400" />
-                  <div>
-                    <p className="leading-tight">Rekaman Live Al-Hikam</p>
-                    <span className="text-[10px] text-purple-300/80 font-medium">Video Kajian & Draf Buku AI</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
             </div>
 
           </div>
