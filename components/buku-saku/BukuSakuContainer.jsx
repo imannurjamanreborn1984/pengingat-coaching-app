@@ -507,63 +507,149 @@ export default function BukuSakuContainer() {
                 className="w-full flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shrink-0 ${
                     isKitabTheme ? "bg-[#eee2cb] text-[#8a5d28] border border-[#cbb38b]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                   }`}>
                     <HeartHandshake className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-sm sm:text-base font-bold text-[#26150a] group-hover:text-[#9e2a2b] transition-colors font-kitab-title">
+                    <h2 className={`text-sm sm:text-base font-bold transition-colors font-kitab-title ${
+                      isKitabTheme ? "text-[#26150a] group-hover:text-[#9e2a2b]" : "text-slate-900 dark:text-white group-hover:text-rose-500"
+                    }`}>
                       {GURU_PREFACE.title}
                     </h2>
-                    <p className="text-xs text-[#734822] font-semibold">
+                    <p className={`text-xs font-semibold ${isKitabTheme ? "text-[#734822]" : "text-slate-500 dark:text-slate-400"}`}>
                       {GURU_PREFACE.subtitle} • {GURU_PREFACE.author}
                     </p>
                   </div>
                 </div>
-                <div className="text-[#82613d] group-hover:text-[#26150a]">
+                <div className={isKitabTheme ? "text-[#82613d] group-hover:text-[#26150a]" : "text-slate-400 group-hover:text-slate-200"}>
                   {showPreface ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </div>
               </button>
 
               {showPreface && (
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                  <p className="whitespace-pre-line italic bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                    "{GURU_PREFACE.quote}"
-                  </p>
+                <div className={`pt-4 border-t space-y-5 text-xs sm:text-sm leading-relaxed animate-in fade-in duration-200 ${
+                  isKitabTheme ? "border-[#d8c3a1] text-[#3d2514]" : "border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                }`}>
+                  {/* Quote Guru */}
+                  {GURU_PREFACE.quote && (
+                    <div className={`p-4 rounded-2xl border italic font-serif text-xs sm:text-sm leading-relaxed ${
+                      isKitabTheme 
+                        ? "bg-[#f4ebd5] border-[#cbb38b] text-[#3a2211]" 
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                    }`}>
+                      "{GURU_PREFACE.quote}"
+                      <span className={`block font-sans not-italic font-bold text-[11px] mt-2 ${
+                        isKitabTheme ? "text-[#9e2a2b]" : "text-rose-500"
+                      }`}>
+                        — {GURU_PREFACE.author}
+                      </span>
+                    </div>
+                  )}
 
+                  {/* Konteks Sanad & Transmisi Sejarah */}
+                  {GURU_PREFACE.heritageContext && (
+                    <div className={`p-4 rounded-2xl border space-y-2 ${
+                      isKitabTheme 
+                        ? "bg-[#faf5eb] border-[#d8c3a1]" 
+                        : "bg-indigo-950/20 border-indigo-500/20 text-indigo-200"
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
+                          isKitabTheme ? "text-[#8a5d28]" : "text-indigo-400"
+                        }`}>
+                          Konteks Sanad & Transmisi Spiritualitas
+                        </h4>
+                      </div>
+                      <p className="text-xs leading-relaxed">
+                        {GURU_PREFACE.heritageContext}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Konsep & Filosofi Akar Spiritualitas */}
                   <div className="space-y-2">
-                    <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                    <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
+                      isKitabTheme ? "text-[#8a5d28]" : "text-rose-600 dark:text-rose-400"
+                    }`}>
                       Konsep & Filosofi Akar Spiritualitas
                     </h4>
-                    <p>{GURU_PREFACE.intro}</p>
-                    <p>{GURU_PREFACE.analogyTree}</p>
+                    <p>{GURU_PREFACE.intro || GURU_PREFACE.coreDefinition}</p>
+                    <p>{GURU_PREFACE.analogyTree || GURU_PREFACE.treeIllustration}</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                    <div className="p-3.5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 space-y-1.5">
-                      <h5 className="font-bold text-rose-900 dark:text-rose-300 text-xs">
-                        ⚠️ 4 Gejala Akar Rapuh
+                  {/* 3 Manfaat Utama */}
+                  {GURU_PREFACE.benefits && (
+                    <div className="space-y-2">
+                      <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
+                        isKitabTheme ? "text-[#8a5d28]" : "text-emerald-600 dark:text-emerald-400"
+                      }`}>
+                        3 Buah & Manfaat Akar yang Kokoh
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {GURU_PREFACE.benefits.map((b, i) => (
+                          <div key={i} className={`p-3 rounded-2xl border space-y-1 ${
+                            isKitabTheme ? "bg-[#f4ebd5] border-[#d8c3a1]" : "bg-slate-950 border-slate-800"
+                          }`}>
+                            <strong className={`block text-xs font-bold ${isKitabTheme ? "text-[#26150a]" : "text-white"}`}>
+                              {i + 1}. {b.title}
+                            </strong>
+                            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                              {b.desc}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2 Kolom: Gejala Rapuh & Praktik Perawatan */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {/* Gejala Rapuh */}
+                    <div className={`p-4 rounded-2xl border space-y-2 ${
+                      isKitabTheme 
+                        ? "bg-[#faeee7] border-[#e2bebe]" 
+                        : "bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30"
+                    }`}>
+                      <h5 className={`font-bold text-xs flex items-center gap-1.5 ${
+                        isKitabTheme ? "text-[#9e2a2b]" : "text-rose-900 dark:text-rose-300"
+                      }`}>
+                        <span>⚠️</span>
+                        <span>4 Gejala Akar Rapuh</span>
                       </h5>
-                      <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                        {GURU_PREFACE.warningSigns.map((w, i) => (
+                      <ul className="space-y-1.5 text-xs">
+                        {(GURU_PREFACE.warningSigns || []).map((w, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="text-rose-500 font-bold">•</span>
-                            <span><strong>{w.sign}:</strong> {w.desc}</span>
+                            <span className="text-rose-600 font-bold shrink-0">•</span>
+                            <span className={isKitabTheme ? "text-[#543516]" : "text-slate-600 dark:text-slate-400"}>
+                              <strong>{w.sign}:</strong> {w.desc}
+                            </span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 space-y-1.5">
-                      <h5 className="font-bold text-emerald-900 dark:text-emerald-300 text-xs">
-                        🌱 4 Praktik Perawatan Akar
+                    {/* Praktik Perawatan */}
+                    <div className={`p-4 rounded-2xl border space-y-2 ${
+                      isKitabTheme 
+                        ? "bg-[#edf6ed] border-[#c2dec2]" 
+                        : "bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30"
+                    }`}>
+                      <h5 className={`font-bold text-xs flex items-center gap-1.5 ${
+                        isKitabTheme ? "text-[#1b6b55]" : "text-emerald-900 dark:text-emerald-300"
+                      }`}>
+                        <span>🌱</span>
+                        <span>4 Praktik Perawatan Akar</span>
                       </h5>
-                      <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                        {GURU_PREFACE.maintenancePractices.map((p, i) => (
+                      <ul className="space-y-1.5 text-xs">
+                        {(GURU_PREFACE.maintenancePractices || []).map((p, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="text-emerald-500 font-bold">✓</span>
-                            <span><strong>{p.title}:</strong> {p.desc}</span>
+                            <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                            <span className={isKitabTheme ? "text-[#1d3d2e]" : "text-slate-600 dark:text-slate-400"}>
+                              <strong>{p.title}:</strong> {p.desc}
+                            </span>
                           </li>
                         ))}
                       </ul>

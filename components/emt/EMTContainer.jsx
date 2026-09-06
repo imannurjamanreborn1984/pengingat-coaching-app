@@ -235,10 +235,32 @@ export default function EMTContainer() {
       }
 
       // Load 21 Days Tracker
-      const userKey = currentUser?.email || 'default_user';
-      const savedDays = localStorage.getItem(`emt_selfhealing_21_days_${userKey}`);
+      let userKey = 'default_user';
+      if (authStr) {
+        try {
+          const u = JSON.parse(authStr);
+          if (u?.email) userKey = u.email;
+        } catch (err) {}
+      }
+      const savedDays = localStorage.getItem(`emt_selfhealing_21_days_${userKey}`) || localStorage.getItem('emt_selfhealing_21_days_default_user');
       if (savedDays) {
-        setHealingDays(JSON.parse(savedDays));
+        try {
+          const parsed = JSON.parse(savedDays);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const merged = INITIAL_21_DAYS.map((def) => {
+              const saved = parsed.find((p) => p && p.day === def.day) || {};
+              return {
+                ...def,
+                ...saved,
+                faseName: saved.faseName || def.faseName,
+                prompt: saved.prompt || def.prompt,
+              };
+            });
+            setHealingDays(merged);
+          }
+        } catch (err) {
+          console.warn("Gagal parse 21 days:", err);
+        }
       }
     } catch (e) {}
     fetchEmtMaterials();
@@ -371,7 +393,8 @@ export default function EMTContainer() {
 
     healingDays.forEach((d) => {
       if (d.completed) {
-        text += `✅ *Hari ke-${d.day}* (${d.faseName}): ${d.note ? `"${d.note}"` : 'Terlaksana'} [${d.completedAt || 'Selesai'}]\n`;
+        const fName = d.faseName || `Fase ${d.fase || 1}`;
+        text += `✅ *Hari ke-${d.day}* (${fName}): ${d.note ? `"${d.note}"` : 'Terlaksana'} [${d.completedAt || 'Selesai'}]\n`;
       }
     });
 
@@ -1456,7 +1479,7 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                         <span className={`text-[10px] block font-semibold ${
                           item.fase === 1 ? 'text-amber-700' : item.fase === 2 ? 'text-sky-700' : 'text-emerald-700'
                         }`}>
-                          {item.faseName.split(':')[0]}
+                          {item.faseName ? item.faseName.split(':')[0] : `Fase ${item.fase || 1}`}
                         </span>
                       </div>
                     </button>
