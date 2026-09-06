@@ -298,6 +298,26 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                 </span>
               </Link>
 
+              {/* MAKTABAH & DAPUR NGAJI BEDAH KITAB (TAFSIR SHAWI, KIFAYATUL AKHYAR, AL-HIKAM) */}
+              <Link
+                href="/admin/maktabah"
+                onClick={onClose}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-amber-950/50 text-amber-200 border border-amber-600/40 shadow-sm transition-all cursor-pointer ${
+                  activePath === '/admin/maktabah' ? 'ring-2 ring-amber-400 bg-amber-950' : 'hover:bg-amber-900/40'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">📚</span>
+                  <div>
+                    <p className="leading-tight text-amber-300">Dapur Ngaji & Bedah Kitab</p>
+                    <span className="text-[9px] text-amber-400/80 font-normal">Syakal, Terjemah, Shawi & Al-Hikam</span>
+                  </div>
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black">
+                  NGAJI
+                </span>
+              </Link>
+
               {/* RUANG KONTROL & EVALUASI EMT KHUSUS KANG IMAN */}
               <Link
                 href="/admin/emt"
