@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "kode": "AKAR-01",
+    "nama": "Akar Spiritual Suara (Suara / Eter)",
+    "kategori": "Psikologi Somatik",
+    "judul_temuan": "Resonansi Akustik Biologis, Vagal Toning, & Pelepasan Nitrat Oksida via Vokalisasi",
+    "deskripsi_singkat": "Suara internal merambat ganda: ke udara (343 m/s) dan ke dalam cairan/tulang tubuh (1.500 m/s). Gelombang suara ritmis dan dengungan vokal menstimulasi aparatus somatik, menenangkan sistem saraf otonom, dan menginduksi keheningan batin.",
+    "jalur_mekanisme_biologis": "Stimulasi cabang laringeal Nervus Vagus (parasimpatis), pelepasan gas Nitrat Oksida (NO) di rongga paranasal hingga 15x lipat, konduksi tulang kranium-fasia dada, sinkronisasi barorefleks (0,1 Hz), dan supresi aktivitas amygdala.",
+    "sumber_jurnal": "Weitzberg, E., & Lundberg, J. O. (2002). Humming greatly increases nasal nitric oxide. Am J Respir Crit Care Med, 166(2), 144-145; Bernardi, L., et al. (2001). Effect of rosary prayer and yoga mantras on autonomic cardiovascular rhythms. BMJ, 323(7327), 1446-1449."
+  },
+  {
+    "id": 2,
+    "kode": "AKAR-02",
+    "nama": "Akar Spiritual Langit (Langit / Udara)",
+    "kategori": "Sains Kognitif",
+    "judul_temuan": "Overview Effect, Emosi Awe, & Penurunan Penanda Pro-Inflamasi via Transendensi Spasial",
+    "deskripsi_singkat": "Orientasi kesadaran vertikal ke cakrawala atau langit terbuka melenyapkan fiksasi kognitif sempit. Pengalaman takjub (Awe) memperkecil persepsi egoistik (small-self) dan membuka kesadaran makrokosmik.",
+    "jalur_mekanisme_biologis": "Penurunan sitokin pro-inflamasi sistemik (Interleukin-6), aktivasi tonus parasimpatis, serta induksi gelombang otak Gamma dan Theta fronto-parietal saat memproses keluasan visual tak berbatas.",
+    "sumber_jurnal": "Stellar, J. E., et al. (2015). Positive affect and the regulation of inflammation. Emotion, 15(2), 129-133; Yaden, D. B., et al. (2016). The overview effect: Awe and self-transcendent experience in space flight. Psychol Conscious, 3(1), 1-11."
+  },
+  {
+    "id": 3,
+    "kode": "AKAR-03",
+    "nama": "Akar Spiritual Bumi (Bumi / Tanah)",
+    "kategori": "Psikologi Somatik",
+    "judul_temuan": "Bio-Elektrik Earthing, Netralisasi ROS, & Sinkronisasi Ritme Diurnal Kortisol",
+    "deskripsi_singkat": "Keterhubungan fisik langsung dengan permukaan bumi (grounding/earthing) mengalirkan elektron bebas sub-atomik ke dalam tubuh untuk menstabilkan potensial elektrik seluler dan meredakan peradangan kronis.",
+    "jalur_mekanisme_biologis": "Penyerapan elektron bebas bumi menetralkan reactive oxygen species (ROS), menurunkan viskositas agregasi sel darah merah (zeta potential), menormalkan profil sekresi kortisol diurnal, dan memperkuat stabilitas postural somatik.",
+    "sumber_jurnal": "Chevalier, G., et al. (2012). Earthing: Health implications of reconnecting the human body to the Earth's surface electrons. J Environ Public Health, 2012, 291541; Oschman, J. L., et al. (2015). The effects of grounding on inflammation and wound healing. J Inflamm Res, 8, 83-96."
+  },
+  {
+    "id": 4,
+    "kode": "AKAR-04",
+    "nama": "Akar Spiritual Kayu (Kayu / Hayat Hijau)",
+    "kategori": "Epigenetika",
+    "judul_temuan": "Inhalasi Phytoncide, Peningkatan Sitotoksisitas Sel NK, & Plastisitas Jaringan Kolagen",
+    "deskripsi_singkat": "Daya hidup organik dan penyembuhan regeneratif. Interaksi mendalam dengan atmosfer biomassa hijau memicu perbaikan jaringan tubuh dan elastisitas respon biologis terhadap kerusakan lingkungan.",
+    "jalur_mekanisme_biologis": "Inhalasi senyawa volatil tanaman (alfa-pinena, beta-pinena) meningkatkan ekspresi protein sitolitik (perforin, granzyme A) pada sel Natural Killer (NK), menstimulasi pelepasan BDNF, serta merelaksasi fascia elastis.",
+    "sumber_jurnal": "Li, Q. (2010). Effect of forest bathing trips on human immune function. Environ Health Prev Med, 15(1), 9-17; Park, B. J., et al. (2010). The physiological effects of Shinrin-yoku. Environ Health Prev Med, 15(1), 18-26."
+  },
+  {
+    "id": 5,
+    "kode": "AKAR-05",
+    "nama": "Akar Spiritual Api (Api / Termogenesis)",
+    "kategori": "Epigenetika",
+    "judul_temuan": "Aktivasi Heat Shock Proteins (HSP70), Autofagi Mitokondria, & Hormesis Panas",
+    "deskripsi_singkat": "Daya bakar purifikasi spiritual berkorelasi dengan respons hormesis termal biologis. Suhu internal yang terkontrol membersihkan debris protein intraseluler dan membakar kelemahan fisiologis.",
+    "jalur_mekanisme_biologis": "Up-regulasi ekspresi Heat Shock Protein 70 (HSP70) yang memperbaiki denaturasi protein, stimulasi mitofagi (pembersihan mitokondria rusak), modulasi simpatis adaptif, dan lonjakan pelepasan endorfin.",
+    "sumber_jurnal": "Laukkanen, J. A., et al. (2018). Cardiovascular and other health benefits of sauna bathing. Mayo Clin Proc, 93(8), 1111-1121; Patrick, R. P., & Johnson, T. L. (2021). Sauna use as a lifestyle practice to extend healthspan. Exp Gerontol, 154, 111509."
+  },
+  {
+    "id": 6,
+    "kode": "AKAR-06",
+    "nama": "Akar Spiritual Logam (Logam / Presisi)",
+    "kategori": "Neurobiologi",
+    "judul_temuan": "Imunoregulasi Barier Mukosa, Integritas Tulang, & Modulasi Prefrontal Cortex",
+    "deskripsi_singkat": "Melambangkan disiplin tanpa kompromi, ketajaman analisis, dan batas batin yang kokoh. Terhubung biologis dengan sistem pernapasan primer (paru-paru) dan pertahanan dinding imun.",
+    "jalur_mekanisme_biologis": "Penguatan epitel mukosa pernapasan dan sekresi Imunoglobulin A (sIgA), stimulasi mineralisasi osteoblas tulang via mekanotransduksi beban, serta inhibisi impuls emosional limbik oleh dorsolateral prefrontal cortex (dlPFC).",
+    "sumber_jurnal": "Gleeson, M. (2007). Immune function in sport and exercise. J Appl Physiol, 103(2), 693-699; Miller, E. K., & Cohen, J. D. (2001). An integrative theory of prefrontal cortex function. Annu Rev Neurosci, 24(1), 167-202."
+  },
+  {
+    "id": 7,
+    "kode": "AKAR-07",
+    "nama": "Akar Spiritual Air (Air / Aliran)",
+    "kategori": "Psikologi Somatik",
+    "judul_temuan": "Refleks Penyelaman Mamalia (Mammalian Dive Reflex) & Sirkulasi Limfatik",
+    "deskripsi_singkat": "Prinsip kerendahan hati dan adaptasi bentuk wadah. Sifat air melarutkan kekakuan batin, melepaskan sumbatan psikosomatis melalui jalur hidrodinamik cairan tubuh.",
+    "jalur_mekanisme_biologis": "Aktivasi saraf trigeminal-vagal melalui kontak suhu dingin air (dive reflex), memicu bradikardia protektif, vasokonstriksi perifer terarah, percepatan aliran limfe, dan peredaman sekresi epinefrin.",
+    "sumber_jurnal": "Schagatay, E., & Holm, B. (1996). The human diving response: Effects of temperature and training. Eur J Appl Physiol, 73(1-2), 161-166; Jungmann, M., et al. (2020). Effects of cold water face immersion on autonomic nervous system. Front Psychol, 11, 576344."
+  },
+  {
+    "id": 8,
+    "kode": "AKAR-08",
+    "nama": "Akar Spiritual Campuran 9 Elemen (9 Elemen Bersatu)",
+    "kategori": "Sains Kognitif",
+    "judul_temuan": "Teori Sistem Kompleks Dinamis, Sinergi Saraf Global, & Homeodinamika Makro",
+    "deskripsi_singkat": "Integrasi spektrum kosmis penuh (5 elemen dasar + ruang, waktu, cahaya, dan polaritas). Praktisi memiliki kapasitas wadah batin multidimensi dan resiliensi sistemik tingkat tinggi.",
+    "jalur_mekanisme_biologis": "Global Workspace Theory (GWT): koordinasi koheren lintas jaringan otak (DMN, Salience Network, Central Executive Network), fleksibilitas alostatis, dan optimasi integritas regulasi neuro-imuno-endokrin terintegrasi.",
+    "sumber_jurnal": "Dehaene, S., & Changeux, J. P. (2011). Experimental and theoretical approaches to conscious processing. Neuron, 70(2), 200-227; McEwen, B. S. (1998). Protective and damaging effects of stress mediators. N Engl J Med, 338(3), 171-179."
+  },
+  {
+    "id": 9,
+    "kode": "AKAR-09",
+    "nama": "Akar Spiritual Campuran 5 Elemen (5 Elemen Al-Khamas)",
+    "kategori": "Neurobiologi",
+    "judul_temuan": "Sinkronisasi Ritme Sirkadian Multi-Organ & Siklus Generatif Neuroviseral",
+    "deskripsi_singkat": "Keseimbangan mikrokosmos tubuh yang utuh mengikuti siklus saling menghidupkan dan mengendalikan (Kayu-Api-Tanah-Logam-Air), mencegah kerentanan penyakit ekstrem.",
+    "jalur_mekanisme_biologis": "Sinkronisasi master clock SCN (suprachiasmatic nucleus) di hipotalamus dengan peripheral clocks di organ hepar, kardiak, lambung, pulmo, dan ren melalui ekspresi gen CLOCK/BMAL1.",
+    "sumber_jurnal": "Takahashi, J. S. (2017). Transcriptional architecture of the mammalian circadian clock. Nat Rev Genet, 18(3), 164-179; Thayer, J. F., & Lane, R. D. (2000). A model of neurovisceral integration in emotion regulation. J Affect Disord, 61(3), 201-216."
+  },
+  {
+    "id": 10,
+    "kode": "AKAR-10",
+    "nama": "Akar Spiritual Ganda (Dual Core / Yin-Yang)",
+    "kategori": "Sains Kognitif",
+    "judul_temuan": "Bistabilitas Neurologis, Dual-Core Flexibility, & Keseimbangan Antagonis Otonom",
+    "deskripsi_singkat": "Kapasitas mengoperasikan dua frekuensi akar yang saling bertolak belakang secara bersamaan (misal Api-Air atau Logam-Suara) tanpa disosiasi kepribadian.",
+    "jalur_mekanisme_biologis": "Modulasi jalur lokus coeruleus-norepinefrin dan nukleus raphe-serotonin, kapasitas ko-aktivasi cabang simpatis dan parasimpatis (autonomic co-activation), serta fleksibilitas konektivitas interhemisferik otak.",
+    "sumber_jurnal": "Berntson, G. G., et al. (1991). Autonomic determinism: The modes of autonomic control, the doctrine of autonomic space. Psychol Rev, 98(4), 459-487; Leopold, D. A., & Logothetis, N. K. (1999). Multistable phenomena: Changing views in perception. Trends Cogn Sci, 3(7), 254-264."
+  },
+  {
+    "id": 11,
+    "kode": "AKAR-11",
+    "nama": "Akar Spiritual Garis Darah (Nasab / Ancestral)",
+    "kategori": "Epigenetika",
+    "judul_temuan": "Transgenerational Epigenetic Inheritance & Memori Resiliensi Seluler DNA",
+    "deskripsi_singkat": "Akselerasi kebangkitan batin bawaan sejak dini akibat transmisi cetak biru spiritual dan pengalaman leluhur yang terekam pada tanda kimiawi rantai DNA.",
+    "jalur_mekanisme_biologis": "Modifikasi metilasi gugus CpG pada promotor gen pengatur stres (NR3C1 dan FKBP5), penataan kembali struktur histon kromatin, dan transmisi molekul small non-coding RNA (sncRNA) germline.",
+    "sumber_jurnal": "Yehuda, R., et al. (2016). Holocaust exposure induced intergenerational effects on FKBP5 methylation. Biol Psychiatry, 80(5), 372-380; Dias, B. G., & Ressler, K. J. (2014). Parental olfactory experience influences behavior and neural structure in subsequent generations. Nat Neurosci, 17(1), 89-96."
+  },
+  {
+    "id": 12,
+    "kode": "AKAR-12",
+    "nama": "Akar Spiritual Kekosongan (Void / Wujud Adam)",
+    "kategori": "Neurobiologi",
+    "judul_temuan": "Deaktivasi Penuh Default Mode Network (DMN) & Gelombang Epsilon/Delta Sadar",
+    "deskripsi_singkat": "Kondisi hening mutlak, lenyapnya dikotomi subjek-objek, dan pelepasan identitas ego (fana') menjadi kehampaan sumber penciptaan.",
+    "jalur_mekanisme_biologis": "Supresi drastis pada Posterior Cingulate Cortex (PCC) dan Medial Prefrontal Cortex (mPFC), desinkronisasi sirkuit salience, serta kemunculan osilasi gelombang otak ultra-lambat (Slow-Wave Delta / Epsilon < 1 Hz) dengan kesadaran terjaga.",
+    "sumber_jurnal": "Brewer, J. A., et al. (2011). Meditation experience is associated with differences in default mode network activity and connectivity. PNAS, 108(50), 20254-20259; Josipovic, Z. (2014). Neural correlates of nondual awareness in meditation. Ann N Y Acad Sci, 1307(1), 9-18."
+  },
+  {
+    "id": 13,
+    "kode": "AKAR-13",
+    "nama": "Akar Spiritual Chaos (Chaos / Entropi Pembebas)",
+    "kategori": "Fisika Kuantum",
+    "judul_temuan": "Stochastik Resonans, Entropi Disipatif Prigogine, & Penghancuran Pola Kaku",
+    "deskripsi_singkat": "Kekuatan mendisrupsi dogma dan keteraturan yang membusuk. Menghadirkan kekacauan terkontrol untuk memaksa sistem biologis melompat ke tatanan kesadaran baru yang lebih tinggi.",
+    "jalur_mekanisme_biologis": "Mekanisme stochastic resonance pada transduksi sinaps saraf, transisi fase dinamis non-linear pada konektivitas otak, induksi pelepasan katekolamin terkontrol, dan pemecahan fiksasi kognitif kaku.",
+    "sumber_jurnal": "McDonnell, M. D., & Abbott, D. (2009). What is stochastic resonance? Definitions, misconceptions, debunks, and its occurrence in biology. PLoS Comput Biol, 5(5), e1000348; Carhart-Harris, R. L. (2014). The entropic brain: A theory of conscious states. Front Hum Neurosci, 8, 20."
+  },
+  {
+    "id": 14,
+    "kode": "AKAR-14",
+    "nama": "Akar Spiritual Es Mistik (Es Mistik / Hening Beku)",
+    "kategori": "Psikologi Somatik",
+    "judul_temuan": "Voluntary Autonomic Suppression, Aktivasi Lemak Cokelat (BAT), & Hipometabolisme",
+    "deskripsi_singkat": "Preservasi esensi murni batin lewat pembekuan gejolak mental. Menjaga kepala tetap dingin dan denyut biologis tetap stabil saat diterpa badai kekacauan ekstrem.",
+    "jalur_mekanisme_biologis": "Supresi respon panik simpatis melalui modulasi korteks insular, pelepasan berkelanjutan dopamin (hingga 250%) tanpa lonjakan kortisol, aktivasi termogenesis non-shivering oleh Brown Adipose Tissue (BAT) via reseptor beta-3 adrenergik.",
+    "sumber_jurnal": "Kox, M., et al. (2014). Voluntary activation of the sympathetic nervous system and attenuation of the innate immune response in humans. PNAS, 111(20), 7379-7384; Sramek, P., et al. (2000). Human physiological responses to immersion into water of different temperatures. Eur J Appl Physiol, 81(5), 436-442."
+  }
+]
