@@ -23,9 +23,11 @@ import {
   ShieldCheck,
   ZoomIn,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Unlock
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
+import { parseUserAccess, formatRoleLabel, NPT_LEVEL_CONFIG } from "@/lib/authHelper";
 
 function formatYouTubeEmbedUrl(url) {
   if (!url || typeof url !== "string") return "";
@@ -143,9 +145,14 @@ export default function NPTLevelDetailPage() {
   const [inputName, setInputName] = useState("");
   const [inputEmail, setInputEmail] = useState("");
   const [inputPhone, setInputPhone] = useState("");
+  const [authProgram, setAuthProgram] = useState("npt");
+  const [authLevel, setAuthLevel] = useState(levelNum);
   const [authStatus, setAuthStatus] = useState(null); // null | 'checking' | 'pending'
 
-  const isApproved = currentUser?.status === "approved" || currentUser?.role === "super_admin";
+  // Access check
+  const access = parseUserAccess(currentUser);
+  const isApproved = access.isApproved;
+  const hasLevelAccess = access.canAccessNptLevel(levelNum);
 
   useEffect(() => {
     try {
@@ -277,15 +284,16 @@ export default function NPTLevelDetailPage() {
         document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
         setIsAuthModalOpen(false);
         setAuthStatus(null);
-        alert("✅ Akses Member Terverifikasi! Perangkat HP Anda tersimpan selamanya.");
+        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan.");
       } else {
         if (!profile) {
+          const roleTarget = authProgram === 'emt' ? 'emt' : `npt_${authLevel}`;
           await supabase.from("profiles").insert([
             {
               full_name: cleanName,
               email: cleanEmail || null,
               phone_number: formattedPhone || null,
-              role: "member",
+              role: roleTarget,
               status: "pending"
             }
           ]);
@@ -353,6 +361,8 @@ export default function NPTLevelDetailPage() {
     }
   };
 
+  const levelInfo = NPT_LEVEL_CONFIG[levelNum] || { name: `Level ${levelNum}` };
+
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
       isKitabTheme 
@@ -387,7 +397,7 @@ export default function NPTLevelDetailPage() {
             <span>Kembali ke Roadmap NPT (1 – 6)</span>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Theme Toggle */}
             <button
               onClick={() => setIsKitabTheme(!isKitabTheme)}
@@ -407,7 +417,7 @@ export default function NPTLevelDetailPage() {
                   ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
                   : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
               }`}>
-                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Member VIP Terbuka
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> {access.badgeText}
               </span>
             ) : (
               <button
@@ -421,6 +431,7 @@ export default function NPTLevelDetailPage() {
                 <Lock className="w-3 h-3" /> Buka Akses Member
               </button>
             )}
+
             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
               isKitabTheme
                 ? 'bg-[#3a2211] text-[#fbf6ec] border-[#8f632d]'
@@ -448,12 +459,12 @@ export default function NPTLevelDetailPage() {
           <h1 className={`text-xl sm:text-3xl font-black ${
             isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
           }`}>
-            Materi & Modul Pembelajaran NPT Level {levelNum}
+            Materi & Modul NPT Level {levelNum}: {levelInfo.name}
           </h1>
           <p className={`text-xs sm:text-sm ${
             isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
           }`}>
-            Akses materi bacaan, file presentasi PPT, modul PDF, dokumen Word, serta rekaman video penjelasan resmi.
+            Siaran ulang video YouTube dapat disimak oleh seluruh member NPT. Akses unduh file presentasi PPT, modul PDF, dan dokumen disesuaikan dengan tingkat level Anda.
           </p>
         </div>
 
@@ -633,123 +644,182 @@ export default function NPTLevelDetailPage() {
                     <div className="p-6 space-y-4 animate-in fade-in duration-200">
                       {mat.content && <ExpandableContent content={mat.content} isKitabTheme={isKitabTheme} />}
 
-                      {/* MEMBER LOCK VS FULL ACCESS */}
-                      {isApproved ? (
-                        /* MEMBER APPROVED: FULL VIDEO, IMAGE & FILE DOWNLOAD ACCESS */
-                        <div className="space-y-4 pt-2">
-                          {mat.image_url && (
-                            <div className="space-y-2">
-                              <div
-                                onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                                className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
-                                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
-                                }`}
-                                title="Klik untuk Perbesar Gambar (Zoom In / Out)"
-                              >
-                                <img
-                                  src={mat.image_url}
-                                  alt={mat.title}
-                                  className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-                                />
-                                <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
-                                  isKitabTheme
-                                    ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
-                                    : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
-                                }`}>
-                                  <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
-                                  <span>Perbesar / Zoom</span>
-                                </div>
-                              </div>
+                      {/* 1. GAMBAR LAMPIRAN */}
+                      {mat.image_url && (
+                        <div className="space-y-2">
+                          <div
+                            onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
+                            className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
+                              isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
+                            }`}
+                            title="Klik untuk Perbesar Gambar (Zoom In / Out)"
+                          >
+                            <img
+                              src={mat.image_url}
+                              alt={mat.title}
+                              className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+                            />
+                            <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
+                              isKitabTheme
+                                ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
+                                : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
+                            }`}>
+                              <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
+                              <span>Perbesar / Zoom</span>
                             </div>
-                          )}
+                          </div>
+                        </div>
+                      )}
 
-                          {mat.youtube_url && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className={`text-xs font-bold flex items-center gap-1.5 ${
-                                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-                                }`}>
-                                  <Film className="w-4 h-4 text-red-500" />
-                                  <span>Video Penjelasan Resmi:</span>
+                      {/* 2. VIDEO YOUTUBE (BEBAS DIAKSES SEMUA MEMBER NPT/APPROVED) */}
+                      {mat.youtube_url && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                            }`}>
+                              <Film className="w-4 h-4 text-red-500" />
+                              <span>Video Siaran Ulang YouTube:</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                                isKitabTheme ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              }`}>
+                                Bebas Diakses Semua Member
+                              </span>
+                            </span>
+                            <a
+                              href={mat.youtube_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
+                                isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
+                              }`}
+                            >
+                              <span>Buka di YouTube</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+
+                          {isApproved ? (
+                            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
+                              <iframe
+                                src={formatYouTubeEmbedUrl(mat.youtube_url)}
+                                title={mat.title}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : (
+                            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                              isKitabTheme ? 'bg-[#f5ebd7] border-[#d8c3a1]' : 'bg-slate-900 border-slate-800'
+                            }`}>
+                              <div className="flex items-center gap-2.5">
+                                <Lock className="w-4 h-4 text-amber-600" />
+                                <span className={`text-xs ${isKitabTheme ? 'text-[#543516]' : 'text-slate-300'}`}>
+                                  Masuk sebagai member untuk menonton video siaran ulang ini.
                                 </span>
-                                <a
-                                  href={mat.youtube_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
-                                    isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
-                                  }`}
-                                >
-                                  <span>Buka di YouTube</span>
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
                               </div>
-                              <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
-                                <iframe
-                                  src={formatYouTubeEmbedUrl(mat.youtube_url)}
-                                  title={mat.title}
-                                  className="w-full h-full border-0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                  allowFullScreen
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {mat.file_url && (
-                            <div className="pt-2">
-                              <a
-                                href={mat.file_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
-                                  isKitabTheme
-                                    ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
-                                    : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
-                                }`}
+                              <button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className="px-3 py-1.5 rounded-xl text-white text-xs font-bold bg-[#9e2a2b] hover:bg-[#852324] shrink-0"
                               >
-                                <Download className="w-4 h-4" />
-                                <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
-                                <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
-                              </a>
+                                Masuk Member
+                              </button>
                             </div>
                           )}
                         </div>
-                      ) : (
-                        /* NON-MEMBER / GUEST: PROTECTED LOCK CARD */
-                        <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                          isKitabTheme
-                            ? 'bg-[#f5ebd7] border-[#d8c3a1]'
-                            : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
-                        }`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                              isKitabTheme
-                                ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
-                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                            }`}>
-                              <Lock className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
-                                Lampiran Dokumen & Video Terkunci
-                              </h4>
-                              <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-                                Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong> dan memutar video.
-                              </p>
-                            </div>
-                          </div>
+                      )}
 
-                          <button
-                            onClick={() => setIsAuthModalOpen(true)}
-                            className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
+                      {/* 3. DOKUMEN / FILE DOWNLOAD (LEVEL-GATED) */}
+                      {mat.file_url && (
+                        <div className="pt-2">
+                          {hasLevelAccess ? (
+                            <a
+                              href={mat.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
+                                isKitabTheme
+                                  ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
+                                  : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
+                              }`}
+                            >
+                              <Download className="w-4 h-4" />
+                              <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
+                              <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
+                            </a>
+                          ) : isApproved ? (
+                            /* Member Approved tapi level belum mencukupi */
+                            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                               isKitabTheme
-                                ? 'bg-[#9e2a2b] hover:bg-[#852324]'
-                                : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
-                            }`}
-                          >
-                            🔓 Masuk / Buka Akses
-                          </button>
+                                ? 'bg-[#ebdcc4]/70 border-[#d8c3a1]'
+                                : 'bg-slate-900 border-amber-500/30'
+                            }`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                                  isKitabTheme
+                                    ? 'bg-[#fdfaf3] text-[#8f632d] border-[#cbb38b]'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                }`}>
+                                  <Lock className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
+                                    Berkas Dokumen Khusus NPT Level {levelNum}
+                                  </h4>
+                                  <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                                    Anda terdaftar di <strong>{access.badgeText}</strong>. Video YouTube di atas bebas Anda simak. Untuk mengunduh modul PDF/PPT ini, silakan ajukan upgrade jenjang level.
+                                  </p>
+                                </div>
+                              </div>
+                              <a
+                                href={`https://wa.me/628123456789?text=${encodeURIComponent(`Assalamu'alaikum Admin NPT, saya *${currentUser?.name || "Member"}* ingin konfirmasi upgrade ke NPT Level ${levelNum}.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`px-4 py-2 rounded-xl text-white text-xs font-bold shrink-0 text-center transition ${
+                                  isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324]' : 'bg-amber-600 hover:bg-amber-500'
+                                }`}
+                              >
+                                Upgrade ke Level {levelNum}
+                              </a>
+                            </div>
+                          ) : (
+                            /* Non-member / Belum login */
+                            <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                              isKitabTheme
+                                ? 'bg-[#f5ebd7] border-[#d8c3a1]'
+                                : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
+                            }`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                                  isKitabTheme
+                                    ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
+                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                }`}>
+                                  <Lock className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
+                                    Lampiran Dokumen Terkunci
+                                  </h4>
+                                  <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                                    Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong>.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
+                                  isKitabTheme
+                                    ? 'bg-[#9e2a2b] hover:bg-[#852324]'
+                                    : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
+                                }`}
+                              >
+                                🔓 Masuk / Buka Akses
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -839,6 +909,51 @@ export default function NPTLevelDetailPage() {
                     onChange={(e) => setInputName(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Pilih Program / Jenjang Level
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setAuthProgram("npt")}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
+                        authProgram === "npt"
+                          ? "bg-sky-600 text-white border-sky-500"
+                          : "bg-slate-950 text-slate-400 border-slate-800"
+                      }`}
+                    >
+                      🏛️ NPT
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAuthProgram("emt")}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
+                        authProgram === "emt"
+                          ? "bg-rose-600 text-white border-rose-500"
+                          : "bg-slate-950 text-slate-400 border-slate-800"
+                      }`}
+                    >
+                      🎓 EMT
+                    </button>
+                  </div>
+
+                  {authProgram === "npt" && (
+                    <select
+                      value={authLevel}
+                      onChange={(e) => setAuthLevel(Number(e.target.value))}
+                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
+                    >
+                      <option value={1}>NPT Level 1</option>
+                      <option value={2}>NPT Level 2</option>
+                      <option value={3}>NPT Level 3</option>
+                      <option value={4}>NPT Level 4</option>
+                      <option value={5}>NPT Level 5</option>
+                      <option value={6}>NPT Level 6</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>

@@ -18,10 +18,13 @@ import {
   RefreshCw,
   Crown,
   Edit3,
-  X
+  X,
+  Layers,
+  GraduationCap
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
+import { formatRoleLabel, NPT_LEVEL_CONFIG } from "@/lib/authHelper";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -29,19 +32,25 @@ export const dynamic = 'force-dynamic';
 export default function MembersAdmin() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(true);
+  
+  // State Tambah Member Baru Manual
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [addProgram, setAddProgram] = useState("npt"); // 'npt' | 'emt'
+  const [addLevel, setAddLevel] = useState("1"); // '1'..'6' | 'all'
+
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [filterTab, setFilterTab] = useState("all"); // 'all' | 'pending' | 'approved'
+  const [filterTab, setFilterTab] = useState("all"); // 'all' | 'pending' | 'approved' | 'emt' | 'npt'
 
   // State Edit Member
   const [editingMember, setEditingMember] = useState(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("npt_1");
   const [editStatus, setEditStatus] = useState("approved");
 
   // Load daftar teman dari Supabase
@@ -77,23 +86,29 @@ export default function MembersAdmin() {
       formattedPhone = "62" + formattedPhone.slice(1);
     }
 
+    const assignedRole = addProgram === "emt" 
+      ? "emt" 
+      : (addLevel === "all" ? "npt_all" : `npt_${addLevel}`);
+
     try {
       const { error } = await supabase.from("profiles").insert([
         {
-          full_name: fullName,
+          full_name: fullName.trim(),
           phone_number: formattedPhone || null,
           email: email.trim().toLowerCase() || null,
-          role: "member",
+          role: assignedRole,
           status: "approved", // Manual add oleh admin otomatis approved
         },
       ]);
 
       if (error) throw error;
 
-      alert("Anggota berhasil ditambahkan dan langsung disetujui!");
+      alert(`Anggota berhasil ditambahkan dengan role ${formatRoleLabel(assignedRole)} dan langsung disetujui!`);
       setFullName("");
       setPhoneNumber("");
       setEmail("");
+      setAddProgram("npt");
+      setAddLevel("1");
       fetchMembers();
     } catch (err) {
       alert("Gagal menambahkan: " + err.message);
@@ -130,6 +145,7 @@ export default function MembersAdmin() {
     setEditName(member.full_name || "");
     setEditPhone(member.phone_number || "");
     setEditEmail(member.email || "");
+    setEditRole(member.role || "npt_1");
     setEditStatus(member.status || "approved");
   };
 
@@ -153,13 +169,14 @@ export default function MembersAdmin() {
           full_name: editName.trim(),
           phone_number: formattedPhone || null,
           email: cleanEmail,
+          role: editRole,
           status: editStatus,
         })
         .eq("id", editingMember.id);
 
       if (error) throw error;
 
-      alert("Data anggota berhasil diperbarui!");
+      alert("Data anggota & hak akses berhasil diperbarui!");
       setEditingMember(null);
       fetchMembers();
     } catch (err) {
@@ -184,16 +201,26 @@ export default function MembersAdmin() {
     }
   };
 
-  // Kirim Pengingat WhatsApp ke Member
+  // Kirim Pengingat / Notifikasi WhatsApp ke Member
   const handleSendWA = (member) => {
     if (!member.phone_number) {
       alert("Nomor WA belum tersimpan.");
       return;
     }
 
-    const text = encodeURIComponent(
-      `Assalamu'alaikum Wr. Wb. Sahabat ${member.full_name},\n\nAkses materi pembelajaran & rekaman live NPT Anda telah aktif. Silakan buka portal:\nhttps://neuroprogrammingtraining.id/hakekat-cinta\n\nTerima kasih!`
-    );
+    const roleName = formatRoleLabel(member.role);
+    const isApproved = member.status === "approved";
+
+    let text = "";
+    if (isApproved) {
+      text = encodeURIComponent(
+        `Assalamu'alaikum Wr. Wb. Sahabat *${member.full_name || "Peserta"}*,\n\nAlhamdulillah, pendaftaran & akses pembelajaran Anda untuk:\n👉 *${roleName}*\ntelah aktif dan disetujui.\n\nAnda dapat mengakses materi modul, siaran ulang video YouTube, dan kurikulum lengkap di portal resmi:\n🌐 https://neuroprogrammingtraining.id\n\nSelamat bertumbuh dan belajar bersama NPT Centre!`
+      );
+    } else {
+      text = encodeURIComponent(
+        `Assalamu'alaikum Wr. Wb. Sahabat *${member.full_name || "Peserta"}*,\n\nTerima kasih telah mendaftar untuk:\n👉 *${roleName}*\n\nData permohonan Anda sedang kami verifikasi. Silakan balas pesan ini jika Anda memiliki konfirmasi pembayaran atau pertanyaan.\n\nSalam hangat,\nTim NPT Centre`
+      );
+    }
 
     window.open(`https://wa.me/${member.phone_number}?text=${text}`, "_blank");
   };
@@ -207,7 +234,7 @@ export default function MembersAdmin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: "Akses pembelajaran & rekaman live kajian Hakikat Cinta NPT telah diperbarui. Silakan buka modul di: https://neuroprogrammingtraining.id"
+          message: "Akses pembelajaran & rekaman live kajian NPT telah diperbarui. Silakan buka modul di: https://neuroprogrammingtraining.id"
         })
       });
       const data = await res.json();
@@ -226,10 +253,20 @@ export default function MembersAdmin() {
   // Filter Data
   const pendingCount = members.filter((m) => m.status === "pending").length;
   const approvedCount = members.filter((m) => m.status === "approved").length;
+  const emtCount = members.filter((m) => (m.role || "").toLowerCase() === "emt").length;
+  const nptCount = members.filter((m) => {
+    const r = (m.role || "").toLowerCase();
+    return r.startsWith("npt_") || r === "member";
+  }).length;
 
   const filteredMembers = members.filter((m) => {
     if (filterTab === "pending") return m.status === "pending";
     if (filterTab === "approved") return m.status === "approved";
+    if (filterTab === "emt") return (m.role || "").toLowerCase() === "emt";
+    if (filterTab === "npt") {
+      const r = (m.role || "").toLowerCase();
+      return r.startsWith("npt_") || r === "member";
+    }
     return true;
   });
 
@@ -294,7 +331,7 @@ export default function MembersAdmin() {
                 )}
               </div>
               <p className={`text-xs mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-                Kelola izin masuk peserta, approval rekaman video, dan kontak reminder WhatsApp.
+                Atur jalur program (EMT / NPT Level 1–6), persetujuan akses video, dan kontak WhatsApp.
               </p>
             </div>
           </div>
@@ -335,12 +372,62 @@ export default function MembersAdmin() {
             ? 'card-kitab-frame'
             : 'bg-slate-900/80 border border-slate-800'
         }`}>
-          <h2 className={`text-sm font-bold flex items-center gap-2 ${
-            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-200'
-          }`}>
-            <UserPlus className={`w-4 h-4 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'}`} />
-            <span>Tambah Anggota Baru Langsung (Otomatis Disetujui)</span>
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 border-[#dfcfb0]/60">
+            <h2 className={`text-sm font-bold flex items-center gap-2 ${
+              isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-200'
+            }`}>
+              <UserPlus className={`w-4 h-4 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'}`} />
+              <span>Tambah Anggota Baru Langsung (Otomatis Disetujui)</span>
+            </h2>
+
+            {/* Pilihan Program & Level Tambah Manual */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1 bg-[#ede1c7] dark:bg-slate-800 p-1 rounded-xl border border-[#d8c3a1] dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setAddProgram("npt")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    addProgram === "npt"
+                      ? "bg-[#3a2211] text-white shadow-xs"
+                      : "text-[#634224] dark:text-slate-300 hover:bg-[#dfcdab]"
+                  }`}
+                >
+                  🏛️ NPT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddProgram("emt")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    addProgram === "emt"
+                      ? "bg-[#9e2a2b] text-white shadow-xs"
+                      : "text-[#634224] dark:text-slate-300 hover:bg-[#dfcdab]"
+                  }`}
+                >
+                  🎓 EMT
+                </button>
+              </div>
+
+              {addProgram === "npt" && (
+                <select
+                  value={addLevel}
+                  onChange={(e) => setAddLevel(e.target.value)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold border focus:outline-hidden cursor-pointer ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                      : 'bg-slate-950 border-slate-700 text-white'
+                  }`}
+                >
+                  <option value="1">Level 1: Nafas & Relaksasi</option>
+                  <option value="2">Level 2: Energi & Somatik</option>
+                  <option value="3">Level 3: Power & Transcendental</option>
+                  <option value="4">Level 4: Self Mastery</option>
+                  <option value="5">Level 5: Higher State</option>
+                  <option value="6">Level 6: 14 Akar Spiritualitas</option>
+                  <option value="all">⭐ Semua Level (1 - 6)</option>
+                </select>
+              )}
+            </div>
+          </div>
 
           <form onSubmit={handleAddMember} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
@@ -358,7 +445,7 @@ export default function MembersAdmin() {
 
             <input
               type="email"
-              placeholder="Alamat Email Gmail (Opsional)"
+              placeholder="Alamat Email Gmail (Kunci Login)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none ${
@@ -396,14 +483,14 @@ export default function MembersAdmin() {
           </form>
         </div>
 
-        {/* Filter Tab Approval */}
-        <div className={`flex items-center justify-between gap-2 border-b pb-3 ${
+        {/* Filter Tab Approval & Program */}
+        <div className={`flex items-center justify-between gap-2 border-b pb-3 overflow-x-auto ${
           isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
         }`}>
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setFilterTab("all")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border shrink-0 ${
                 filterTab === "all"
                   ? isKitabTheme ? "bg-[#3a2211] text-[#fbf6ec] border-[#8f632d]" : "bg-slate-800 text-white border-slate-700"
                   : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
@@ -411,20 +498,22 @@ export default function MembersAdmin() {
             >
               Semua ({members.length})
             </button>
+            
             <button
               onClick={() => setFilterTab("pending")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border shrink-0 ${
                 filterTab === "pending"
                   ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-400 border-amber-500/30"
                   : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Menunggu Persetujuan ({pendingCount})</span>
+              <span>Menunggu ({pendingCount})</span>
             </button>
+
             <button
               onClick={() => setFilterTab("approved")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border shrink-0 ${
                 filterTab === "approved"
                   ? isKitabTheme ? "bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                   : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
@@ -432,6 +521,30 @@ export default function MembersAdmin() {
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Disetujui ({approvedCount})</span>
+            </button>
+
+            <button
+              onClick={() => setFilterTab("npt")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border shrink-0 ${
+                filterTab === "npt"
+                  ? isKitabTheme ? "bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]" : "bg-sky-500/20 text-sky-400 border-sky-500/30"
+                  : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>NPT ({nptCount})</span>
+            </button>
+
+            <button
+              onClick={() => setFilterTab("emt")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border shrink-0 ${
+                filterTab === "emt"
+                  ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                  : isKitabTheme ? "bg-[#eee3cb] text-[#543516] border-[#d8c3a1]" : "text-slate-400 hover:text-slate-200 border-transparent"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>EMT ({emtCount})</span>
             </button>
           </div>
         </div>
@@ -458,19 +571,33 @@ export default function MembersAdmin() {
               {filteredMembers.map((member) => {
                 const isApproved = member.status === "approved";
                 const isSuperAdminRole = member.role === "super_admin";
+                const roleLabel = formatRoleLabel(member.role);
 
                 return (
                   <div
                     key={member.id}
-                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className={`font-bold text-sm ${
                           isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
                         }`}>
                           {member.full_name || "Tanpa Nama"}
                         </span>
+
+                        {/* Badge Role / Program / Level */}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                          (member.role || "").startsWith("emt")
+                            ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                            : isSuperAdminRole
+                              ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                              : isKitabTheme ? "bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]" : "bg-sky-500/20 text-sky-300 border-sky-500/30"
+                        }`}>
+                          {roleLabel}
+                        </span>
+
+                        {/* Status Badge */}
                         {isSuperAdminRole ? (
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
                             isKitabTheme
@@ -514,7 +641,7 @@ export default function MembersAdmin() {
                           </span>
                         )}
                         <span className={`text-[10px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
-                          Terdaftar: {new Date(member.created_at).toLocaleDateString("id-ID")}
+                          Terdaftar: {new Date(member.created_at || Date.now()).toLocaleDateString("id-ID")}
                         </span>
                       </div>
                     </div>
@@ -548,7 +675,7 @@ export default function MembersAdmin() {
                         </button>
                       )}
 
-                      {/* Tombol Edit Data Anggota */}
+                      {/* Tombol Edit Data & Role Anggota */}
                       <button
                         onClick={() => handleOpenEdit(member)}
                         className={`p-2 rounded-xl border transition cursor-pointer ${
@@ -556,7 +683,7 @@ export default function MembersAdmin() {
                             ? 'bg-[#eee3cb] text-[#8f632d] border-[#d8c3a1] hover:bg-[#dfcdab]'
                             : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/20'
                         }`}
-                        title="Edit Data Anggota (Nama, Email, No WA)"
+                        title="Edit Data & Level Anggota"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -569,7 +696,7 @@ export default function MembersAdmin() {
                               ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3] hover:bg-[#cbeae4]'
                               : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                           }`}
-                          title="Kirim Pesan WA"
+                          title="Kirim Notifikasi / Pesan WA"
                         >
                           <Send className="w-4 h-4" />
                         </button>
@@ -595,7 +722,7 @@ export default function MembersAdmin() {
         </div>
       </div>
 
-      {/* MODAL EDIT DATA ANGGOTA */}
+      {/* MODAL EDIT DATA & LEVEL ANGGOTA */}
       {editingMember && (
         <div 
           onClick={() => setEditingMember(null)}
@@ -624,10 +751,10 @@ export default function MembersAdmin() {
                   <h3 className={`text-sm font-bold ${
                     isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
                   }`}>
-                    Edit Data Anggota
+                    Edit Data & Hak Akses Level
                   </h3>
                   <p className={`text-[10px] ${isKitabTheme ? 'text-[#734822]' : 'text-slate-400'}`}>
-                    Lengkapi Email atau Perbaiki Nomor WA
+                    Atur Program EMT atau Tingkat Level NPT
                   </p>
                 </div>
               </div>
@@ -660,6 +787,40 @@ export default function MembersAdmin() {
                       : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
                   }`}
                 />
+              </div>
+
+              {/* DROPDOWN PROGRAM & LEVEL NPT */}
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
+                  Program & Tingkat Level Akses
+                </label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+                  }`}
+                >
+                  <optgroup label="🎓 Program EMT">
+                    <option value="emt">🎓 EMT (Pelatihan Emosi Guru)</option>
+                  </optgroup>
+                  <optgroup label="🏛️ Program NPT (Neuro Programming Training)">
+                    <option value="npt_1">🏛️ NPT Level 1: {NPT_LEVEL_CONFIG[1]?.name}</option>
+                    <option value="npt_2">⚡ NPT Level 2: {NPT_LEVEL_CONFIG[2]?.name}</option>
+                    <option value="npt_3">🔥 NPT Level 3: {NPT_LEVEL_CONFIG[3]?.name}</option>
+                    <option value="npt_4">🧠 NPT Level 4: {NPT_LEVEL_CONFIG[4]?.name}</option>
+                    <option value="npt_5">👁️ NPT Level 5: {NPT_LEVEL_CONFIG[5]?.name}</option>
+                    <option value="npt_6">🌿 NPT Level 6: {NPT_LEVEL_CONFIG[6]?.name}</option>
+                    <option value="npt_all">⭐ NPT Semua Level (1 – 6)</option>
+                  </optgroup>
+                  <optgroup label="👑 Hak Akses Pengelola">
+                    <option value="super_admin">👑 Super Admin VIP</option>
+                  </optgroup>
+                </select>
               </div>
 
               <div>
@@ -718,7 +879,7 @@ export default function MembersAdmin() {
                       : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
                   }`}
                 >
-                  <option value="approved">✅ Disetujui (Approved / Full VIP)</option>
+                  <option value="approved">✅ Disetujui (Approved / Aktif)</option>
                   <option value="pending">⏳ Menunggu Persetujuan (Pending)</option>
                 </select>
               </div>
