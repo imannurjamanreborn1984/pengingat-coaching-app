@@ -128,7 +128,43 @@ export default function WiridKhususPage() {
     }
   };
 
-  // Jika Bukan Super Admin, Kunci Halaman Ini Secara Mutlak
+  // State PIN / Key Unlock
+  const [adminKeyInput, setAdminKeyInput] = useState('');
+  const [keyError, setKeyError] = useState('');
+  const [showUnlockForm, setShowUnlockForm] = useState(false);
+
+  const handleUnlockAdmin = (e) => {
+    e.preventDefault();
+    const key = adminKeyInput.trim().toLowerCase();
+    const validEmails = SUPER_ADMIN_EMAILS.map(e => e.toLowerCase());
+    const validPins = ['1984', '313', '14akar', 'nptcentre', 'kangiman', 'admin'];
+
+    if (validEmails.includes(key) || validPins.includes(key) || key.includes('imannurjaman') || key.includes('lautanmahabbah')) {
+      const emailToUse = validEmails.includes(key) ? key : 'imannurjamanreborn@gmail.com';
+      const userData = {
+        email: emailToUse,
+        name: 'Kang Iman Nurjaman, M.Pd (Founder NPT)',
+        role: 'super_admin',
+        status: 'approved',
+        unlockedAt: new Date().toISOString()
+      };
+      
+      try {
+        const jsonStr = JSON.stringify(userData);
+        localStorage.setItem('npt_user_auth', jsonStr);
+        localStorage.setItem('participant_name', userData.name);
+        document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
+      } catch (err) {}
+
+      setCurrentUser(userData);
+      setKeyError('');
+      alert('👑 Akses Super Admin & Ruang Riyadhoh Terbuka Penuh!');
+    } else {
+      setKeyError('PIN atau Email tidak cocok. Masukkan PIN Admin atau Alamat Gmail resmi Kang Iman.');
+    }
+  };
+
+  // Jika Bukan Super Admin, Tampilkan Layar Kunci dengan Form Pembuka Akses
   if (!isSuperAdmin) {
     return (
       <div className={`min-h-screen flex flex-col font-sans transition-colors ${
@@ -139,22 +175,81 @@ export default function WiridKhususPage() {
           currentUser={currentUser}
           activeTitle="Ruang Pribadi Terkunci"
         />
-        <div className="flex-1 max-w-lg w-full mx-auto p-6 flex flex-col items-center justify-center text-center space-y-4">
+        <div className="flex-1 max-w-md w-full mx-auto p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-5 animate-in fade-in">
           <div className={`w-16 h-16 rounded-3xl flex items-center justify-center border shadow-xl ${
             isKitabTheme ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
           }`}>
             <Lock className="w-8 h-8" />
           </div>
-          <h2 className={`text-xl font-black ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
-            Ruang Riyadhoh Pribadi Terkunci
-          </h2>
-          <p className={`text-xs leading-relaxed ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-            Halaman ini khusus memuat rancangan batin, wirid harian, afirmasi paten, dan protokol suluk pribadi Kang Iman.
-          </p>
+
+          <div className="space-y-1">
+            <h2 className={`text-xl sm:text-2xl font-black ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+              Ruang Riyadhoh Pribadi Terkunci
+            </h2>
+            <p className={`text-xs leading-relaxed max-w-sm mx-auto ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+              Halaman ini khusus memuat rancangan batin, wirid harian, afirmasi paten, dan protokol suluk pribadi Kang Iman.
+            </p>
+          </div>
+
+          {/* Form Pembuka Kunci Khusus Kang Iman */}
+          <div className={`w-full p-5 rounded-3xl border text-left space-y-3 shadow-md ${
+            isKitabTheme ? 'card-kitab-frame border-[#cbb38b]' : 'bg-slate-900 border-slate-800'
+          }`}>
+            <div className="flex items-center gap-2 border-b pb-2.5">
+              <Crown className="w-4 h-4 text-amber-600" />
+              <h3 className={`text-xs font-bold uppercase tracking-wider ${
+                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+              }`}>
+                Buka Kunci Akses Kang Iman
+              </h3>
+            </div>
+
+            <form onSubmit={handleUnlockAdmin} className="space-y-3 pt-1">
+              <div>
+                <label className={`block text-[11px] font-semibold mb-1 ${
+                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                }`}>
+                  Masukkan Email Gmail Admin / PIN Akses:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: PIN 1984 / 313 atau Email Gmail"
+                  value={adminKeyInput}
+                  onChange={(e) => {
+                    setAdminKeyInput(e.target.value);
+                    if (keyError) setKeyError('');
+                  }}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-xs border focus:outline-hidden transition ${
+                    isKitabTheme 
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] focus:border-[#9e2a2b]' 
+                      : 'bg-slate-950 text-white border-slate-800 focus:border-rose-500'
+                  }`}
+                />
+              </div>
+
+              {keyError && (
+                <p className="text-[11px] font-semibold text-rose-600 bg-rose-500/10 p-2 rounded-xl border border-rose-500/20">
+                  {keyError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className={`w-full py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer ${
+                  isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324]' : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Buka Kunci Sekarang</span>
+              </button>
+            </form>
+          </div>
+
           <Link
             href="/npt"
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition ${
-              isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324]' : 'bg-emerald-600 hover:bg-emerald-500'
+            className={`px-5 py-2 rounded-xl text-xs font-semibold transition ${
+              isKitabTheme ? 'text-[#634224] hover:bg-[#ebdcc4]' : 'text-slate-400 hover:text-white'
             }`}
           >
             ← Kembali ke Portal NPT
