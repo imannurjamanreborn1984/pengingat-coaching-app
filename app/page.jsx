@@ -19,7 +19,8 @@ import {
   UserCheck,
   HelpCircle,
   LogOut,
-  CheckCircle2
+  CheckCircle2,
+  Activity
 } from 'lucide-react';
 
 const SUPER_ADMIN_EMAILS = [
