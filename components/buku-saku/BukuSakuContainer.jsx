@@ -124,6 +124,13 @@ export default function BukuSakuContainer() {
       if (savedUser) {
         setCurrentUser(savedUser);
       }
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam === 'journal' || tabParam === 'diary') {
+          setActiveTab('journal');
+        }
+      }
     } catch (e) {}
     loadAllData();
   }, []);
@@ -362,18 +369,20 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
               <span>{isKitabTheme ? "📜 Mode Kitab" : "🌌 Mode Dark"}</span>
             </button>
 
-            <button
-              onClick={() => setIsDataModalOpen(true)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
-                isKitabTheme
-                  ? 'bg-[#eee3cb] text-[#4a2e12] border-[#d8c3a1] hover:bg-[#dfcdab]'
-                  : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
-              }`}
-              title="Backup / Restore Data"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Backup/Restore</span>
-            </button>
+            {currentUser?.role === 'super_admin' && (
+              <button
+                onClick={() => setIsDataModalOpen(true)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                  isKitabTheme
+                    ? 'bg-[#eee3cb] text-[#4a2e12] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
+                }`}
+                title="Backup / Restore Data"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Backup/Restore</span>
+              </button>
+            )}
           </div>
         </div>
 

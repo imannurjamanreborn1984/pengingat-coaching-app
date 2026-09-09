@@ -18,7 +18,8 @@ import {
   ChevronRight,
   GraduationCap,
   FileText,
-  Activity
+  Activity,
+  PenTool
 } from 'lucide-react';
 
 export const SUPER_ADMIN_EMAILS = [
@@ -174,6 +175,20 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                   </Link>
 
                   <Link
+                    href="/buku-saku?tab=journal"
+                    onClick={onClose}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/30 ${
+                      activePath === '/buku-saku' ? 'text-emerald-300' : 'text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <PenTool className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>📔 Buku Diary Temuan Harian</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </Link>
+
+                  <Link
                     href="/buku-saku"
                     onClick={onClose}
                     className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -248,244 +263,139 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
                     <GraduationCap className="w-4 h-4 text-amber-400" />
                     <div>
                       <p className="leading-tight">Ruang Kelas & Jurnal EMT</p>
-                      <span className="text-[9px] text-emerald-400/80 font-normal">Setor Refleksi & Evaluasi Batin</span>
+                      <p className="text-[10px] font-normal text-slate-400">Setor Refleksi & Evaluasi Batin</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  <ChevronRight className="w-3.5 h-3.5 opacity-70" />
                 </Link>
-
-                <div className="p-2 rounded-xl bg-slate-950/80 border border-emerald-500/20 space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 px-1">
-                    <span className="flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Self-Healing 21 Hari</span>
-                    </span>
-                    <span className="text-[9px] text-amber-400 font-bold">Protokol Batin</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 px-1 leading-relaxed">
-                    Diasuh langsung oleh Kang Iman sebelum melangkah ke asuhan Sang Guru NPT.
-                  </p>
-                </div>
               </div>
             </div>
+
+            {/* ========================================================================= */}
+            {/* FITUR KHUSUS SUPER ADMIN                                                  */}
+            {/* ========================================================================= */}
+            {isSuperAdmin && (
+              <div className="space-y-2 p-3 rounded-2xl bg-amber-950/20 border border-amber-500/30">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-amber-400" />
+                    <span className="text-[10px] font-black tracking-wider uppercase text-amber-300">
+                      PANEL ADMIN UTAMA
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    VIP
+                  </span>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <Link
+                    href="/admin/members"
+                    onClick={onClose}
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold bg-slate-950/80 hover:bg-slate-800 text-amber-300 border border-amber-500/20 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      <span>Ruang Persetujuan (Members)</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </Link>
+
+                  <Link
+                    href="/admin/submissions"
+                    onClick={onClose}
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold bg-slate-950/80 hover:bg-slate-800 text-amber-300 border border-amber-500/20 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-400" />
+                      <span>Rekap Diary & Tugas (Word Export)</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </Link>
+                </div>
+              </div>
+            )}
 
           </div>
-
-          {/* Admin & Ruang Approval (Hanya Tampil untuk Super Admin) */}
-          {isSuperAdmin && (
-            <div className="space-y-1">
-              <div className="text-[10px] font-bold tracking-wider uppercase text-amber-400/80 px-3 py-1 flex items-center justify-between">
-                <span>Admin & Ruang Pribadi</span>
-                <Crown className="w-3 h-3 text-amber-400" />
-              </div>
-
-              {/* RUANG PRIBADI KANG IMAN (WIRID & AFIRMASI PATEN LEVEL 5) */}
-              <Link
-                href="/wirid-khusus"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-600/30 via-amber-500/20 to-rose-600/20 text-amber-200 border border-amber-500/40 shadow-md shadow-amber-950/40 transition-all cursor-pointer ${
-                  activePath === '/wirid-khusus' ? 'ring-2 ring-amber-400' : ''
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base">📿</span>
-                  <div>
-                    <p className="leading-tight text-amber-300">Riyadhoh Khusus Kang Iman</p>
-                    <span className="text-[9px] text-amber-400/80 font-normal">Afirmasi Paten Level 5 & Barier</span>
-                  </div>
-                </div>
-                <span className="px-1.5 py-0.2 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black">
-                  PRIVAT
-                </span>
-              </Link>
-
-              {/* MAKTABAH & DAPUR NGAJI BEDAH KITAB (TAFSIR SHAWI, KIFAYATUL AKHYAR, AL-HIKAM) */}
-              <Link
-                href="/admin/maktabah"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-950/50 via-amber-900/30 to-amber-950/50 text-amber-200 border border-amber-600/40 shadow-sm transition-all cursor-pointer ${
-                  activePath === '/admin/maktabah' ? 'ring-2 ring-amber-400 bg-amber-950' : 'hover:bg-amber-900/40'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base">📚</span>
-                  <div>
-                    <p className="leading-tight text-amber-300">Dapur Ngaji & Bedah Kitab</p>
-                    <span className="text-[9px] text-amber-400/80 font-normal">Syakal, Terjemah, Shawi & Al-Hikam</span>
-                  </div>
-                </div>
-                <span className="px-1.5 py-0.2 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black">
-                  NGAJI
-                </span>
-              </Link>
-
-              {/* RUANG KONTROL & EVALUASI EMT KHUSUS KANG IMAN */}
-              <Link
-                href="/admin/emt"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all cursor-pointer ${
-                  activePath === '/admin/emt' ? 'ring-2 ring-emerald-400 bg-emerald-950/50' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <GraduationCap className="w-4 h-4 text-emerald-400" />
-                  <div>
-                    <p className="leading-tight">Ruang Kontrol & Evaluasi EMT</p>
-                    <span className="text-[9px] text-emerald-400/80 font-normal">Laporan Orang Perorang & Login</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
-
-              <Link
-                href="/admin/members"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all cursor-pointer ${
-                  activePath === '/admin/members' ? 'ring-2 ring-amber-500' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-4 h-4 text-amber-400" />
-                  <span>Ruang Persetujuan & Anggota</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
-
-              <Link
-                href="/admin/submissions"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
-                  activePath === '/admin/submissions' ? 'bg-slate-800 text-white' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Users className="w-4 h-4 text-sky-400" />
-                  <span>Rekap Jawaban Peserta</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
-
-              <Link
-                href="/admin/materials"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
-                  activePath === '/admin/materials' ? 'bg-slate-800 text-white ring-1 ring-rose-500' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <BookOpen className="w-4 h-4 text-rose-400" />
-                  <span>Upload Materi NPT (1 – 6)</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
-
-              <Link
-                href="/admin/dashboard"
-                onClick={onClose}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer ${
-                  activePath === '/admin/dashboard' ? 'bg-slate-800 text-white' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Crown className="w-4 h-4 text-amber-500" />
-                  <span>Dashboard Admin</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Drawer */}
-        <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/80">
-          <span className="text-[10px] text-slate-500 font-mono">
-            NPT Centre v2.0
-          </span>
-          <span className="text-[10px] font-bold text-rose-500">
-            🔴⚪ Merah Putih NPT
-          </span>
         </div>
       </aside>
     </>
   );
 }
 
-export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Hakikat Cinta & Rekaman Live" }) {
+export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Portal NPT" }) {
   const isSuperAdmin = 
     currentUser?.role === 'super_admin' || 
     (currentUser?.email && SUPER_ADMIN_EMAILS.includes(currentUser.email.toLowerCase().trim()));
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-slate-950/85 border-b border-slate-800 transition-colors">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
-        {/* Left: Hamburger & Brand */}
-        <div className="flex items-center gap-2 sm:gap-3.5">
+    <header className="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 text-white shadow-md">
+      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+        {/* Left Side: Drawer Toggle & Active Title */}
+        <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            title="Buka Menu & Navigasi"
-            className="p-2 sm:p-2.5 rounded-xl text-slate-200 hover:bg-slate-800 active:scale-95 transition-all border border-slate-800 cursor-pointer"
-            aria-label="Menu"
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+            title="Buka Menu Navigasi Portal"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-5 h-5 text-rose-500" />
+            <span className="text-xs font-bold hidden sm:inline">Menu</span>
           </button>
 
-          <Link 
-            href="/"
-            className="flex items-center gap-2.5 select-none group cursor-pointer"
-            title="Kembali ke Gerbang Awal"
-          >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-rose-600 via-red-500 to-rose-700 flex items-center justify-center text-white shadow-sm shadow-rose-600/30 group-hover:scale-105 transition-transform">
-              <Film className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-white text-sm sm:text-base tracking-tight leading-none group-hover:text-rose-400 transition-colors">
-                  {activeTitle}
-                </span>
-                <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-rose-500/10 text-rose-400 rounded-md border border-rose-500/20">
-                  🔴⚪ NPT
-                </span>
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none mt-1 hidden xs:block">
-                NPT Centre • Portal Terpadu
-              </p>
-            </div>
-          </Link>
+          <div className="flex items-center gap-2">
+            <span className="text-sm hidden sm:inline">📜</span>
+            <h1 className="text-sm sm:text-base font-bold text-slate-100 tracking-tight font-serif truncate max-w-[200px] sm:max-w-xs">
+              {activeTitle}
+            </h1>
+          </div>
         </div>
 
-        {/* Right Action Buttons */}
+        {/* Right Side: Quick Links & User Badge */}
         <div className="flex items-center gap-2">
-          {isSuperAdmin && (
-            <Link
-              href="/admin/members"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shadow-xs"
-              title="Ruang Approval Anggota"
-            >
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Ruang Approval</span>
-            </Link>
-          )}
-
+          {/* Quick Link ke Buku Diary Temuan Harian */}
           <Link
-            href="/dashboard"
-            className="p-2 text-slate-300 hover:bg-slate-800 rounded-xl border border-slate-800 transition-colors"
-            title="Reminder Penugasan"
+            href="/buku-saku?tab=journal"
+            className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Buka Buku Diary Temuan Harian"
           >
-            <Bell className="w-4 h-4 text-amber-400" />
+            <PenTool className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">📔 Buku Diary</span>
           </Link>
 
-          <button
-            onClick={onToggleSidebar}
-            title={`Akun: ${currentUser?.name || currentUser?.email || 'Member'}`}
-            className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors cursor-pointer"
+          {/* Quick Link ke 14 Akar */}
+          <Link
+            href="/buku-saku"
+            className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            title="Buka 14 Akar Spiritualitas"
           >
-            <div className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center">
-              {currentUser?.name?.charAt(0) || 'N'}
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">14 Akar</span>
+          </Link>
+
+          {/* User Status Badge */}
+          {currentUser ? (
+            <div className="flex items-center gap-2 pl-1">
+              <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-200 hidden sm:inline">
+                {currentUser.name || currentUser.email?.split('@')[0] || 'User'}
+              </span>
+              {isSuperAdmin ? (
+                <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
+                  <Crown className="w-3 h-3 text-amber-500" /> Admin
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                  VIP
+                </span>
+              )}
             </div>
-            <span className="text-[11px] font-bold text-slate-200 hidden md:inline">
-              {currentUser?.name || 'Member'}
-            </span>
-          </button>
+          ) : (
+            <Link
+              href="/"
+              className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition"
+            >
+              Masuk
+            </Link>
+          )}
         </div>
       </div>
     </header>
