@@ -109,7 +109,7 @@ export const MultiPerspectiveView = ({
 
           {/* Quick Keyword Pills */}
           <div className="flex flex-wrap gap-2 mt-4">
-            {root.coreKeywords.map((kw, i) => (
+            {root.coreKeywords?.map((kw, i) => (
               <span
                 key={i}
                 className="text-xs px-2.5 py-1 rounded-lg bg-[#eee3cb] text-[#543516] font-semibold border border-[#dfcfb0]"
@@ -162,23 +162,25 @@ export const MultiPerspectiveView = ({
                 </h3>
               </div>
               <h4 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
-                {root.lightAspect.title}
+                {root.lightAspect?.title}
               </h4>
               <p className="text-xs sm:text-sm text-[#3d2514] mt-2 leading-relaxed font-sans">
-                {root.lightAspect.description}
+                {root.lightAspect?.description}
               </p>
 
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-bold text-[#694827]">
-                  Karakteristik Utama:
-                </p>
-                {root.lightAspect.traits.map((trait, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-[#2b170a] font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                    <span>{trait}</span>
-                  </div>
-                ))}
-              </div>
+              {root.lightAspect?.traits && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-bold text-[#694827]">
+                    Karakteristik Utama:
+                  </p>
+                  {root.lightAspect.traits.map((trait, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-[#2b170a] font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                      <span>{trait}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#dfcfb0] text-[11px] text-[#734822] font-semibold italic">
@@ -195,23 +197,25 @@ export const MultiPerspectiveView = ({
                 </h3>
               </div>
               <h4 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
-                {root.shadowAspect.title}
+                {root.shadowAspect?.title}
               </h4>
               <p className="text-xs sm:text-sm text-[#3d2514] mt-2 leading-relaxed font-sans">
-                {root.shadowAspect.description}
+                {root.shadowAspect?.description}
               </p>
 
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-bold text-[#694827]">
-                  Tanda Jebakan / Distorsi:
-                </p>
-                {root.shadowAspect.pitfalls.map((pitfall, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-[#2b170a] font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0 mt-1.5" />
-                    <span>{pitfall}</span>
-                  </div>
-                ))}
-              </div>
+              {root.shadowAspect?.pitfalls && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-bold text-[#694827]">
+                    Tanda Jebakan / Distorsi:
+                  </p>
+                  {root.shadowAspect.pitfalls.map((pitfall, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-[#2b170a] font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0 mt-1.5" />
+                      <span>{pitfall}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#dfcfb0] text-[11px] text-[#734822] font-semibold italic">
@@ -245,7 +249,7 @@ export const MultiPerspectiveView = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {root.sainsEpigenetika.map((item) => (
+              {root.sainsEpigenetika?.map((item) => (
                 <div
                   key={item.id}
                   className="card-kitab-frame rounded-2xl p-5 shadow-xs flex flex-col justify-between"
@@ -324,7 +328,7 @@ export const MultiPerspectiveView = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {root.kitabKearifan.map((item) => (
+              {root.kitabKearifan?.map((item) => (
                 <div
                   key={item.id}
                   className="card-kitab-frame rounded-2xl p-6 shadow-xs"
@@ -389,7 +393,7 @@ export const MultiPerspectiveView = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {root.popCultureFolklore.map((item) => (
+              {root.popCultureFolklore?.map((item) => (
                 <div
                   key={item.id}
                   className="card-kitab-frame rounded-2xl p-5 shadow-xs flex flex-col justify-between"
@@ -426,96 +430,181 @@ export const MultiPerspectiveView = ({
       {activeTab === 'latihan' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="card-kitab-frame rounded-3xl p-6 shadow-sm flex flex-col justify-between border-rose-600/30">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300">
-                    Latihan Gerak Somatik
-                  </span>
-                  <Activity className="w-4 h-4 text-rose-700" />
-                </div>
+            {/* 1. LATIHAN GERAK SOMATIK (DYNAMIC MEDITATION) */}
+            {root.panduanLatihan?.dynamicMeditation && (
+              <div className="card-kitab-frame rounded-3xl p-6 shadow-sm flex flex-col justify-between border-rose-600/30">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300">
+                      Latihan Gerak Somatik
+                    </span>
+                    <Activity className="w-4 h-4 text-rose-700" />
+                  </div>
 
-                <h3 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
-                  {root.panduanLatihan.dynamicMeditation.title}
-                </h3>
-                <p className="text-xs text-[#734822] mt-1 font-semibold">
-                  🎯 <strong>Tujuan:</strong> {root.panduanLatihan.dynamicMeditation.objective}
-                </p>
+                  <h3 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
+                    {root.panduanLatihan.dynamicMeditation.title}
+                  </h3>
+                  {root.panduanLatihan.dynamicMeditation.objective && (
+                    <p className="text-xs text-[#734822] mt-1 font-semibold">
+                      🎯 <strong>Tujuan:</strong> {root.panduanLatihan.dynamicMeditation.objective}
+                    </p>
+                  )}
 
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-bold text-[#26150a]">Langkah Gerak:</p>
-                  {root.panduanLatihan.dynamicMeditation.steps.map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-[#3d2514]">
-                      <span className="w-5 h-5 rounded-full bg-[#3a2211] text-[#fbf6ec] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                        {idx + 1}
-                      </span>
-                      <span>{step}</span>
+                  {root.panduanLatihan.dynamicMeditation.steps && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs font-bold text-[#26150a]">Langkah Gerak:</p>
+                      {root.panduanLatihan.dynamicMeditation.steps.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 text-xs text-[#3d2514]">
+                          <span className="w-5 h-5 rounded-full bg-[#3a2211] text-[#fbf6ec] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span>{step}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
 
-                <div className="mt-4 p-3 rounded-xl bg-[#faf2e3] border border-[#d4b886] text-xs">
-                  <span className="font-bold text-[#9e2a2b]">Fokus Sensasi Tubuh: </span>
-                  <span className="text-[#3d2514]">{root.panduanLatihan.dynamicMeditation.somaticFocus}</span>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-[#dfcfb0]">
-                <button
-                  onClick={() => onStartPractice(root, 'dynamic_meditation')}
-                  className="w-full py-2.5 rounded-xl bg-[#9e2a2b] hover:bg-[#852324] active:scale-98 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Timer className="w-4 h-4" />
-                  <span>Mulai & Catat ke Jurnal</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="card-kitab-frame rounded-3xl p-6 shadow-sm flex flex-col justify-between border-blue-600/30">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
-                    Olah Nafas & Pranayama
-                  </span>
-                  <Activity className="w-4 h-4 text-blue-700" />
-                </div>
-
-                <h3 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
-                  {root.panduanLatihan.breathwork.title}
-                </h3>
-                <p className="text-xs text-[#734822] mt-1 font-semibold">
-                  🎯 <strong>Tujuan:</strong> {root.panduanLatihan.breathwork.objective}
-                </p>
-
-                <div className="mt-4 p-3 rounded-xl bg-[#eee2cb] border border-[#d8c3a1] text-xs">
-                  <p className="font-bold text-[#26150a]">Pola Ritme Nafas:</p>
-                  <p className="text-sm font-black text-[#9e2a2b] mt-0.5 font-mono">{root.panduanLatihan.breathwork.pattern}</p>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-bold text-[#26150a]">Instruksi Pelaksanaan:</p>
-                  {root.panduanLatihan.breathwork.instructions.map((inst, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-[#3d2514]">
-                      <span className="w-5 h-5 rounded-full bg-[#3a2211] text-[#fbf6ec] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                        {idx + 1}
-                      </span>
-                      <span>{inst}</span>
+                  {root.panduanLatihan.dynamicMeditation.somaticFocus && (
+                    <div className="mt-4 p-3 rounded-xl bg-[#faf2e3] border border-[#d4b886] text-xs">
+                      <span className="font-bold text-[#9e2a2b]">Fokus Sensasi Tubuh: </span>
+                      <span className="text-[#3d2514]">{root.panduanLatihan.dynamicMeditation.somaticFocus}</span>
                     </div>
-                  ))}
+                  )}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#dfcfb0]">
+                  <button
+                    onClick={() => onStartPractice(root, 'dynamic_meditation')}
+                    className="w-full py-2.5 rounded-xl bg-[#9e2a2b] hover:bg-[#852324] active:scale-98 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Timer className="w-4 h-4" />
+                    <span>Mulai & Catat ke Jurnal</span>
+                  </button>
                 </div>
               </div>
+            )}
 
-              <div className="mt-6 pt-4 border-t border-[#dfcfb0]">
-                <button
-                  onClick={() => onStartPractice(root, 'breathwork')}
-                  className="w-full py-2.5 rounded-xl bg-[#3a2211] hover:bg-[#26150a] active:scale-98 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Timer className="w-4 h-4" />
-                  <span>Mulai & Catat ke Jurnal</span>
-                </button>
+            {/* 2. LATIHAN HENING & KHALWAT */}
+            {root.panduanLatihan?.khalwat && (
+              <div className="card-kitab-frame rounded-3xl p-6 shadow-sm flex flex-col justify-between border-blue-600/30">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
+                      Latihan Hening & Khalwat
+                    </span>
+                    <Moon className="w-4 h-4 text-blue-700" />
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
+                    {root.panduanLatihan.khalwat.title}
+                  </h3>
+                  
+                  {root.panduanLatihan.khalwat.durationRecommended && (
+                    <p className="text-xs text-[#734822] mt-1 font-semibold">
+                      ⏱️ <strong>Durasi Disarankan:</strong> {root.panduanLatihan.khalwat.durationRecommended}
+                    </p>
+                  )}
+
+                  {root.panduanLatihan.khalwat.promptContemplation && (
+                    <div className="mt-4 p-3 rounded-xl bg-[#eee2cb] border border-[#d8c3a1] text-xs">
+                      <p className="font-bold text-[#26150a]">Pertanyaan Refleksi Batin:</p>
+                      <p className="text-xs italic text-[#9e2a2b] mt-1 font-serif">"{root.panduanLatihan.khalwat.promptContemplation}"</p>
+                    </div>
+                  )}
+
+                  {root.panduanLatihan.khalwat.solitudePractice && (
+                    <div className="mt-4 text-xs text-[#3d2514]">
+                      <p className="font-bold text-[#26150a] mb-1">Panduan Laku Hening:</p>
+                      <p className="leading-relaxed">{root.panduanLatihan.khalwat.solitudePractice}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#dfcfb0]">
+                  <button
+                    onClick={() => onStartPractice(root, 'khalwat')}
+                    className="w-full py-2.5 rounded-xl bg-[#3a2211] hover:bg-[#26150a] active:scale-98 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Timer className="w-4 h-4" />
+                    <span>Mulai & Catat ke Jurnal</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* 3. OLAH NAFAS & PRANAYAMA (JIKA ADA) */}
+            {root.panduanLatihan?.breathwork && (
+              <div className="card-kitab-frame rounded-3xl p-6 shadow-sm flex flex-col justify-between border-teal-600/30">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-900 border border-teal-300">
+                      Olah Nafas & Pranayama
+                    </span>
+                    <Activity className="w-4 h-4 text-teal-700" />
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-bold text-[#26150a] font-serif">
+                    {root.panduanLatihan.breathwork.title}
+                  </h3>
+                  {root.panduanLatihan.breathwork.objective && (
+                    <p className="text-xs text-[#734822] mt-1 font-semibold">
+                      🎯 <strong>Tujuan:</strong> {root.panduanLatihan.breathwork.objective}
+                    </p>
+                  )}
+
+                  {root.panduanLatihan.breathwork.pattern && (
+                    <div className="mt-4 p-3 rounded-xl bg-[#eee2cb] border border-[#d8c3a1] text-xs">
+                      <p className="font-bold text-[#26150a]">Pola Ritme Nafas:</p>
+                      <p className="text-sm font-black text-[#9e2a2b] mt-0.5 font-mono">{root.panduanLatihan.breathwork.pattern}</p>
+                    </div>
+                  )}
+
+                  {root.panduanLatihan.breathwork.instructions && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs font-bold text-[#26150a]">Instruksi Pelaksanaan:</p>
+                      {root.panduanLatihan.breathwork.instructions.map((inst, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 text-xs text-[#3d2514]">
+                          <span className="w-5 h-5 rounded-full bg-[#3a2211] text-[#fbf6ec] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span>{inst}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#dfcfb0]">
+                  <button
+                    onClick={() => onStartPractice(root, 'breathwork')}
+                    className="w-full py-2.5 rounded-xl bg-[#1b6b55] hover:bg-[#155644] active:scale-98 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Timer className="w-4 h-4" />
+                    <span>Mulai & Catat ke Jurnal</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* 4. AFIRMASI HARIAN */}
+          {root.panduanLatihan?.afirmasiHarian && root.panduanLatihan.afirmasiHarian.length > 0 && (
+            <div className="card-kitab-frame rounded-3xl p-6 shadow-sm border-amber-600/30">
+              <div className="flex items-center gap-2 text-amber-800 mb-2">
+                <Quote className="w-5 h-5" />
+                <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider font-kitab-title">
+                  Afirmasi & Mantra Batin Harian
+                </h4>
+              </div>
+              <div className="space-y-2">
+                {root.panduanLatihan.afirmasiHarian.map((af, idx) => (
+                  <p key={idx} className="text-xs sm:text-sm font-serif italic text-[#26150a] bg-[#faf2e3] p-3 rounded-xl border border-[#d4b886]">
+                    "{af}"
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

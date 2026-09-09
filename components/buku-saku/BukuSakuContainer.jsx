@@ -171,7 +171,7 @@ export default function BukuSakuContainer() {
         document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
         setIsAuthModalOpen(false);
         setAuthStatus(null);
-        alert("✅ Akses Member Terbuka! Perangkat HP Anda tersimpan selamanya.");
+        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan.");
       } else {
         if (!profile) {
           await supabase.from("profiles").insert([
@@ -193,10 +193,6 @@ export default function BukuSakuContainer() {
   };
 
   const handleSelectRoot = (root) => {
-    if (!isApproved) {
-      setIsAuthModalOpen(true);
-      return;
-    }
     setSelectedRoot(root);
   };
 
@@ -217,10 +213,50 @@ export default function BukuSakuContainer() {
     loadAllData();
   };
 
-  const handleSaveJournal = (entryData) => {
+  const handleSaveJournal = async (entryData) => {
     DataService.saveJournal(entryData);
     setJournals(DataService.getJournals());
     setJournalSubTab('list');
+
+    if (entryData.isSharedWithAdmin) {
+      try {
+        const userName = currentUser?.name || currentUser?.full_name || 'Peserta NPT';
+        const userPhone = currentUser?.phone_number || null;
+        const userEmail = currentUser?.email || null;
+
+        await supabase.from("submissions").insert([
+          {
+            user_name: `${userName}${userPhone ? ` (${userPhone})` : ''}`,
+            answer_text: `[📔 BUKU DIARY & TEMUAN HARIAN PESERTA]
+📌 Judul: ${entryData.title}
+📅 Tanggal: ${entryData.date}
+🎯 Akar Terkait: ${entryData.targetRootName}
+🏃 Kategori: ${entryData.practiceType}
+⚡ Level Energi: ${entryData.energyLevelBefore} ➔ ${entryData.energyLevelAfter}
+🧘 Sensasi Somatik: ${entryData.somaticSensations ? entryData.somaticSensations.join(", ") : "-"}
+
+📖 ISI CATATAN HARIAN:
+${entryData.notes}
+
+💡 TEMUAN HARIAN (INSIGHTS):
+${entryData.findings || "-"}
+
+🎯 EVALUASI DIRI:
+${entryData.evaluation || "-"}
+
+🔗 LAMPIRAN MEDIA:
+${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.youtubeUrl ? `🎬 YouTube: ${entryData.youtubeUrl}\n` : ""}${entryData.gdriveUrl ? `☁️ Drive: ${entryData.gdriveUrl}\n` : ""}`,
+            created_at: new Date().toISOString()
+          }
+        ]);
+        alert("✅ Diary berhasil disimpan di perangkat dan DI-SHARE ke Admin (Kang Iman)!");
+      } catch (e) {
+        console.error("Gagal share ke admin:", e);
+        alert("Diary tersimpan secara pribadi di HP Anda.");
+      }
+    } else {
+      alert("🔒 Diary berhasil disimpan sebagai Catatan Pribadi di HP Anda.");
+    }
   };
 
   const handleDeleteJournal = (id) => {
@@ -285,764 +321,290 @@ export default function BukuSakuContainer() {
         activePath="/buku-saku"
       />
 
-      {/* Subnav Action Bar */}
-      <div className={`py-2.5 px-4 sm:px-6 border-b transition-colors ${
-        isKitabTheme ? "bg-[#eee2ca]/90 border-[#d4b886]" : "bg-slate-100 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800"
-      }`}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={() => { setSelectedRoot(null); setActiveTab('roots'); }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'roots' && !selectedRoot
-                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
-                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
+        
+        {/* Top Header Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/npt"
+              className={`p-2 rounded-xl border transition ${
+                isKitabTheme
+                  ? 'bg-[#eee3cb] text-[#4a2e12] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
               }`}
+              title="Kembali ke Modul NPT"
             >
-              14 Akar
-            </button>
-            <button
-              onClick={() => { 
-                if (!isApproved) { setIsAuthModalOpen(true); return; }
-                setSelectedRoot(null); 
-                setActiveTab('journal'); 
-              }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'journal'
-                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
-                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <span>Jurnal ({journals.length})</span>
-              {!isApproved && <Lock className="w-3 h-3 text-amber-500" />}
-            </button>
-            <button
-              onClick={() => { 
-                if (!isApproved) { setIsAuthModalOpen(true); return; }
-                setSelectedRoot(null); 
-                setActiveTab('assessment'); 
-              }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'assessment'
-                  ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] shadow-sm border border-[#8f632d]' : 'bg-rose-600 text-white shadow-xs'
-                  : isKitabTheme ? 'text-[#5e3d1c] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <span>Pemetaan</span>
-              {!isApproved && <Lock className="w-3 h-3 text-amber-500" />}
-            </button>
-          </nav>
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <h1 className={`text-lg sm:text-2xl font-black ${
+                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+              }`}>
+                Buku Saku 14 Akar Spiritualitas
+              </h1>
+              <p className={`text-xs ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                Ensiklopedi Sains, Kitab Hikmah, & Jurnal Temuan Harian Peserta
+              </p>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle */}
             <button
               onClick={() => setIsKitabTheme(!isKitabTheme)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                 isKitabTheme
-                  ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
-                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                  ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4]'
+                  : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
               }`}
-              title="Ganti Mode Tampilan (Kitab Klasik Perkamen / Mode Gelap)"
             >
-              <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+              <span>{isKitabTheme ? "📜 Mode Kitab" : "🌌 Mode Dark"}</span>
             </button>
 
             <button
-              onClick={() => {
-                if (!isApproved) { setIsAuthModalOpen(true); return; }
-                handleOpenQuickAdd();
-              }}
-              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer ${
-                isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324] text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'
+              onClick={() => setIsDataModalOpen(true)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                isKitabTheme
+                  ? 'bg-[#eee3cb] text-[#4a2e12] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                  : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
               }`}
+              title="Backup / Restore Data"
             >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tambah Bahan</span>
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Backup/Restore</span>
             </button>
-            {isApproved && (
-              <button
-                onClick={() => setIsDataModalOpen(true)}
-                className={`p-1.5 rounded-xl border cursor-pointer ${
-                  isKitabTheme ? 'text-[#4a2e12] border-[#cbb38b] hover:bg-[#dfcdab]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'
-                }`}
-                title="Backup & Sinkronisasi JSON"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
-      </div>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-20 md:pb-8">
+        {/* Selected Root Detail View */}
         {selectedRoot ? (
           <MultiPerspectiveView
             root={selectedRoot}
             onBack={() => setSelectedRoot(null)}
-            onOpenQuickAdd={(rootId, cat) => handleOpenQuickAdd(rootId, cat)}
+            onOpenQuickAdd={handleOpenQuickAdd}
             onStartPractice={handleStartPractice}
             isBookmarked={bookmarks.includes(selectedRoot.id)}
             onToggleBookmark={handleToggleBookmark}
             isKitabTheme={isKitabTheme}
           />
-        ) : activeTab === 'roots' ? (
-          <div className="space-y-6 pb-12">
-            {/* Hero Banner */}
-            {isKitabTheme ? (
-              <div className="relative overflow-hidden rounded-3xl card-kitab-frame p-6 sm:p-8 shadow-xl text-[#231409]">
-                <div className="relative z-10 max-w-3xl space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eee2cb] border border-[#cbb38b] text-xs font-bold text-[#5c3c1b]">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Pusat Riset & Praktik Spiritual NPT • Edisi Kitab Klasik</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-xs font-kitab-arabic text-[#8a5d28] tracking-widest font-bold">
-                      بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                    </p>
-                    <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#26150a] leading-tight font-kitab-title">
-                      Kitab Induk 14 Akar Spiritualitas
-                    </h1>
-                  </div>
-
-                  <p className="text-xs sm:text-sm text-[#3d2514] leading-relaxed font-sans font-medium">
-                    Sistem pemetaan spiritualitas berbasis 14 fondasi batin: dari sains biologi & epigenetika, kearifan tasawuf & kitab hikmah klasik, hingga budaya & pop-culture kontemporer.
-                  </p>
-
-                  {/* Status Lencana Akses */}
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    {isApproved ? (
-                      <span className="px-3.5 py-1.5 rounded-full bg-[#e3eedb] text-[#28491a] border border-[#b2d3a0] text-xs font-bold flex items-center gap-1.5 shadow-xs">
-                        <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                        <span>Akses Member Terbuka Penuh (Seluruh 14 Bab Terbuka)</span>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setIsAuthModalOpen(true)}
-                        className="px-4 py-2 rounded-full bg-[#9e2a2b] hover:bg-[#852324] text-white text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Lock className="w-3.5 h-3.5" />
-                        <span>Mode Tamu: Masuk Member Untuk Buka Kunci Bab</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-purple-950 dark:to-slate-950 text-white p-6 sm:p-8 shadow-xl border border-indigo-900/40">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 max-w-2xl space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-rose-300">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Pusat Riset & Praktik Spiritual NPT</span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                    Peta 14 Akar Spiritual & Integrasi Multi-Perspektif
-                  </h1>
-
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Sistem pemetaan spiritualitas berbasis 14 fondasi batin: dari sains biologi & neurobiologi, kearifan tasawuf & kitab hikmah, hingga budaya & pop-culture kontemporer.
-                  </p>
-
-                  <div className="pt-1 flex flex-wrap items-center gap-3">
-                    {isApproved ? (
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span>Akses Penuh Member Aktif (14 Akar Terbuka)</span>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setIsAuthModalOpen(true)}
-                        className="px-3.5 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/40 transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Lock className="w-3.5 h-3.5" />
-                        <span>Mode Tamu: Masuk Member Untuk Buka Kunci Bab</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* GUEST BANNER PERINGATAN TERGEMBOK */}
-            {!isApproved && (
-              <div className={`p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg ${
-                isKitabTheme
-                  ? "card-kitab-frame border-[#b38b42]"
-                  : "bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40"
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center border border-rose-500/20 shrink-0">
-                    <Lock className="w-5 h-5 text-rose-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#26150a]">
-                      Dokumen & Latihan 14 Akar Khusus Member NPT
-                    </h4>
-                    <p className="text-[11px] text-[#734822]">
-                      Anda sedang melihat pratinjau daftar 14 Akar. Klik kartu akar manapun untuk masuk/daftar sebagai member terverifikasi.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setIsAuthModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-[#9e2a2b] hover:bg-[#852324] text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer"
-                >
-                  🔓 Masuk / Login Member
-                </button>
-              </div>
-            )}
-
-            {/* Sambutan & Panduan Guru Pembina */}
-            <div className={`rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 ${
-              isKitabTheme ? "card-kitab-frame" : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-            }`}>
+        ) : (
+          <>
+            {/* Main Tabs Navigation: 14 Akar vs Buku Diary vs Radar Fitur */}
+            <div className="flex border-b border-[#dfcfb0] dark:border-slate-800">
               <button
-                onClick={() => setShowPreface(!showPreface)}
-                className="w-full flex items-center justify-between text-left group cursor-pointer"
+                onClick={() => setActiveTab('roots')}
+                className={`px-5 py-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+                  activeTab === 'roots'
+                    ? isKitabTheme ? 'border-[#9e2a2b] text-[#9e2a2b] bg-[#f5ebd7]/50' : 'border-rose-500 text-rose-400 bg-slate-900/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shrink-0 ${
-                    isKitabTheme ? "bg-[#eee2cb] text-[#8a5d28] border border-[#cbb38b]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                  }`}>
-                    <HeartHandshake className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className={`text-sm sm:text-base font-bold transition-colors font-kitab-title ${
-                      isKitabTheme ? "text-[#26150a] group-hover:text-[#9e2a2b]" : "text-slate-900 dark:text-white group-hover:text-rose-500"
-                    }`}>
-                      {GURU_PREFACE.title}
-                    </h2>
-                    <p className={`text-xs font-semibold ${isKitabTheme ? "text-[#734822]" : "text-slate-500 dark:text-slate-400"}`}>
-                      {GURU_PREFACE.subtitle} • {GURU_PREFACE.author}
-                    </p>
-                  </div>
-                </div>
-                <div className={isKitabTheme ? "text-[#82613d] group-hover:text-[#26150a]" : "text-slate-400 group-hover:text-slate-200"}>
-                  {showPreface ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </div>
+                <Compass className="w-4 h-4" />
+                <span>Katalog 14 Akar</span>
               </button>
 
-              {showPreface && (
-                <div className={`pt-4 border-t space-y-5 text-xs sm:text-sm leading-relaxed animate-in fade-in duration-200 ${
-                  isKitabTheme ? "border-[#d8c3a1] text-[#3d2514]" : "border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {/* Quote Guru */}
-                  {GURU_PREFACE.quote && (
-                    <div className={`p-4 rounded-2xl border italic font-serif text-xs sm:text-sm leading-relaxed ${
-                      isKitabTheme 
-                        ? "bg-[#f4ebd5] border-[#cbb38b] text-[#3a2211]" 
-                        : "bg-slate-50 dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400"
-                    }`}>
-                      "{GURU_PREFACE.quote}"
-                      <span className={`block font-sans not-italic font-bold text-[11px] mt-2 ${
-                        isKitabTheme ? "text-[#9e2a2b]" : "text-rose-500"
-                      }`}>
-                        — {GURU_PREFACE.author}
-                      </span>
-                    </div>
-                  )}
+              <button
+                onClick={() => setActiveTab('journal')}
+                className={`px-5 py-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+                  activeTab === 'journal'
+                    ? isKitabTheme ? 'border-[#9e2a2b] text-[#9e2a2b] bg-[#f5ebd7]/50' : 'border-rose-500 text-rose-400 bg-slate-900/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <PenTool className="w-4 h-4" />
+                <span>📔 Buku Diary & Temuan Harian ({journals.length})</span>
+              </button>
 
-                  {/* Konteks Sanad & Transmisi Sejarah */}
-                  {GURU_PREFACE.heritageContext && (
-                    <div className={`p-4 rounded-2xl border space-y-2 ${
-                      isKitabTheme 
-                        ? "bg-[#faf5eb] border-[#d8c3a1]" 
-                        : "bg-indigo-950/20 border-indigo-500/20 text-indigo-200"
-                    }`}>
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
-                          isKitabTheme ? "text-[#8a5d28]" : "text-indigo-400"
-                        }`}>
-                          Konteks Sanad & Transmisi Spiritualitas
-                        </h4>
-                      </div>
-                      <p className="text-xs leading-relaxed">
-                        {GURU_PREFACE.heritageContext}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Konsep & Filosofi Akar Spiritualitas */}
-                  <div className="space-y-2">
-                    <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
-                      isKitabTheme ? "text-[#8a5d28]" : "text-rose-600 dark:text-rose-400"
-                    }`}>
-                      Konsep & Filosofi Akar Spiritualitas
-                    </h4>
-                    <p>{GURU_PREFACE.intro || GURU_PREFACE.coreDefinition}</p>
-                    <p>{GURU_PREFACE.analogyTree || GURU_PREFACE.treeIllustration}</p>
-                  </div>
-
-                  {/* 3 Manfaat Utama */}
-                  {GURU_PREFACE.benefits && (
-                    <div className="space-y-2">
-                      <h4 className={`font-bold text-xs uppercase tracking-wider font-kitab-title ${
-                        isKitabTheme ? "text-[#8a5d28]" : "text-emerald-600 dark:text-emerald-400"
-                      }`}>
-                        3 Buah & Manfaat Akar yang Kokoh
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        {GURU_PREFACE.benefits.map((b, i) => (
-                          <div key={i} className={`p-3 rounded-2xl border space-y-1 ${
-                            isKitabTheme ? "bg-[#f4ebd5] border-[#d8c3a1]" : "bg-slate-950 border-slate-800"
-                          }`}>
-                            <strong className={`block text-xs font-bold ${isKitabTheme ? "text-[#26150a]" : "text-white"}`}>
-                              {i + 1}. {b.title}
-                            </strong>
-                            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-                              {b.desc}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2 Kolom: Gejala Rapuh & Praktik Perawatan */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    {/* Gejala Rapuh */}
-                    <div className={`p-4 rounded-2xl border space-y-2 ${
-                      isKitabTheme 
-                        ? "bg-[#faeee7] border-[#e2bebe]" 
-                        : "bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30"
-                    }`}>
-                      <h5 className={`font-bold text-xs flex items-center gap-1.5 ${
-                        isKitabTheme ? "text-[#9e2a2b]" : "text-rose-900 dark:text-rose-300"
-                      }`}>
-                        <span>⚠️</span>
-                        <span>4 Gejala Akar Rapuh</span>
-                      </h5>
-                      <ul className="space-y-1.5 text-xs">
-                        {(GURU_PREFACE.warningSigns || []).map((w, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="text-rose-600 font-bold shrink-0">•</span>
-                            <span className={isKitabTheme ? "text-[#543516]" : "text-slate-600 dark:text-slate-400"}>
-                              <strong>{w.sign}:</strong> {w.desc}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Praktik Perawatan */}
-                    <div className={`p-4 rounded-2xl border space-y-2 ${
-                      isKitabTheme 
-                        ? "bg-[#edf6ed] border-[#c2dec2]" 
-                        : "bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30"
-                    }`}>
-                      <h5 className={`font-bold text-xs flex items-center gap-1.5 ${
-                        isKitabTheme ? "text-[#1b6b55]" : "text-emerald-900 dark:text-emerald-300"
-                      }`}>
-                        <span>🌱</span>
-                        <span>4 Praktik Perawatan Akar</span>
-                      </h5>
-                      <ul className="space-y-1.5 text-xs">
-                        {(GURU_PREFACE.maintenancePractices || []).map((p, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                            <span className={isKitabTheme ? "text-[#1d3d2e]" : "text-slate-600 dark:text-slate-400"}>
-                              <strong>{p.title}:</strong> {p.desc}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <button
+                onClick={() => setActiveTab('assessment')}
+                className={`px-5 py-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+                  activeTab === 'assessment'
+                    ? isKitabTheme ? 'border-[#9e2a2b] text-[#9e2a2b] bg-[#f5ebd7]/50' : 'border-rose-500 text-rose-400 bg-slate-900/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Radar Pemetaan</span>
+              </button>
             </div>
 
-            {/* Search & Element Filters */}
-            <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <div className="relative flex-1">
-                  <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${
-                    isKitabTheme ? "text-[#82613d]" : "text-slate-400"
-                  }`} />
-                  <input
-                    type="text"
-                    placeholder="Cari nama akar, keyword (vitalitas, fokus), sains (mitokondria), atau rujukan kitab..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-2xl text-xs sm:text-sm shadow-xs focus:ring-2 focus:outline-hidden transition-all ${
-                      isKitabTheme
-                        ? "bg-[#fdfaf3] border border-[#cbb38b] text-[#26150a] placeholder:text-[#82613d] focus:ring-[#b38b42]"
-                        : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-rose-500"
-                    }`}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold cursor-pointer ${
-                        isKitabTheme ? "text-[#82613d] hover:text-[#26150a]" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            {/* TAB 1: KATALOG 14 AKAR */}
+            {activeTab === 'roots' && (
+              <div className="space-y-6 animate-in fade-in">
+                {/* Search & Element Filter */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="relative flex-1">
+                    <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${
+                      isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'
+                    }`} />
+                    <input
+                      type="text"
+                      placeholder="Cari nama akar, keyword, ayat, atau nama jurnal sains..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs focus:outline-none ${
+                        isKitabTheme
+                          ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                          : 'bg-slate-900 border-slate-800 text-slate-100 placeholder-slate-500 focus:border-rose-500'
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 overflow-x-auto">
+                    <select
+                      value={selectedElement}
+                      onChange={(e) => setSelectedElement(e.target.value)}
+                      className={`px-3 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
+                        isKitabTheme
+                          ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                          : 'bg-slate-900 border-slate-800 text-slate-200'
                       }`}
                     >
-                      Reset
+                      {ELEMENTS.map((el) => (
+                        <option key={el.id} value={el.id}>
+                          {el.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={() => setShowBookmarksOnly(!showBookmarksOnly)}
+                      className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                        showBookmarksOnly
+                          ? 'bg-amber-500 text-white border-amber-600'
+                          : isKitabTheme
+                          ? 'bg-[#eee3cb] text-[#4a2e12] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                          : 'bg-slate-900 text-slate-300 border-slate-800'
+                      }`}
+                    >
+                      <Bookmark className="w-3.5 h-3.5" />
+                      <span>{showBookmarksOnly ? 'Bookmark Saja' : 'Semua'}</span>
                     </button>
-                  )}
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => setShowBookmarksOnly(!showBookmarksOnly)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
-                    showBookmarksOnly
-                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                      : isKitabTheme
-                      ? 'bg-[#fdfaf3] border-[#cbb38b] text-[#5e3d1c] hover:bg-[#ebdcc4]'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Bookmark className={`w-3.5 h-3.5 ${showBookmarksOnly ? 'fill-current' : ''}`} />
-                  <span>Tersimpan ({bookmarks.length})</span>
-                </button>
+                {/* Grid 14 Akar Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredRoots.map((root) => (
+                    <RootCard
+                      key={root.id}
+                      root={root}
+                      onSelect={handleSelectRoot}
+                      isBookmarked={bookmarks.includes(root.id)}
+                      onToggleBookmark={handleToggleBookmark}
+                      isKitabTheme={isKitabTheme}
+                    />
+                  ))}
+                </div>
               </div>
+            )}
 
-              <div className="flex overflow-x-auto gap-1.5 pb-1 scrollbar-none">
-                {ELEMENTS.map((el) => (
+            {/* TAB 2: BUKU DIARY TEMUAN HARIAN */}
+            {activeTab === 'journal' && (
+              <div className="space-y-6 animate-in fade-in">
+                {/* Toolbar Subtab Journal */}
+                <div className="flex items-center justify-between gap-3 border-b border-[#dfcfb0] dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setJournalSubTab('list')}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                        journalSubTab === 'list'
+                          ? isKitabTheme ? 'bg-[#3a2211] text-[#fbf6ec] border-[#8f632d]' : 'bg-slate-800 text-white border-slate-700'
+                          : isKitabTheme ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]' : 'text-slate-400 border-transparent'
+                      }`}
+                    >
+                      Riwayat Diary ({journals.length})
+                    </button>
+                    <button
+                      onClick={() => setJournalSubTab('form')}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer border flex items-center gap-1.5 ${
+                        journalSubTab === 'form'
+                          ? isKitabTheme ? 'bg-[#9e2a2b] text-white border-[#8f632d]' : 'bg-rose-600 text-white border-rose-500'
+                          : isKitabTheme ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]' : 'text-slate-400 border-transparent'
+                      }`}
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>+ Tulis Catatan Baru</span>
+                    </button>
+                  </div>
+
                   <button
-                    key={el.id}
-                    onClick={() => setSelectedElement(el.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer ${
-                      selectedElement === el.id
-                        ? isKitabTheme
-                          ? 'bg-[#3a2211] text-[#fbf6ec] border border-[#8f632d] shadow-sm font-bold'
-                          : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs font-bold'
-                        : isKitabTheme
-                        ? 'bg-[#eee3cb] text-[#543516] border border-[#d8c3a1] hover:bg-[#dfcdab] font-medium'
-                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
+                    onClick={() => setJournalSubTab('timer')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                      journalSubTab === 'timer'
+                        ? 'bg-amber-500 text-white border-amber-600'
+                        : isKitabTheme ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]' : 'bg-slate-900 text-slate-300 border-slate-800'
                     }`}
                   >
-                    {el.label}
+                    <Timer className="w-3.5 h-3.5" />
+                    <span>Timer Hening Somatik</span>
                   </button>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Grid */}
-            {filteredRoots.length === 0 ? (
-              <div className={`text-center py-16 rounded-3xl p-8 space-y-3 ${
-                isKitabTheme ? "card-kitab-frame" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-              }`}>
-                <Compass className="w-10 h-10 text-[#82613d] mx-auto opacity-70" />
-                <h3 className="text-sm font-bold text-[#26150a]">
-                  Tidak ada akar spiritual yang sesuai
-                </h3>
-                <p className="text-xs text-[#734822] max-w-md mx-auto">
-                  Coba ubah kata kunci pencarian atau reset filter elemen.
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedElement('ALL');
-                    setShowBookmarksOnly(false);
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#9e2a2b] hover:bg-[#852324] text-white shadow-xs cursor-pointer"
-                >
-                  Reset Semua Filter
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredRoots.map((root) => (
-                  <RootCard
-                    key={root.id}
-                    root={root}
-                    isBookmarked={bookmarks.includes(root.id)}
-                    onToggleBookmark={handleToggleBookmark}
-                    onSelectRoot={(r) => handleSelectRoot(r)}
+                {/* Subtab Content */}
+                {journalSubTab === 'list' && (
+                  <JournalList
+                    journals={journals}
+                    onDeleteJournal={handleDeleteJournal}
                     isKitabTheme={isKitabTheme}
                   />
-                ))}
+                )}
+
+                {journalSubTab === 'form' && (
+                  <JournalForm
+                    roots={roots}
+                    selectedRoot={practiceRoot}
+                    initialPracticeType={practiceType}
+                    initialDuration={completedDuration}
+                    onSave={handleSaveJournal}
+                    onCancel={() => setJournalSubTab('list')}
+                    isKitabTheme={isKitabTheme}
+                  />
+                )}
+
+                {journalSubTab === 'timer' && (
+                  <MeditationTimer
+                    onComplete={handleTimerComplete}
+                    isKitabTheme={isKitabTheme}
+                  />
+                )}
               </div>
             )}
-          </div>
-        ) : activeTab === 'journal' ? (
-          <div className="space-y-6 pb-12">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
-                    <Compass className="w-5 h-5" />
-                  </span>
-                  <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                    Jurnal Latihan Spiritual & Khalwat
-                  </h1>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Catatan harian untuk melatih 14 akar spiritual melalui gerak dinamis somatik dan keheningan.
-                </p>
-              </div>
 
-              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
-                <button
-                  onClick={() => setJournalSubTab('list')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    journalSubTab === 'list'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Daftar ({journals.length})
-                </button>
-                <button
-                  onClick={() => setJournalSubTab('form')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    journalSubTab === 'form'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Tulis Baru
-                </button>
-                <button
-                  onClick={() => setJournalSubTab('timer')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    journalSubTab === 'timer'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Timer Meditasi
-                </button>
-              </div>
-            </div>
-
-            {journalSubTab === 'list' && (
-              <JournalList
-                journals={journals}
+            {/* TAB 3: RADAR PEMETAAN & ASSESSMENT */}
+            {activeTab === 'assessment' && (
+              <AssessmentPreview
                 roots={roots}
-                onDeleteJournal={handleDeleteJournal}
-                onNewJournal={() => setJournalSubTab('form')}
-                onStartTimer={() => setJournalSubTab('timer')}
+                onNavigateToRoot={(rootId) => {
+                  const rootObj = roots.find((r) => r.id === rootId);
+                  if (rootObj) setSelectedRoot(rootObj);
+                }}
+                isKitabTheme={isKitabTheme}
               />
             )}
-
-            {journalSubTab === 'form' && (
-              <div className="max-w-2xl mx-auto">
-                <JournalForm
-                  roots={roots}
-                  defaultRootId={practiceRoot}
-                  defaultType={practiceType}
-                  defaultDuration={completedDuration}
-                  onSave={handleSaveJournal}
-                  onCancel={() => setJournalSubTab('list')}
-                />
-              </div>
-            )}
-
-            {journalSubTab === 'timer' && (
-              <div className="max-w-xl mx-auto">
-                <MeditationTimer
-                  roots={roots}
-                  onCompletePractice={handleTimerComplete}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6 pb-12">
-            <AssessmentPreview roots={roots} />
-          </div>
+          </>
         )}
       </main>
 
-      {/* Floating Bottom Nav for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-30 px-4 py-2">
-        <div className="flex items-center justify-around">
-          <button
-            onClick={() => { setSelectedRoot(null); setActiveTab('roots'); }}
-            className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
-              activeTab === 'roots' && !selectedRoot
-                ? 'text-rose-600 dark:text-rose-400 font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-[10px] mt-1">14 Akar</span>
-          </button>
+      {/* Quick Add Modal */}
+      <QuickAddModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        roots={roots}
+        defaultRootId={quickAddRootId}
+        defaultCategory={quickAddCategory}
+        onSave={handleSaveQuickAdd}
+        isKitabTheme={isKitabTheme}
+      />
 
-          <button
-            onClick={() => { 
-              if (!isApproved) { setIsAuthModalOpen(true); return; }
-              setSelectedRoot(null); 
-              setActiveTab('journal'); 
-            }}
-            className={`flex flex-col items-center py-1 px-2 rounded-xl relative transition-all ${
-              activeTab === 'journal'
-                ? 'text-rose-600 dark:text-rose-400 font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <Compass className="w-5 h-5" />
-            <span className="text-[10px] mt-1">Jurnal</span>
-            {journals.length > 0 && (
-              <span className="absolute top-0.5 right-4 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
-                {journals.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              if (!isApproved) { setIsAuthModalOpen(true); return; }
-              handleOpenQuickAdd();
-            }}
-            className="flex flex-col items-center py-1 px-2 rounded-xl transition-all text-slate-500 dark:text-slate-400"
-          >
-            <PlusCircle className="w-5 h-5 text-rose-500" />
-            <span className="text-[10px] mt-1">Input Bahan</span>
-          </button>
-
-          <button
-            onClick={() => { 
-              if (!isApproved) { setIsAuthModalOpen(true); return; }
-              setSelectedRoot(null); 
-              setActiveTab('assessment'); 
-            }}
-            className={`flex flex-col items-center py-1 px-2 rounded-xl transition-all ${
-              activeTab === 'assessment'
-                ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <Sparkles className="w-5 h-5" />
-            <span className="text-[10px] mt-1">Pemetaan</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Modals */}
-      {isQuickAddOpen && (
-        <QuickAddModal
-          roots={roots}
-          defaultRootId={quickAddRootId}
-          defaultCategory={quickAddCategory}
-          onClose={() => setIsQuickAddOpen(false)}
-          onSave={handleSaveQuickAdd}
-        />
-      )}
-
-      {isDataModalOpen && (
-        <DataManagementModal
-          onClose={() => setIsDataModalOpen(false)}
-          onDataChanged={loadAllData}
-        />
-      )}
-
-      {/* MODAL VERIFIKASI MEMBER KHUSUS 14 AKAR SPIRITUAL */}
-      {isAuthModalOpen && (
-        <div
-          onClick={() => setIsAuthModalOpen(false)}
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-3xl p-6 shadow-2xl space-y-4 text-left"
-          >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Akses Member 14 Akar</h3>
-                  <p className="text-[10px] text-slate-400">Buka Bab Kajian & Latihan Lengkap</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsAuthModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {authStatus === "pending" ? (
-              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2.5">
-                <Clock className="w-8 h-8 text-amber-400 mx-auto animate-pulse" />
-                <h4 className="text-xs font-bold text-amber-300">
-                  Pendaftaran Berhasil Terkirim
-                </h4>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Data Anda sudah masuk di antrean persetujuan Admin NPT. Silakan hubungi admin via WhatsApp untuk aktivasi cepat.
-                </p>
-                <button
-                  onClick={() => {
-                    setAuthStatus(null);
-                    setIsAuthModalOpen(false);
-                  }}
-                  className="px-4 py-1.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300"
-                >
-                  Tutup
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleLoginSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Nama Lengkap Anda
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    placeholder="Nama lengkap Anda..."
-                    value={inputName}
-                    onChange={(e) => setInputName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Alamat Email Gmail
-                  </label>
-                  <input
-                    type="email"
-                    autoComplete="off"
-                    placeholder="contoh: nama@gmail.com"
-                    value={inputEmail}
-                    onChange={(e) => setInputEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Nomor WhatsApp
-                  </label>
-                  <input
-                    type="tel"
-                    autoComplete="off"
-                    placeholder="08123456789"
-                    value={inputPhone}
-                    onChange={(e) => setInputPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    *Bisa masukkan Email atau Nomor WA terdaftar.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={authStatus === "checking"}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-2 cursor-pointer mt-1"
-                >
-                  <UserCheck className="w-4 h-4" />
-                  <span>{authStatus === "checking" ? "Memeriksa Status..." : "Masuk & Buka 14 Akar"}</span>
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Data Management Modal */}
+      <DataManagementModal
+        isOpen={isDataModalOpen}
+        onClose={() => setIsDataModalOpen(false)}
+        onDataRestored={loadAllData}
+        isKitabTheme={isKitabTheme}
+      />
     </div>
   );
 }

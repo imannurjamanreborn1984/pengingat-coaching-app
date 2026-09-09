@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Save, X } from 'lucide-react';
+import { Sparkles, Save, X, Lock, Send, Image, Film, ExternalLink, Cloud } from 'lucide-react';
 
 const COMMON_SOMATIC_SENSATIONS = [
   'Dada terasa hangat & lapang',
@@ -22,20 +22,28 @@ export const JournalForm = ({
   initialDuration = 15,
   onSave,
   onCancel,
+  isKitabTheme = true,
 }) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [title, setTitle] = useState('');
   const [practiceType, setPracticeType] = useState(initialPracticeType);
   const [targetRootId, setTargetRootId] = useState(selectedRoot?.id || roots[0]?.id || '');
   const [durationMinutes, setDurationMinutes] = useState(initialDuration);
-  const [energyLevelBefore, setEnergyLevelBefore] = useState(2);
-  const [energyLevelAfter, setEnergyLevelAfter] = useState(4);
+  const [energyLevelBefore, setEnergyLevelBefore] = useState(3);
+  const [energyLevelAfter, setEnergyLevelAfter] = useState(5);
   const [selectedSensations, setSelectedSensations] = useState([
     'Dada terasa hangat & lapang',
     'Pikiran hening (zero chatter)',
   ]);
   const [customSensation, setCustomSensation] = useState('');
-  const [notes, setNotes] = useState('');
-  const [breakthroughInsights, setBreakthroughInsights] = useState('');
+  
+  // Field Bebas User (6 Komponen Utama)
+  const [notes, setNotes] = useState(''); // Isi Catatan Harian
+  const [findings, setFindings] = useState(''); // Temuan Harian
+  const [evaluation, setEvaluation] = useState(''); // Evaluasi Diri
+  const [imageUrl, setImageUrl] = useState(''); // Link Gambar
+  const [youtubeUrl, setYoutubeUrl] = useState(''); // Link Video YouTube
+  const [gdriveUrl, setGdriveUrl] = useState(''); // Link Google Drive
 
   const toggleSensation = (item) => {
     if (selectedSensations.includes(item)) {
@@ -53,11 +61,13 @@ export const JournalForm = ({
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleFormSubmit = (e, isSharedWithAdmin) => {
+    if (e) e.preventDefault();
     const rootObj = roots.find((r) => r.id === targetRootId);
+    
     onSave({
       date,
+      title: title.trim() || `Catatan Temuan - ${new Date(date).toLocaleDateString('id-ID')}`,
       practiceType,
       targetRootId,
       targetRootName: rootObj ? `${rootObj.name} (${rootObj.alias})` : 'Umum',
@@ -65,20 +75,29 @@ export const JournalForm = ({
       energyLevelBefore,
       energyLevelAfter,
       somaticSensations: selectedSensations,
-      notes,
-      breakthroughInsights,
+      notes: notes.trim(),
+      findings: findings.trim(),
+      evaluation: evaluation.trim(),
+      imageUrl: imageUrl.trim(),
+      youtubeUrl: youtubeUrl.trim(),
+      gdriveUrl: gdriveUrl.trim(),
+      isSharedWithAdmin: !!isSharedWithAdmin,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+    <div className={`rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 text-left ${
+      isKitabTheme ? 'card-kitab-frame' : 'bg-white dark:bg-slate-900 border border-slate-800'
+    }`}>
+      <div className="flex items-center justify-between border-b border-[#dfcfb0] dark:border-slate-800 pb-4">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Catat Sesi Latihan & Refleksi
+          <h3 className={`text-lg font-bold tracking-tight ${
+            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+          }`}>
+            📔 Buku Diary & Temuan Harian Peserta
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Dokumentasikan sensasi somatik dan hikmah batin dari latihanmu.
+          <p className={`text-xs mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+            Tuliskan catatan bebas, temuan batin, evaluasi diri, dan lampirkan link gambar/media.
           </p>
         </div>
 
@@ -86,206 +105,282 @@ export const JournalForm = ({
           <button
             type="button"
             onClick={onCancel}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className={`p-1.5 rounded-xl transition cursor-pointer ${
+              isKitabTheme ? 'text-[#734822] hover:bg-[#dfcdab]' : 'text-slate-400 hover:bg-slate-800'
+            }`}
           >
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={(e) => handleFormSubmit(e, false)} className="space-y-5">
+        {/* 1. JUDUL & TANGGAL DIARY */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="sm:col-span-2">
+            <label className={`block text-xs font-bold mb-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Judul Catatan / Temuan Harian *
+            </label>
+            <input
+              type="text"
+              placeholder="Contoh: Temuan Rasa Lapang Saat Hening Subuh di Tepi Sungai"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+              }`}
+              required
+            />
+          </div>
+
+          <div>
+            <label className={`block text-xs font-bold mb-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Tanggal
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                  : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+              }`}
+              required
+            />
+          </div>
+        </div>
+
+        {/* 2. PILIHAN AKAR & JENIS LATIHAN */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={`block text-xs font-bold mb-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Fokus Akar Spiritual Terkait (Opsional)
+            </label>
+            <select
+              value={targetRootId}
+              onChange={(e) => setTargetRootId(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                  : 'bg-slate-950 border-slate-800 text-white'
+              }`}
+            >
+              {roots.map((r) => (
+                <option key={r.id} value={r.id}>
+                  #{r.number} - {r.name} ({r.element})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={`block text-xs font-bold mb-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+            }`}>
+              Kategori Catatan / Laku
+            </label>
+            <select
+              value={practiceType}
+              onChange={(e) => setPracticeType(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
+                  : 'bg-slate-950 border-slate-800 text-white'
+              }`}
+            >
+              <option value="dynamic_meditation">🏃 Dynamic Meditation (Gerak Somatik)</option>
+              <option value="khalwat">🧘 Khalwat (Hening & Kontemplasi Mandiri)</option>
+              <option value="refleksi_harian">📖 Refleksi Harian / Muhasabah</option>
+              <option value="observasi_akar">🔍 Temuan & Pengamatan Alam / Diri</option>
+            </select>
+          </div>
+        </div>
+
+        {/* 3. ISI CATATAN HARIAN */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Tanggal Sesi
+          <label className={`block text-xs font-bold mb-1.5 ${
+            isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+          }`}>
+            📖 Isi Catatan Harian (Bebas Menceritakan Pengalaman / Perasaan) *
           </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
+          <textarea
+            rows={4}
+            placeholder="Tuliskan pengalaman hari ini, suasana hati, atau dinamika yang terjadi secara leluasa..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-xs leading-relaxed focus:outline-hidden ${
+              isKitabTheme
+                ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+            }`}
             required
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Jenis Latihan
-          </label>
-          <select
-            value={practiceType}
-            onChange={(e) => setPracticeType(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
-          >
-            <option value="dynamic_meditation">Dynamic Meditation (Gerak Somatik)</option>
-            <option value="khalwat">Khalwat (Hening & Kontemplasi Mandiri)</option>
-            <option value="refleksi_harian">Refleksi Harian / Muhasabah</option>
-            <option value="observasi_akar">Observasi Dinamika Akar dalam Aktivitas</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Fokus Akar Spiritual yang Dilatih
-          </label>
-          <select
-            value={targetRootId}
-            onChange={(e) => setTargetRootId(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
-          >
-            {roots.map((r) => (
-              <option key={r.id} value={r.id}>
-                #{r.number} - {r.name} ({r.element})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Durasi Latihan (Menit)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="360"
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            <span>Level Energi Sebelum:</span>
-            <span className="font-bold text-rose-600 dark:text-rose-400">{energyLevelBefore} / 5</span>
+        {/* 4. TEMUAN HARIAN & EVALUASI DIRI */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={`block text-xs font-bold mb-1.5 flex items-center gap-1.5 ${
+              isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'
+            }`}>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>💡 Temuan Harian (*Breakthrough Insights*)</span>
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Pencerahan, kesadaran baru, atau titik pemahaman yang kamu dapatkan hari ini..."
+              value={findings}
+              onChange={(e) => setFindings(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs leading-relaxed italic focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#faf2e3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white focus:border-amber-500'
+              }`}
+            />
           </div>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={energyLevelBefore}
-            onChange={(e) => setEnergyLevelBefore(parseInt(e.target.value))}
-            className="w-full accent-rose-600"
-          />
-          <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-            <span>1 (Lesu/Lelah)</span>
-            <span>5 (Penuh Vitalitas)</span>
+
+          <div>
+            <label className={`block text-xs font-bold mb-1.5 flex items-center gap-1.5 ${
+              isKitabTheme ? 'text-[#3a2211]' : 'text-sky-400'
+            }`}>
+              🎯 Evaluasi Diri (*Self-Evaluation*)
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Apa yang perlu diperbaiki, dijaga, atau ditingkatkan untuk esok hari..."
+              value={evaluation}
+              onChange={(e) => setEvaluation(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs leading-relaxed focus:outline-hidden ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                  : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
+              }`}
+            />
           </div>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            <span>Level Energi Sesudah:</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">{energyLevelAfter} / 5</span>
-          </div>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={energyLevelAfter}
-            onChange={(e) => setEnergyLevelAfter(parseInt(e.target.value))}
-            className="w-full accent-emerald-600"
-          />
-          <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-            <span>1 (Lesu)</span>
-            <span>5 (Sangat Bugar & Hening)</span>
-          </div>
-        </div>
-      </div>
+        {/* 5. LINK MEDIA (GAMBAR, YOUTUBE, GDRIVE) */}
+        <div className={`p-4 rounded-2xl border space-y-3 ${
+          isKitabTheme ? 'bg-[#eee3cb]/60 border-[#d8c3a1]' : 'bg-slate-950/60 border-slate-800'
+        }`}>
+          <span className={`text-xs font-bold block ${isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'}`}>
+            🔗 Lampiran Media (Opsional):
+          </span>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-          Sensasi Somatik yang Dirasakan Tubuh:
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          {COMMON_SOMATIC_SENSATIONS.map((sensation, idx) => {
-            const isSelected = selectedSensations.includes(sensation);
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => toggleSensation(sensation)}
-                className={`text-[11px] px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 font-semibold'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${
+                isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+              }`}>
+                <Image className="w-3.5 h-3.5 text-emerald-600" /> URL Gambar / Foto
+              </label>
+              <input
+                type="url"
+                placeholder="https://... (Link foto suasana)"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-hidden ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                    : 'bg-slate-900 border-slate-800 text-white'
                 }`}
-              >
-                {isSelected ? '✓ ' : '+ '} {sensation}
-              </button>
-            );
-          })}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${
+                isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+              }`}>
+                <Film className="w-3.5 h-3.5 text-red-500" /> Link Video YouTube
+              </label>
+              <input
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-hidden ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                    : 'bg-slate-900 border-slate-800 text-white'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${
+                isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
+              }`}>
+                <Cloud className="w-3.5 h-3.5 text-blue-500" /> Link Google Drive
+              </label>
+              <input
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={gdriveUrl}
+                onChange={(e) => setGdriveUrl(e.target.value)}
+                className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-hidden ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
+                    : 'bg-slate-900 border-slate-800 text-white'
+                }`}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-2 flex gap-2">
-          <input
-            type="text"
-            placeholder="Tambah sensasi fisik lainnya..."
-            value={customSensation}
-            onChange={(e) => setCustomSensation(e.target.value)}
-            className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500"
-          />
+        {/* 6. DUA TOMBOL SUBMIT SAKRAL */}
+        <div className="pt-3 border-t border-[#dfcfb0] dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                isKitabTheme ? 'text-[#634224] hover:bg-[#dfcdab]' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              Batal
+            </button>
+          )}
+
+          {/* OPSI 1: SIMPAN SEBAGAI CATATAN PRIBADI */}
           <button
             type="button"
-            onClick={handleAddCustomSensation}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            onClick={(e) => handleFormSubmit(e, false)}
+            className={`w-full sm:w-auto px-5 py-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+              isKitabTheme
+                ? 'bg-[#eee3cb] text-[#3a2211] border-[#cbb38b] hover:bg-[#dfcdab]'
+                : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+            }`}
+            title="Hanya tersimpan di perangkat HP sendiri"
           >
-            Tambah
+            <Lock className="w-4 h-4 text-amber-600" />
+            <span>🔒 Simpan Catatan Pribadi</span>
+          </button>
+
+          {/* OPSI 2: SIMPAN DAN SHARE KE ADMIN */}
+          <button
+            type="button"
+            onClick={(e) => handleFormSubmit(e, true)}
+            className={`w-full sm:w-auto px-6 py-3 rounded-xl text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              isKitabTheme
+                ? 'bg-[#9e2a2b] hover:bg-[#852324] shadow-rose-950/20'
+                : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
+            }`}
+            title="Tersimpan di HP & dikirim ke Kang Iman / Admin untuk diulas"
+          >
+            <Send className="w-4 h-4" />
+            <span>📤 Simpan & Share ke Admin</span>
           </button>
         </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-          Catatan Proses / Dinamika Emosi
-        </label>
-        <textarea
-          rows={3}
-          placeholder="Ceritakan apa yang dialami selama latihan, hambatan pikiran, atau perubahan detak nafas..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none leading-relaxed"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-rose-600 dark:text-rose-400 mb-1.5 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Hikmah / Breakthrough Kesadaran (Opsional)</span>
-        </label>
-        <textarea
-          rows={2}
-          placeholder="Satu kalimat hikmah pencerahan atau pemahaman baru yang kamu dapatkan..."
-          value={breakthroughInsights}
-          onChange={(e) => setBreakthroughInsights(e.target.value)}
-          className="w-full px-3.5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-50/20 dark:bg-rose-950/20 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none leading-relaxed italic"
-        />
-      </div>
-
-      <div className="flex items-center justify-end gap-3 pt-2">
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            Batal
-          </button>
-        )}
-        <button
-          type="submit"
-          className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <Save className="w-4 h-4" />
-          <span>Simpan ke Jurnal Saku</span>
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
