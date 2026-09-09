@@ -5,9 +5,12 @@ import { DataService } from '../../lib/services/dataService';
 import { Download, Upload, RefreshCw, X, Check, Copy, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const DataManagementModal = ({
+  isOpen = true,
   onClose,
   onDataChanged,
+  onDataRestored
 }) => {
+  if (!isOpen) return null;
   const [importJson, setImportJson] = useState('');
   const [copied, setCopied] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);

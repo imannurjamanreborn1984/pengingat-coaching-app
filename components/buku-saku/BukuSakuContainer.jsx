@@ -608,12 +608,14 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
       />
 
       {/* Data Management Modal */}
-      <DataManagementModal
-        isOpen={isDataModalOpen}
-        onClose={() => setIsDataModalOpen(false)}
-        onDataRestored={loadAllData}
-        isKitabTheme={isKitabTheme}
-      />
+      {isDataModalOpen && (
+        <DataManagementModal
+          isOpen={isDataModalOpen}
+          onClose={() => setIsDataModalOpen(false)}
+          onDataRestored={loadAllData}
+          isKitabTheme={isKitabTheme}
+        />
+      )}
     </div>
   );
 }

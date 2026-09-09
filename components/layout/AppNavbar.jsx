@@ -355,21 +355,21 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Portal 
           {/* Quick Link ke Buku Diary Temuan Harian */}
           <Link
             href="/buku-saku?tab=journal"
-            className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
             title="Buka Buku Diary Temuan Harian"
           >
             <PenTool className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">📔 Buku Diary</span>
+            <span className="inline">📔 Buku Diary</span>
           </Link>
 
           {/* Quick Link ke 14 Akar */}
           <Link
             href="/buku-saku"
-            className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
             title="Buka 14 Akar Spiritualitas"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden md:inline">14 Akar</span>
+            <span className="inline">📖 14 Akar</span>
           </Link>
 
           {/* User Status Badge */}
