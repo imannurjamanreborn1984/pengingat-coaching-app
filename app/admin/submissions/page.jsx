@@ -3,7 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Users, BookOpen, Clock, FileDown, ArrowLeft, RefreshCw } from "lucide-react";
+import { 
+  Users, 
+  BookOpen, 
+  Clock, 
+  FileDown, 
+  ArrowLeft, 
+  RefreshCw, 
+  Share2, 
+  CheckCircle2, 
+  Sparkles, 
+  X, 
+  Send, 
+  Layers, 
+  UserCheck, 
+  ShieldCheck, 
+  Tag 
+} from "lucide-react";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { saveAs } from "file-saver";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
@@ -17,6 +33,17 @@ export default function AdminSubmissions() {
   const [currentUser, setCurrentUser] = useState(null);
   const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [curatedMaterials, setCuratedMaterials] = useState([]);
+
+  // State Modal Kurasi
+  const [selectedSubForCuration, setSelectedSubForCuration] = useState(null);
+  const [curateLevel, setCurateLevel] = useState(1);
+  const [curateTitle, setCurateTitle] = useState("");
+  const [curateContent, setCurateContent] = useState("");
+  const [curateAuthorType, setCurateAuthorType] = useState("real"); // 'real' | 'anonymous'
+  const [curateImageUrl, setCurateImageUrl] = useState("");
+  const [curateNote, setCurateNote] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     try {
@@ -53,10 +80,102 @@ export default function AdminSubmissions() {
       }, {});
 
       setGroupedSubmissions(grouped);
+
+      // Ambil materi yang sudah pernah dikurasi ke npt_materials
+      try {
+        const { data: mats } = await supabase
+          .from("npt_materials")
+          .select("id, level, title, created_at, file_type")
+          .order("created_at", { ascending: false });
+        if (mats) setCuratedMaterials(mats);
+      } catch (err) {
+        console.warn("Info fetch npt_materials:", err.message);
+      }
     } catch (err) {
       console.error("Gagal mengambil data submissions:", err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Buka Modal Kurasi
+  const handleOpenCurateModal = (sub) => {
+    setSelectedSubForCuration(sub);
+    const text = sub.answer_text || "";
+
+    let title = "";
+    let notes = text;
+    let imageUrl = "";
+
+    const titleMatch = text.match(/📌 Judul:\s*(.+)/);
+    if (titleMatch) title = titleMatch[1].trim();
+
+    const imgMatch = text.match(/📷 Link Foto\/Gambar:\s*(.+)/);
+    if (imgMatch) imageUrl = imgMatch[1].trim();
+
+    const notesMatch = text.match(/📖 CATATAN & TEMUAN:\s*([\s\S]*?)(?=\n📷|$)/);
+    if (notesMatch) notes = notesMatch[1].trim();
+
+    if (!title) {
+      title = `Catatan Refleksi: ${sub.user_name || "Sahabat NPT"}`;
+    }
+
+    // Deteksi level otomatis jika ada kata "Level X"
+    let detectedLevel = 1;
+    const levelMatch = text.match(/Level\s*([1-6])/i) || sub.user_name?.match(/Level\s*([1-6])/i);
+    if (levelMatch && levelMatch[1]) {
+      detectedLevel = Number(levelMatch[1]);
+    }
+
+    setCurateLevel(detectedLevel);
+    setCurateTitle(title);
+    setCurateContent(notes);
+    setCurateImageUrl(imageUrl);
+    setCurateAuthorType("real");
+    setCurateNote("");
+  };
+
+  // Eksekusi Terbitkan ke Sahabat Se-Level
+  const handlePublishCurated = async (e) => {
+    if (e) e.preventDefault();
+    if (!curateTitle.trim() || !curateContent.trim()) {
+      alert("Judul dan Isi Catatan tidak boleh kosong.");
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const rawName = selectedSubForCuration?.user_name?.split("(")[0]?.trim() || "Sahabat NPT";
+      const authorLabel = curateAuthorType === "anonymous" 
+        ? `Draf Buku NPT • Refleksi Sahabat Level ${curateLevel} (Anonim)`
+        : `Draf Buku NPT • Ditulis oleh: ${rawName} (Level ${curateLevel})`;
+
+      const finalContent = curateNote.trim()
+        ? `${curateContent.trim()}\n\n━━━━━━━━━━━━━━━━━━━━\n💡 Catatan Guru / Kurator:\n${curateNote.trim()}`
+        : curateContent.trim();
+
+      const payload = {
+        level: Number(curateLevel),
+        title: `[Inspirasi Sahabat] ${curateTitle.trim()}`,
+        subtitle: authorLabel,
+        content: finalContent,
+        image_url: curateImageUrl || "",
+        file_type: "draf_buku",
+        is_published: true,
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from("npt_materials").insert([payload]);
+      if (error) throw error;
+
+      alert(`✅ Berhasil Diterbitkan!\nDiary berhasil dibagikan ke Sahabat NPT Level ${curateLevel} dan siap menjadi materi draf buku.`);
+      setSelectedSubForCuration(null);
+      fetchSubmissions();
+    } catch (err) {
+      console.error("Gagal menerbitkan:", err);
+      alert("Gagal menerbitkan: " + err.message);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -280,6 +399,45 @@ export default function AdminSubmissions() {
                     }`}>
                       {sub.answer_text}
                     </div>
+
+                    {/* Action Bar Kurasi */}
+                    {(() => {
+                      const isCurated = curatedMaterials.find((m) => {
+                        const titleMatch = sub.answer_text?.match(/📌 Judul:\s*(.+)/);
+                        const targetTitle = titleMatch ? titleMatch[1].trim() : "";
+                        return targetTitle && m.title?.includes(targetTitle);
+                      });
+
+                      return (
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-2 border-t border-[#ede0c8] dark:border-slate-800">
+                          {isCurated ? (
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Sudah Terbit di Level {isCurated.level} (Draf Buku)</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-[#82613d] dark:text-slate-500 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Status: Arsip Masuk Khusus Admin</span>
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCurateModal(sub)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs ${
+                              isKitabTheme
+                                ? 'bg-[#3a2211] hover:bg-[#26150a] text-white shadow-amber-950/20'
+                                : 'bg-rose-600 hover:bg-rose-500 text-white'
+                            }`}
+                            title="Kurasi dan terbitkan ke teman-teman se-level peserta"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                            <span>📢 Kurasi & Share ke Se-Level</span>
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
@@ -287,6 +445,224 @@ export default function AdminSubmissions() {
           ))
         )}
       </main>
+
+      {/* MODAL KURASI & PUBLIKASI DIARY KE SAHABAT SE-LEVEL */}
+      {selectedSubForCuration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className={`border rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-5 text-left ${
+            isKitabTheme
+              ? 'bg-[#fdfaf3] border-[#cbb38b] text-[#26150a]'
+              : 'bg-slate-900 border-slate-800 text-slate-100'
+          }`}>
+            {/* Header Modal */}
+            <div className="flex items-center justify-between border-b border-[#dfcfb0] dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-500/20">
+                  <Sparkles className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight ${
+                    isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+                  }`}>
+                    📢 Kurasi & Bagikan ke Sahabat Se-Level
+                  </h3>
+                  <p className={`text-xs mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                    Terbitkan temuan ini ke modul level peserta & arsipkan sebagai draf bab buku NPT.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedSubForCuration(null)}
+                className={`p-1.5 rounded-xl transition cursor-pointer ${
+                  isKitabTheme ? 'text-[#734822] hover:bg-[#dfcdab]' : 'text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePublishCurated} className="space-y-4">
+              {/* Target Level */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5">
+                  1. Pilih Target Level Penerima:
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setCurateLevel(lvl)}
+                      className={`py-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                        curateLevel === lvl
+                          ? isKitabTheme
+                            ? 'bg-[#3a2211] text-amber-300 border-[#8f632d] shadow-sm'
+                            : 'bg-rose-600 text-white border-rose-500'
+                          : isKitabTheme
+                            ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                      }`}
+                    >
+                      Lvl {lvl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Opsi Nama Penulis / Anonim */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5">
+                  2. Atribusi Penulis (Privasi Peserta):
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurateAuthorType("real")}
+                    className={`p-2.5 rounded-xl text-xs font-bold border text-left flex items-center gap-2 cursor-pointer transition ${
+                      curateAuthorType === "real"
+                        ? isKitabTheme
+                          ? 'bg-[#edd8b6] text-[#26150a] border-[#8f632d]'
+                          : 'bg-slate-800 text-white border-rose-500'
+                        : isKitabTheme
+                          ? 'bg-[#f4ebd5] text-[#734822] border-[#d8c3a1]'
+                          : 'bg-slate-950 text-slate-400 border-slate-800'
+                    }`}
+                  >
+                    <UserCheck className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <p className="leading-tight">Nama Asli Peserta</p>
+                      <span className="text-[10px] font-normal opacity-80">
+                        {selectedSubForCuration?.user_name?.split("(")[0]?.trim() || "Nama Peserta"}
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurateAuthorType("anonymous")}
+                    className={`p-2.5 rounded-xl text-xs font-bold border text-left flex items-center gap-2 cursor-pointer transition ${
+                      curateAuthorType === "anonymous"
+                        ? isKitabTheme
+                          ? 'bg-[#edd8b6] text-[#26150a] border-[#8f632d]'
+                          : 'bg-slate-800 text-white border-rose-500'
+                        : isKitabTheme
+                          ? 'bg-[#f4ebd5] text-[#734822] border-[#d8c3a1]'
+                          : 'bg-slate-950 text-slate-400 border-slate-800'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    <div>
+                      <p className="leading-tight">Anonim (Disamarkan)</p>
+                      <span className="text-[10px] font-normal opacity-80">
+                        "Sahabat NPT Level {curateLevel}"
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Judul Materi Draf Buku */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5">
+                  3. Judul Catatan / Judul Draf Buku:
+                </label>
+                <input
+                  type="text"
+                  value={curateTitle}
+                  onChange={(e) => setCurateTitle(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] focus:border-[#8f632d]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+                  }`}
+                  placeholder="Judul temuan / refleksi batin"
+                />
+              </div>
+
+              {/* Isi Refleksi */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5">
+                  4. Isi Catatan (Bisa Diedit / Dipoles untuk Draf Buku):
+                </label>
+                <textarea
+                  rows={6}
+                  value={curateContent}
+                  onChange={(e) => setCurateContent(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs leading-relaxed focus:outline-hidden font-sans ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] focus:border-[#8f632d]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+                  }`}
+                  placeholder="Isi catatan pengalaman batin peserta..."
+                />
+              </div>
+
+              {/* Catatan / Faedah dari Guru/Admin */}
+              <div>
+                <label className="block text-xs font-bold mb-1.5">
+                  5. Catatan / Faedah Hikmah dari Guru (Opsional):
+                </label>
+                <input
+                  type="text"
+                  value={curateNote}
+                  onChange={(e) => setCurateNote(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] focus:border-[#8f632d]'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-rose-500'
+                  }`}
+                  placeholder="Contoh: Sangat selaras dengan Maqamat Al-Hikam bab Tawakkal..."
+                />
+              </div>
+
+              {/* Foto Lampiran */}
+              {curateImageUrl && (
+                <div className="p-3 rounded-xl border bg-amber-500/5 border-amber-500/20 text-xs space-y-1">
+                  <span className="font-bold flex items-center gap-1 text-amber-700">
+                    📷 Foto Lampiran Terdeteksi:
+                  </span>
+                  <a
+                    href={curateImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-sky-600 underline truncate block"
+                  >
+                    {curateImageUrl}
+                  </a>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#dfcfb0] dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubForCuration(null)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    isKitabTheme ? 'text-[#734822] hover:bg-[#dfcdab]' : 'text-slate-400 hover:bg-slate-800'
+                  }`}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPublishing}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white transition flex items-center gap-2 shadow-md cursor-pointer ${
+                    isPublishing
+                      ? 'opacity-60 cursor-not-allowed bg-slate-600'
+                      : isKitabTheme
+                        ? 'bg-[#3a2211] hover:bg-[#26150a] shadow-amber-950/20'
+                        : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isPublishing ? 'Menerbitkan...' : `Terbitkan ke Level ${curateLevel}`}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

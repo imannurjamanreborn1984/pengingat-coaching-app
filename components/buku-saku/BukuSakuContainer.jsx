@@ -39,7 +39,8 @@ import {
   UserCheck,
   X,
   Clock,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
 
 const ELEMENTS = [
@@ -77,8 +78,10 @@ export default function BukuSakuContainer() {
   const [journals, setJournals] = useState([]);
   const [activeTab, setActiveTab] = useState('roots'); // 'roots' | 'journal' | 'assessment'
 
-  // Journal subtab
-  const [journalSubTab, setJournalSubTab] = useState('list'); // 'list' | 'form' | 'timer'
+  // Journal subtab: 'list' | 'form' | 'timer' | 'peer_insights'
+  const [journalSubTab, setJournalSubTab] = useState('list');
+  const [curatedPeerInsights, setCuratedPeerInsights] = useState([]);
+  const [loadingPeerInsights, setLoadingPeerInsights] = useState(false);
   const [practiceRoot, setPracticeRoot] = useState(undefined);
   const [practiceType, setPracticeType] = useState('dynamic_meditation');
   const [completedDuration, setCompletedDuration] = useState(15);
@@ -108,6 +111,36 @@ export default function BukuSakuContainer() {
     }
   };
 
+  const fetchCuratedPeerInsights = async (userObj = currentUser) => {
+    setLoadingPeerInsights(true);
+    try {
+      if (supabase) {
+        const userRole = userObj?.role || '';
+        let query = supabase
+          .from("npt_materials")
+          .select("*")
+          .or("file_type.eq.draf_buku,title.ilike.%Inspirasi Sahabat%")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false });
+
+        // Filter per level jika bukan super admin dan bukan npt_all
+        const levelMatch = userRole.match(/npt_([1-6])/);
+        if (levelMatch && userRole !== 'super_admin' && userRole !== 'npt_all') {
+          query = query.eq("level", Number(levelMatch[1]));
+        }
+
+        const { data, error } = await query;
+        if (!error && data) {
+          setCuratedPeerInsights(data);
+        }
+      }
+    } catch (err) {
+      console.warn("Error fetching peer insights:", err);
+    } finally {
+      setLoadingPeerInsights(false);
+    }
+  };
+
   useEffect(() => {
     try {
       let savedUser = null;
@@ -131,6 +164,7 @@ export default function BukuSakuContainer() {
           setActiveTab('journal');
         }
       }
+      fetchCuratedPeerInsights(savedUser);
     } catch (e) {}
     loadAllData();
   }, []);
@@ -537,6 +571,20 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
                       <PlusCircle className="w-3.5 h-3.5" />
                       <span>+ Tulis Catatan Baru</span>
                     </button>
+                    <button
+                      onClick={() => {
+                        setJournalSubTab('peer_insights');
+                        fetchCuratedPeerInsights();
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer border flex items-center gap-1.5 ${
+                        journalSubTab === 'peer_insights'
+                          ? isKitabTheme ? 'bg-[#3a2211] text-amber-300 border-[#8f632d]' : 'bg-rose-600 text-white border-rose-500'
+                          : isKitabTheme ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]' : 'text-slate-400 border-transparent'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>👥 Temuan Sahabat ({curatedPeerInsights.length})</span>
+                    </button>
                   </div>
 
                   <button
@@ -578,6 +626,104 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
                     onComplete={handleTimerComplete}
                     isKitabTheme={isKitabTheme}
                   />
+                )}
+
+                {journalSubTab === 'peer_insights' && (
+                  <div className="space-y-4 animate-in fade-in">
+                    <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                      isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-900 border-slate-800'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">📖</span>
+                        <div>
+                          <h4 className={`text-xs sm:text-sm font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                            Temuan & Refleksi Sahabat NPT (Telah Dikurasi Guru/Admin)
+                          </h4>
+                          <p className={`text-[11px] mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                            Kumpulan catatan batin terpilih dari sesama sahabat seperjuangan sebagai bahan inspirasi & draf pembukuan.
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => fetchCuratedPeerInsights()}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                          isKitabTheme ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1] hover:bg-[#dfcdab]' : 'bg-slate-800 text-slate-300 border-slate-700'
+                        }`}
+                      >
+                        <RefreshCw className={`w-3 h-3 ${loadingPeerInsights ? 'animate-spin' : ''}`} />
+                        <span>Muat Ulang</span>
+                      </button>
+                    </div>
+
+                    {loadingPeerInsights ? (
+                      <div className="p-12 text-center text-xs text-slate-400 space-y-2">
+                        <div className="w-6 h-6 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                        <p>Memuat temuan sahabat se-level...</p>
+                      </div>
+                    ) : curatedPeerInsights.length === 0 ? (
+                      <div className={`p-10 rounded-3xl border text-center space-y-2 ${
+                        isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800 text-slate-400'
+                      }`}>
+                        <p className={`text-sm font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                          Belum ada catatan sahabat yang diterbitkan untuk level Anda.
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Catatan diary Anda yang di-share ke admin dan dinilai inspiratif nantinya akan dikurasi dan muncul di sini.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {curatedPeerInsights.map((insight, idx) => (
+                          <div
+                            key={insight.id || idx}
+                            className={`p-6 rounded-3xl border space-y-3 shadow-xs text-left ${
+                              isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dfcfb0]/60 dark:border-slate-800 pb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center text-xs border border-amber-500/20">
+                                  ✍️
+                                </span>
+                                <div>
+                                  <h4 className={`text-sm font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'}`}>
+                                    {insight.title?.replace('[Inspirasi Sahabat]', '').trim() || insight.title}
+                                  </h4>
+                                  <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                                    {insight.subtitle || 'Draf Buku NPT'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {insight.created_at && (
+                                <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(insight.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 rounded-2xl border font-sans ${
+                              isKitabTheme ? 'bg-[#fbf7ee] text-[#2c1810] border-[#dfcfb0]' : 'bg-slate-950 text-slate-300 border-slate-800'
+                            }`}>
+                              {insight.content}
+                            </div>
+
+                            {insight.image_url && (
+                              <div className="max-h-72 rounded-2xl overflow-hidden border bg-black/5 flex items-center justify-center">
+                                <img
+                                  src={insight.image_url}
+                                  alt={insight.title}
+                                  className="w-full h-auto max-h-72 object-contain"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}

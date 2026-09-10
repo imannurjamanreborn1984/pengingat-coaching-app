@@ -442,40 +442,74 @@ export default function NPTLevelDetailPage() {
           </div>
         </div>
 
-        {/* Level Header Banner */}
-        <div className={`p-6 sm:p-8 rounded-3xl space-y-2 shadow-sm ${
-          isKitabTheme
-            ? 'card-kitab-frame'
-            : 'bg-slate-900 border border-slate-800 shadow-xl'
+        {/* Hero Header Level */}
+        <div className={`p-6 sm:p-8 rounded-3xl border space-y-3 relative overflow-hidden shadow-sm ${
+          isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
         }`}>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📜</span>
-            <span className={`text-xs font-bold uppercase tracking-wider ${
-              isKitabTheme ? 'text-[#9e2a2b]' : 'text-rose-400'
-            }`}>
-              Kurikulum Modul Resmi NPT
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider uppercase bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                  🔴⚪ Kurikulum Asuhan Sang Guru
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  Level {levelNum} dari 6
+                </span>
+              </div>
+              <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${
+                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+              }`}>
+                {levelInfo.name}
+              </h1>
+              <p className={`text-xs sm:text-sm font-medium ${
+                isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'
+              }`}>
+                {levelInfo.focus}
+              </p>
+            </div>
+
+            {/* Status Akses User */}
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+              {hasLevelAccess ? (
+                <div className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Akses Penuh Level {levelNum}</span>
+                </div>
+              ) : isApproved ? (
+                <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Pratinjau Terbatas</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-rose-600/30 transition cursor-pointer"
+                >
+                  <Unlock className="w-3.5 h-3.5" />
+                  <span>Buka Akses</span>
+                </button>
+              )}
+            </div>
           </div>
-          <h1 className={`text-xl sm:text-3xl font-black ${
-            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+
+          <p className={`text-xs sm:text-sm leading-relaxed ${
+            isKitabTheme ? 'text-[#543516]' : 'text-slate-300'
           }`}>
-            Materi & Modul NPT Level {levelNum}: {levelInfo.name}
-          </h1>
-          <p className={`text-xs sm:text-sm ${
-            isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
-          }`}>
-            Siaran ulang video YouTube dapat disimak oleh seluruh member NPT. Akses unduh file presentasi PPT, modul PDF, dan dokumen disesuaikan dengan tingkat level Anda.
+            {levelInfo.desc}
           </p>
         </div>
 
-        {/* Material Items */}
+        {/* ========================================================================= */}
+        {/* DAFTAR MATERI KURIKULUM & VIDEO                                           */}
+        {/* ========================================================================= */}
         {isLoading ? (
-          <div className={`py-16 text-center text-xs ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}`}>
-            Memuat materi pembelajaran...
+          <div className={`p-12 text-center text-xs space-y-2 ${isKitabTheme ? 'text-[#8f632d]' : 'text-slate-400'}`}>
+            <div className="w-6 h-6 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p>Memuat kurikulum dan video pembelajaran...</p>
           </div>
-        ) : materials.length === 0 ? (
-          <div className={`p-8 rounded-3xl text-center space-y-3 ${
-            isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900/60 border border-slate-800'
+        ) : coreMaterials.length === 0 && peerInsights.length === 0 ? (
+          <div className={`p-12 rounded-3xl border text-center space-y-3 shadow-xs ${
+            isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900 border-slate-800'
           }`}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto border ${
               isKitabTheme ? 'bg-[#ebdcc4] text-[#8f632d] border-[#cbb38b]' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
@@ -495,7 +529,7 @@ export default function NPTLevelDetailPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-1">
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-bold ${isKitabTheme ? 'text-[#4a2e12]' : 'text-slate-300'}`}>
-                  📚 {materials.length} Topik Pembelajaran
+                  📚 {coreMaterials.length} Modul & Materi Inti
                 </span>
                 <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
                   isKitabTheme ? 'bg-[#eee2cb] text-[#634224] border border-[#d8c3a1]' : 'bg-slate-800 text-slate-300 border border-slate-700'
@@ -503,7 +537,7 @@ export default function NPTLevelDetailPage() {
                   Urutan: Terbaru di Paling Atas
                 </span>
               </div>
-              {materials.length > 1 && (
+              {coreMaterials.length > 1 && (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -532,7 +566,7 @@ export default function NPTLevelDetailPage() {
             </div>
 
             {/* List Materi */}
-            {materials.map((mat, idx) => {
+            {coreMaterials.map((mat, idx) => {
               const isExpanded = expandedIds.has(mat.id || idx);
               const isLatest = idx === 0;
 
@@ -843,6 +877,125 @@ export default function NPTLevelDetailPage() {
                 </div>
               );
             })}
+
+            {/* ========================================================================= */}
+            {/* BAGIAN 2: 🌟 INSPIRASI & TEMUAN SAHABAT SE-LEVEL (DRAF BUKU NPT)          */}
+            {/* ========================================================================= */}
+            {peerInsights.length > 0 && (
+              <div className="pt-6 space-y-4">
+                <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d8c3a1]' : 'bg-slate-900 border-slate-800'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🌟</span>
+                    <div>
+                      <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${
+                        isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                      }`}>
+                        <span>Temuan & Refleksi Sahabat Se-Level ({peerInsights.length})</span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                          Draf Pembukuan
+                        </span>
+                      </h3>
+                      <p className={`text-xs mt-0.5 ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                        Catatan diary & pengalaman batin sesama peserta Level {levelNum} yang telah dikurasi oleh Guru/Admin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* List Peer Insights */}
+                <div className="grid grid-cols-1 gap-4">
+                  {peerInsights.map((insight, pIdx) => {
+                    const isExp = expandedIds.has(insight.id || `peer-${pIdx}`);
+
+                    return (
+                      <div
+                        key={insight.id || `peer-${pIdx}`}
+                        className={`rounded-3xl border transition overflow-hidden text-left ${
+                          isKitabTheme
+                            ? 'bg-[#fdfbf6] border-[#d8c3a1] shadow-sm'
+                            : 'bg-slate-900/90 border-slate-800 shadow-md'
+                        }`}
+                      >
+                        {/* Header Accordion */}
+                        <div
+                          onClick={() => toggleExpand(insight.id || `peer-${pIdx}`)}
+                          className={`p-5 flex items-center justify-between gap-3 transition cursor-pointer select-none ${
+                            isExp
+                              ? isKitabTheme ? 'bg-[#f7eedc] border-b border-[#dfcfb0]' : 'bg-slate-950 border-b border-slate-800'
+                              : isKitabTheme ? 'hover:bg-[#f5ebd7]' : 'hover:bg-slate-800/60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center shrink-0 border border-amber-500/20 text-base">
+                              ✍️
+                            </div>
+                            <div className="space-y-0.5 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                                  📖 Temuan Sahabat
+                                </span>
+                                {insight.created_at && (
+                                  <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {new Date(insight.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className={`text-sm sm:text-base font-bold leading-snug ${
+                                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                              }`}>
+                                {insight.title?.replace('[Inspirasi Sahabat]', '').trim() || insight.title}
+                              </h4>
+                              {insight.subtitle && (
+                                <p className={`text-xs font-semibold ${isKitabTheme ? 'text-[#8f632d]' : 'text-amber-400'}`}>
+                                  {insight.subtitle}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 p-1.5 rounded-xl border border-slate-700/30 text-slate-400">
+                            {isExp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </div>
+                        </div>
+
+                        {/* Expanded Content */}
+                        {isExp && (
+                          <div className="p-5 sm:p-6 space-y-4 animate-in fade-in duration-200">
+                            {insight.content && (
+                              <div className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 sm:p-5 rounded-2xl border font-sans ${
+                                isKitabTheme ? 'bg-[#fbf7ee] text-[#2c1810] border-[#dfcfb0]' : 'bg-slate-950 text-slate-300 border-slate-800'
+                              }`}>
+                                {insight.content}
+                              </div>
+                            )}
+
+                            {insight.image_url && (
+                              <div
+                                onClick={() => setActiveLightbox({ url: insight.image_url, title: insight.title })}
+                                className="relative w-full max-h-80 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-sm bg-black/5"
+                              >
+                                <img
+                                  src={insight.image_url}
+                                  alt={insight.title}
+                                  className="w-full h-auto max-h-80 object-contain rounded-2xl"
+                                />
+                                <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 text-white flex items-center gap-1">
+                                  <ZoomIn className="w-3 h-3 text-amber-400" />
+                                  <span>Perbesar Foto</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
