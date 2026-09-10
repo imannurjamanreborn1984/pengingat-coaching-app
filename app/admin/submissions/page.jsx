@@ -18,14 +18,72 @@ import {
   Layers, 
   UserCheck, 
   ShieldCheck, 
-  Tag 
+  Tag,
+  ZoomIn
 } from "lucide-react";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { saveAs } from "file-saver";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
+import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 
 export const dynamic = 'force-dynamic';
+
+// Helper pembersih teks dan ekstraksi foto Base64 / URL
+function parseSubmissionText(text = "") {
+  let title = "";
+  let cleanText = text;
+  let imageUrl = "";
+  let youtubeUrl = "";
+  let gdriveUrl = "";
+
+  // 1. Ekstrak gambar (Base64 atau link URL)
+  const base64Match = text.match(/(data:image\/[a-zA-Z0-9.+_-]+;base64,[A-Za-z0-9+/=]+)/);
+  if (base64Match) {
+    imageUrl = base64Match[1];
+  } else {
+    const imgUrlMatch = text.match(/📷\s*(?:Link Foto\/Gambar|Foto):\s*(https?:\/\/[^\s\n]+)/i);
+    if (imgUrlMatch) imageUrl = imgUrlMatch[1].trim();
+  }
+
+  // 2. Ekstrak Judul
+  const titleMatch = text.match(/📌\s*Judul:\s*(.+)/i);
+  if (titleMatch) title = titleMatch[1].trim();
+
+  // 3. Ekstrak Link YouTube / Drive jika ada
+  const ytMatch = text.match(/🎬\s*YouTube:\s*(https?:\/\/[^\s\n]+)/i);
+  if (ytMatch) youtubeUrl = ytMatch[1].trim();
+
+  const driveMatch = text.match(/☁️\s*Drive:\s*(https?:\/\/[^\s\n]+)/i);
+  if (driveMatch) gdriveUrl = driveMatch[1].trim();
+
+  // 4. Bersihkan tampilan teks dari rentetan kode Base64 yang panjang
+  cleanText = cleanText.replace(/data:image\/[a-zA-Z0-9.+_-]+;base64,[A-Za-z0-9+/=]+/g, "");
+  cleanText = cleanText.replace(/📷\s*(?:Link Foto\/Gambar|Foto):\s*\n?/gi, "");
+  cleanText = cleanText.replace(/📎\s*LAMPIRAN MEDIA:\s*\n?/gi, "");
+  cleanText = cleanText.replace(/🔗\s*LAMPIRAN MEDIA:\s*\n?/gi, "");
+
+  // 5. Ekstrak isi catatan murni untuk draf buku / kurasi
+  let notesOnly = cleanText;
+  const notesMatch = cleanText.match(/📖\s*(?:ISI CATATAN HARIAN|CATATAN & TEMUAN):\s*([\s\S]*?)(?=(?:💡\s*TEMUAN HARIAN|🎯\s*EVALUASI DIRI|🔗\s*LAMPIRAN MEDIA|📎\s*LAMPIRAN MEDIA|$))/i);
+  if (notesMatch && notesMatch[1].trim()) {
+    notesOnly = notesMatch[1].trim();
+  }
+
+  const findingsMatch = cleanText.match(/💡\s*TEMUAN HARIAN \(INSIGHTS\):\s*([\s\S]*?)(?=(?:🎯\s*EVALUASI DIRI|🔗\s*LAMPIRAN MEDIA|📎\s*LAMPIRAN MEDIA|$))/i);
+  if (findingsMatch && findingsMatch[1].trim() && findingsMatch[1].trim() !== "-") {
+    notesOnly += `\n\n💡 Temuan Batin: ${findingsMatch[1].trim()}`;
+  }
+
+  return {
+    title,
+    cleanDisplayText: cleanText.trim(),
+    notesForCuration: notesOnly.trim() || cleanText.trim(),
+    imageUrl,
+    youtubeUrl,
+    gdriveUrl
+  };
+}
 
 export default function AdminSubmissions() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -34,6 +92,7 @@ export default function AdminSubmissions() {
   const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
   const [curatedMaterials, setCuratedMaterials] = useState([]);
+  const [activeLightbox, setActiveLightbox] = useState(null); // { url, title }
 
   // State Modal Kurasi
   const [selectedSubForCuration, setSelectedSubForCuration] = useState(null);
@@ -101,36 +160,21 @@ export default function AdminSubmissions() {
   // Buka Modal Kurasi
   const handleOpenCurateModal = (sub) => {
     setSelectedSubForCuration(sub);
-    const text = sub.answer_text || "";
+    const parsed = parseSubmissionText(sub.answer_text || "");
 
-    let title = "";
-    let notes = text;
-    let imageUrl = "";
-
-    const titleMatch = text.match(/📌 Judul:\s*(.+)/);
-    if (titleMatch) title = titleMatch[1].trim();
-
-    const imgMatch = text.match(/📷 Link Foto\/Gambar:\s*(.+)/);
-    if (imgMatch) imageUrl = imgMatch[1].trim();
-
-    const notesMatch = text.match(/📖 CATATAN & TEMUAN:\s*([\s\S]*?)(?=\n📷|$)/);
-    if (notesMatch) notes = notesMatch[1].trim();
-
-    if (!title) {
-      title = `Catatan Refleksi: ${sub.user_name || "Sahabat NPT"}`;
-    }
+    const title = parsed.title || `Catatan Refleksi: ${sub.user_name?.split("(")[0]?.trim() || "Sahabat NPT"}`;
 
     // Deteksi level otomatis jika ada kata "Level X"
     let detectedLevel = 1;
-    const levelMatch = text.match(/Level\s*([1-6])/i) || sub.user_name?.match(/Level\s*([1-6])/i);
+    const levelMatch = (sub.answer_text || "").match(/Level\s*([1-6])/i) || sub.user_name?.match(/Level\s*([1-6])/i);
     if (levelMatch && levelMatch[1]) {
       detectedLevel = Number(levelMatch[1]);
     }
 
     setCurateLevel(detectedLevel);
     setCurateTitle(title);
-    setCurateContent(notes);
-    setCurateImageUrl(imageUrl);
+    setCurateContent(parsed.notesForCuration);
+    setCurateImageUrl(parsed.imageUrl);
     setCurateAuthorType("real");
     setCurateNote("");
   };
@@ -394,48 +438,69 @@ export default function AdminSubmissions() {
                         {new Date(sub.created_at).toLocaleString("id-ID")}
                       </span>
                     </div>
-                    <div className={`text-xs whitespace-pre-line leading-relaxed pt-1 ${
-                      isKitabTheme ? 'text-[#331d10] font-kitab-body' : 'text-slate-300'
-                    }`}>
-                      {sub.answer_text}
-                    </div>
-
-                    {/* Action Bar Kurasi */}
                     {(() => {
+                      const parsed = parseSubmissionText(sub.answer_text || "");
                       const isCurated = curatedMaterials.find((m) => {
-                        const titleMatch = sub.answer_text?.match(/📌 Judul:\s*(.+)/);
-                        const targetTitle = titleMatch ? titleMatch[1].trim() : "";
-                        return targetTitle && m.title?.includes(targetTitle);
+                        return parsed.title && m.title?.includes(parsed.title);
                       });
 
                       return (
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-2 border-t border-[#ede0c8] dark:border-slate-800">
-                          {isCurated ? (
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>Sudah Terbit di Level {isCurated.level} (Draf Buku)</span>
+                        <>
+                          <div className={`text-xs whitespace-pre-line leading-relaxed pt-1 ${
+                            isKitabTheme ? 'text-[#331d10] font-kitab-body' : 'text-slate-300'
+                          }`}>
+                            {parsed.cleanDisplayText}
+                          </div>
+
+                          {/* Foto Visual Asli (Bukan Teks Kode Base64) */}
+                          {parsed.imageUrl && (
+                            <div className="pt-2">
+                              <div
+                                onClick={() => setActiveLightbox({ url: parsed.imageUrl, title: parsed.title || sub.user_name })}
+                                className="relative max-w-xs max-h-52 rounded-2xl overflow-hidden border border-[#d8c3a1] dark:border-slate-800 cursor-zoom-in group bg-black/5 flex items-center justify-center shadow-xs"
+                              >
+                                <img
+                                  src={parsed.imageUrl}
+                                  alt="Lampiran Foto Peserta"
+                                  className="w-full h-auto max-h-52 object-contain rounded-2xl transition group-hover:scale-[1.02]"
+                                />
+                                <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 text-white flex items-center gap-1 shadow-md">
+                                  <ZoomIn className="w-3 h-3 text-amber-400" />
+                                  <span>Lihat Foto</span>
+                                </div>
+                              </div>
                             </div>
-                          ) : (
-                            <span className="text-[10px] text-[#82613d] dark:text-slate-500 flex items-center gap-1">
-                              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-                              <span>Status: Arsip Masuk Khusus Admin</span>
-                            </span>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => handleOpenCurateModal(sub)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs ${
-                              isKitabTheme
-                                ? 'bg-[#3a2211] hover:bg-[#26150a] text-white shadow-amber-950/20'
-                                : 'bg-rose-600 hover:bg-rose-500 text-white'
-                            }`}
-                            title="Kurasi dan terbitkan ke teman-teman se-level peserta"
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                            <span>📢 Kurasi & Share ke Se-Level</span>
-                          </button>
-                        </div>
+                          {/* Action Bar Kurasi */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-2 border-t border-[#ede0c8] dark:border-slate-800">
+                            {isCurated ? (
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Sudah Terbit di Level {isCurated.level} (Draf Buku)</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-[#82613d] dark:text-slate-500 flex items-center gap-1">
+                                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                                <span>Status: Arsip Masuk Khusus Admin</span>
+                              </span>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenCurateModal(sub)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs ${
+                                isKitabTheme
+                                  ? 'bg-[#3a2211] hover:bg-[#26150a] text-white shadow-amber-950/20'
+                                  : 'bg-rose-600 hover:bg-rose-500 text-white'
+                              }`}
+                              title="Kurasi dan terbitkan ke teman-teman se-level peserta"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                              <span>📢 Kurasi & Share ke Se-Level</span>
+                            </button>
+                          </div>
+                        </>
                       );
                     })()}
                   </div>
@@ -618,18 +683,42 @@ export default function AdminSubmissions() {
 
               {/* Foto Lampiran */}
               {curateImageUrl && (
-                <div className="p-3 rounded-xl border bg-amber-500/5 border-amber-500/20 text-xs space-y-1">
-                  <span className="font-bold flex items-center gap-1 text-amber-700">
-                    📷 Foto Lampiran Terdeteksi:
-                  </span>
-                  <a
-                    href={curateImageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-sky-600 underline truncate block"
+                <div
+                  className={`p-3 rounded-xl border space-y-2 ${
+                    isKitabTheme ? 'bg-[#f5ede0] border-[#cbb38b]' : 'bg-slate-950/80 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                      📷 Foto Lampiran Peserta
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurateImageUrl('')}
+                      className="text-[11px] text-rose-500 hover:text-rose-600 font-semibold cursor-pointer"
+                    >
+                      ✕ Hapus dari Terbitan
+                    </button>
+                  </div>
+                  <div
+                    onClick={() =>
+                      setActiveLightbox({
+                        url: curateImageUrl,
+                        title: curateTitle || 'Foto Lampiran',
+                      })
+                    }
+                    className="relative group rounded-lg overflow-hidden border border-amber-900/10 max-h-44 cursor-pointer bg-black/5 flex items-center justify-center"
                   >
-                    {curateImageUrl}
-                  </a>
+                    <img
+                      src={curateImageUrl}
+                      alt="Preview Lampiran"
+                      className="max-h-44 w-auto object-contain rounded-lg transition duration-200 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center text-white text-xs font-semibold gap-1.5">
+                      <ZoomIn className="w-4 h-4" />
+                      <span>Klik untuk perbesar</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -663,6 +752,14 @@ export default function AdminSubmissions() {
           </div>
         </div>
       )}
+
+      {/* Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={!!activeLightbox}
+        imageUrl={activeLightbox?.url}
+        title={activeLightbox?.title}
+        onClose={() => setActiveLightbox(null)}
+      />
     </div>
   );
 }
