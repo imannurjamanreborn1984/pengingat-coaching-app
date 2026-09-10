@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Save, X, Lock, Send, Image, Film, ExternalLink, Cloud } from 'lucide-react';
+import { Sparkles, Save, X, Lock, Send, Image, Film, ExternalLink, Cloud, Upload } from 'lucide-react';
 
 const COMMON_SOMATIC_SENSATIONS = [
   'Dada terasa hangat & lapang',
@@ -42,6 +42,7 @@ export const JournalForm = ({
   const [findings, setFindings] = useState(''); // Temuan Harian
   const [evaluation, setEvaluation] = useState(''); // Evaluasi Diri
   const [imageUrl, setImageUrl] = useState(''); // Link Gambar
+  const [images, setImages] = useState([]); // Array Foto (1 atau 2 foto dari Galeri/File)
   const [youtubeUrl, setYoutubeUrl] = useState(''); // Link Video YouTube
   const [gdriveUrl, setGdriveUrl] = useState(''); // Link Google Drive
 
@@ -61,10 +62,37 @@ export const JournalForm = ({
     }
   };
 
+  const handleImageFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const selectedFiles = files.slice(0, 2 - images.length);
+    selectedFiles.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        alert('Mohon pilih file gambar (JPG, PNG, WebP).');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImages((prev) => {
+          if (prev.length >= 2) return prev;
+          return [...prev, event.target.result];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleFormSubmit = (e, isSharedWithAdmin) => {
     if (e) e.preventDefault();
     const rootObj = roots.find((r) => r.id === targetRootId);
     
+    const primaryImage = images[0] || imageUrl.trim();
+
     onSave({
       date,
       title: title.trim() || `Catatan Temuan - ${new Date(date).toLocaleDateString('id-ID')}`,
@@ -78,7 +106,8 @@ export const JournalForm = ({
       notes: notes.trim(),
       findings: findings.trim(),
       evaluation: evaluation.trim(),
-      imageUrl: imageUrl.trim(),
+      imageUrl: primaryImage,
+      images: images,
       youtubeUrl: youtubeUrl.trim(),
       gdriveUrl: gdriveUrl.trim(),
       isSharedWithAdmin: !!isSharedWithAdmin,
@@ -231,23 +260,50 @@ export const JournalForm = ({
           </span>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Upload File Gambar (Maksimal 2 Foto) */}
             <div>
               <label className={`block text-[11px] font-semibold mb-1 flex items-center gap-1 ${
                 isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
               }`}>
-                <Image className="w-3.5 h-3.5 text-emerald-600" /> URL Gambar / Foto
+                <Image className="w-3.5 h-3.5 text-emerald-600" /> Upload File Foto/Gambar (1 atau 2 Foto)
               </label>
-              <input
-                type="url"
-                placeholder="https://... (Link foto suasana)"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-hidden ${
+
+              {images.length < 2 && (
+                <label className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed text-xs font-bold cursor-pointer transition ${
                   isKitabTheme
-                    ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
-                    : 'bg-slate-900 border-slate-800 text-white'
-                }`}
-              />
+                    ? 'bg-[#fdfaf3] text-[#4a2e12] border-[#cbb38b] hover:bg-[#eee3cb]'
+                    : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                }`}>
+                  <Upload className="w-4 h-4 text-emerald-600" />
+                  <span>{images.length === 0 ? "📷 Pilih File Foto (Max 2)" : "➕ Tambah 1 Foto Lagi"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageFileChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+
+              {/* Preview Foto */}
+              {images.length > 0 && (
+                <div className="flex gap-2 mt-2">
+                  {images.map((imgSrc, idx) => (
+                    <div key={idx} className="relative group w-14 h-14 rounded-xl overflow-hidden border border-amber-500/40 shadow-xs">
+                      <img src={imgSrc} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-0.5 right-0.5 p-1 rounded-full bg-rose-600 text-white shadow-xs hover:bg-rose-700 transition cursor-pointer"
+                        title="Hapus foto ini"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>

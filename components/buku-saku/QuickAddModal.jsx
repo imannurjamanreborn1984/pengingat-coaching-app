@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Sparkles, Lock, Send, Image as ImageIcon, Calendar } from 'lucide-react';
+import { X, Sparkles, Lock, Send, Image as ImageIcon, Calendar, Upload } from 'lucide-react';
 import { DataService } from '../../lib/services/dataService';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -20,7 +20,33 @@ export const QuickAddModal = ({
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleImageFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const selectedFiles = files.slice(0, 2 - images.length);
+    selectedFiles.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        alert('Mohon pilih file gambar (JPG, PNG, WebP).');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImages((prev) => {
+          if (prev.length >= 2) return prev;
+          return [...prev, event.target.result];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleFormSubmit = async (e, isSharedWithAdmin) => {
     if (e) e.preventDefault();
@@ -31,6 +57,8 @@ export const QuickAddModal = ({
 
     setIsSubmitting(true);
 
+    const primaryImage = images[0] || imageUrl.trim();
+
     const entryData = {
       id: `journal-${Date.now()}`,
       date,
@@ -40,7 +68,8 @@ export const QuickAddModal = ({
       notes: notes.trim(),
       findings: notes.trim(),
       evaluation: '',
-      imageUrl: imageUrl.trim(),
+      imageUrl: primaryImage,
+      images: images,
       youtubeUrl: '',
       gdriveUrl: '',
       isSharedWithAdmin: !!isSharedWithAdmin,
@@ -181,19 +210,45 @@ ${entryData.imageUrl ? `\n📷 Link Foto/Gambar: ${entryData.imageUrl}` : ''}`,
               isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
             }`}>
               <ImageIcon className="w-4 h-4 text-emerald-600" />
-              <span>Foto / Gambar AI (Opsional, Tanpa OCR):</span>
+              <span>Foto / Gambar (Maksimal 2 Foto, Tanpa OCR):</span>
             </label>
-            <input
-              type="url"
-              placeholder="Tempelkan link/URL foto (Contoh: https://...)"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
+
+            {images.length < 2 && (
+              <label className={`flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed text-xs font-bold cursor-pointer transition ${
                 isKitabTheme
-                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b] placeholder:text-[#9e876a]'
-                  : 'bg-slate-950 border-slate-800 text-white'
-              }`}
-            />
+                  ? 'bg-[#faf2e3] text-[#4a2e12] border-[#cbb38b] hover:bg-[#eee3cb]'
+                  : 'bg-slate-950 text-slate-300 border-slate-700 hover:bg-slate-800'
+              }`}>
+                <Upload className="w-4 h-4 text-emerald-600" />
+                <span>{images.length === 0 ? "📷 Pilih File Foto dari Galeri (1 atau 2)" : "➕ Tambah 1 Foto Lagi"}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageFileChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {/* Preview Foto */}
+            {images.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {images.map((imgSrc, idx) => (
+                  <div key={idx} className="relative group w-16 h-16 rounded-xl overflow-hidden border border-amber-500/40 shadow-xs">
+                    <img src={imgSrc} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-0.5 right-0.5 p-1 rounded-full bg-rose-600 text-white shadow-xs hover:bg-rose-700 transition cursor-pointer"
+                      title="Hapus foto ini"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* DUA TOMBOL SUBMIT */}
