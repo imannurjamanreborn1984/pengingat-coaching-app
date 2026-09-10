@@ -8,16 +8,22 @@ export const RootCard = ({
   isBookmarked,
   onToggleBookmark,
   onSelectRoot,
+  onSelect,
   isKitabTheme = true,
 }) => {
   const sainsCount = root.sainsEpigenetika?.length || 0;
   const kitabCount = root.kitabKearifan?.length || 0;
   const popCount = root.popCultureFolklore?.length || 0;
 
+  const handleSelect = (r) => {
+    const fn = onSelectRoot || onSelect;
+    if (typeof fn === 'function') fn(r);
+  };
+
   if (isKitabTheme) {
     return (
       <div
-        onClick={() => onSelectRoot(root)}
+        onClick={() => handleSelect(root)}
         className="group relative rounded-2xl p-5 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between card-kitab-frame card-kitab-hover"
       >
         {/* Subtle illuminated corner accent */}
@@ -103,7 +109,7 @@ export const RootCard = ({
   // Fallback Modern Dark Mode Card
   return (
     <div
-      onClick={() => onSelectRoot(root)}
+      onClick={() => handleSelect(root)}
       className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between hover:border-rose-500/40 dark:hover:border-rose-500/40"
     >
       <div

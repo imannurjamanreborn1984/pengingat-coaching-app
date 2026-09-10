@@ -500,6 +500,7 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
                       key={root.id}
                       root={root}
                       onSelect={handleSelectRoot}
+                      onSelectRoot={handleSelectRoot}
                       isBookmarked={bookmarks.includes(root.id)}
                       onToggleBookmark={handleToggleBookmark}
                       isKitabTheme={isKitabTheme}
