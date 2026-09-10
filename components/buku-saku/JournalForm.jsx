@@ -157,53 +157,7 @@ export const JournalForm = ({
           </div>
         </div>
 
-        {/* 2. PILIHAN AKAR & JENIS LATIHAN */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={`block text-xs font-bold mb-1.5 ${
-              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-            }`}>
-              Fokus Akar Spiritual Terkait (Opsional)
-            </label>
-            <select
-              value={targetRootId}
-              onChange={(e) => setTargetRootId(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
-                isKitabTheme
-                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
-                  : 'bg-slate-950 border-slate-800 text-white'
-              }`}
-            >
-              {roots.map((r) => (
-                <option key={r.id} value={r.id}>
-                  #{r.number} - {r.name} ({r.element})
-                </option>
-              ))}
-            </select>
-          </div>
 
-          <div>
-            <label className={`block text-xs font-bold mb-1.5 ${
-              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-            }`}>
-              Kategori Catatan / Laku
-            </label>
-            <select
-              value={practiceType}
-              onChange={(e) => setPracticeType(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-medium focus:outline-hidden ${
-                isKitabTheme
-                  ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
-                  : 'bg-slate-950 border-slate-800 text-white'
-              }`}
-            >
-              <option value="dynamic_meditation">🏃 Dynamic Meditation (Gerak Somatik)</option>
-              <option value="khalwat">🧘 Khalwat (Hening & Kontemplasi Mandiri)</option>
-              <option value="refleksi_harian">📖 Refleksi Harian / Muhasabah</option>
-              <option value="observasi_akar">🔍 Temuan & Pengamatan Alam / Diri</option>
-            </select>
-          </div>
-        </div>
 
         {/* 3. ISI CATATAN HARIAN */}
         <div>
