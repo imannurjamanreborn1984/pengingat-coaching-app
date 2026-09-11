@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Save, X, Lock, Send, Image, Film, ExternalLink, Cloud, Upload } from 'lucide-react';
+import { Sparkles, Save, X, Lock, Send, Image, Film, ExternalLink, Cloud, Upload, Loader2 } from 'lucide-react';
+import { compressImageFile } from '../../lib/utils/imageCompressor';
 
 const COMMON_SOMATIC_SENSATIONS = [
   'Dada terasa hangat & lapang',
@@ -36,6 +37,8 @@ export const JournalForm = ({
     'Pikiran hening (zero chatter)',
   ]);
   const [customSensation, setCustomSensation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
   
   // Field Bebas User (6 Komponen Utama)
   const [notes, setNotes] = useState(''); // Isi Catatan Harian
@@ -62,56 +65,77 @@ export const JournalForm = ({
     }
   };
 
-  const handleImageFileChange = (e) => {
+  const handleImageFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
+    setIsCompressingImage(true);
     const selectedFiles = files.slice(0, 2 - images.length);
-    selectedFiles.forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        alert('Mohon pilih file gambar (JPG, PNG, WebP).');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
+
+    try {
+      for (const file of selectedFiles) {
+        if (!file.type.startsWith('image/')) {
+          alert('Mohon pilih file gambar (JPG, PNG, WebP).');
+          continue;
+        }
+        const compressedDataUrl = await compressImageFile(file, 800, 800, 0.7);
         setImages((prev) => {
           if (prev.length >= 2) return prev;
-          return [...prev, event.target.result];
+          return [...prev, compressedDataUrl];
         });
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+    } catch (err) {
+      console.error('Error compressing image:', err);
+      alert('Gagal memproses gambar. Silakan coba file lain.');
+    } finally {
+      setIsCompressingImage(false);
+    }
   };
 
   const removeImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleFormSubmit = (e, isSharedWithAdmin) => {
+  const handleFormSubmit = async (e, isSharedWithAdmin) => {
     if (e) e.preventDefault();
-    const rootObj = roots.find((r) => r.id === targetRootId);
-    
-    const primaryImage = images[0] || imageUrl.trim();
+    if (isSubmitting) return;
 
-    onSave({
-      date,
-      title: title.trim() || `Catatan Temuan - ${new Date(date).toLocaleDateString('id-ID')}`,
-      practiceType,
-      targetRootId,
-      targetRootName: rootObj ? `${rootObj.name} (${rootObj.alias})` : 'Umum',
-      durationMinutes,
-      energyLevelBefore,
-      energyLevelAfter,
-      somaticSensations: selectedSensations,
-      notes: notes.trim(),
-      findings: findings.trim(),
-      evaluation: evaluation.trim(),
-      imageUrl: primaryImage,
-      images: images,
-      youtubeUrl: youtubeUrl.trim(),
-      gdriveUrl: gdriveUrl.trim(),
-      isSharedWithAdmin: !!isSharedWithAdmin,
-    });
+    if (!title.trim() && !notes.trim()) {
+      alert("Mohon isi Judul Catatan dan Isi Catatan Harian terlebih dahulu.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const rootObj = roots.find((r) => r.id === targetRootId);
+      const primaryImage = images[0] || imageUrl.trim();
+
+      await onSave({
+        date,
+        title: title.trim() || `Catatan Temuan - ${new Date(date).toLocaleDateString('id-ID')}`,
+        practiceType,
+        targetRootId,
+        targetRootName: rootObj ? `${rootObj.name} (${rootObj.alias})` : 'Umum',
+        durationMinutes,
+        energyLevelBefore,
+        energyLevelAfter,
+        somaticSensations: selectedSensations,
+        notes: notes.trim(),
+        findings: findings.trim(),
+        evaluation: evaluation.trim(),
+        imageUrl: primaryImage,
+        images: images,
+        youtubeUrl: youtubeUrl.trim(),
+        gdriveUrl: gdriveUrl.trim(),
+        isSharedWithAdmin: !!isSharedWithAdmin,
+      });
+    } catch (err) {
+      console.error('Error saving journal:', err);
+      alert('Gagal menyimpan diary: ' + (err.message || 'Terjadi kesalahan sistem'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -270,16 +294,29 @@ export const JournalForm = ({
 
               {images.length < 2 && (
                 <label className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed text-xs font-bold cursor-pointer transition ${
+                  isCompressingImage ? 'opacity-50 pointer-events-none' : ''
+                } ${
                   isKitabTheme
                     ? 'bg-[#fdfaf3] text-[#4a2e12] border-[#cbb38b] hover:bg-[#eee3cb]'
                     : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
                 }`}>
-                  <Upload className="w-4 h-4 text-emerald-600" />
-                  <span>{images.length === 0 ? "📷 Pilih File Foto (Max 2)" : "➕ Tambah 1 Foto Lagi"}</span>
+                  {isCompressingImage ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                  ) : (
+                    <Upload className="w-4 h-4 text-emerald-600" />
+                  )}
+                  <span>
+                    {isCompressingImage
+                      ? "⏳ Memproses Foto..."
+                      : images.length === 0
+                      ? "📷 Pilih File Foto (Max 2)"
+                      : "➕ Tambah 1 Foto Lagi"}
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
                     multiple
+                    disabled={isCompressingImage}
                     onChange={handleImageFileChange}
                     className="hidden"
                   />
@@ -295,6 +332,7 @@ export const JournalForm = ({
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
+                        disabled={isSubmitting}
                         className="absolute top-0.5 right-0.5 p-1 rounded-full bg-rose-600 text-white shadow-xs hover:bg-rose-700 transition cursor-pointer"
                         title="Hapus foto ini"
                       >
@@ -352,6 +390,7 @@ export const JournalForm = ({
             <button
               type="button"
               onClick={onCancel}
+              disabled={isSubmitting}
               className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 isKitabTheme ? 'text-[#634224] hover:bg-[#dfcdab]' : 'text-slate-400 hover:bg-slate-800'
               }`}
@@ -363,31 +402,45 @@ export const JournalForm = ({
           {/* OPSI 1: SIMPAN SEBAGAI CATATAN PRIBADI */}
           <button
             type="button"
+            disabled={isSubmitting || isCompressingImage}
             onClick={(e) => handleFormSubmit(e, false)}
             className={`w-full sm:w-auto px-5 py-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+              isSubmitting ? 'opacity-50 pointer-events-none' : ''
+            } ${
               isKitabTheme
                 ? 'bg-[#eee3cb] text-[#3a2211] border-[#cbb38b] hover:bg-[#dfcdab]'
                 : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
             }`}
             title="Hanya tersimpan di perangkat HP sendiri"
           >
-            <Lock className="w-4 h-4 text-amber-600" />
-            <span>🔒 Simpan Catatan Pribadi</span>
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+            ) : (
+              <Lock className="w-4 h-4 text-amber-600" />
+            )}
+            <span>{isSubmitting ? 'Menyimpan...' : '🔒 Simpan Catatan Pribadi'}</span>
           </button>
 
           {/* OPSI 2: SIMPAN DAN SHARE KE ADMIN */}
           <button
             type="button"
+            disabled={isSubmitting || isCompressingImage}
             onClick={(e) => handleFormSubmit(e, true)}
             className={`w-full sm:w-auto px-6 py-3 rounded-xl text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              isSubmitting ? 'opacity-50 pointer-events-none' : ''
+            } ${
               isKitabTheme
                 ? 'bg-[#9e2a2b] hover:bg-[#852324] shadow-rose-950/20'
                 : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
             }`}
             title="Tersimpan di HP & dikirim ke Kang Iman / Admin untuk diulas"
           >
-            <Send className="w-4 h-4" />
-            <span>📤 Simpan & Share ke Admin</span>
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            <span>{isSubmitting ? 'Menyimpan & Mengirim...' : '📤 Simpan & Share ke Admin'}</span>
           </button>
         </div>
       </form>

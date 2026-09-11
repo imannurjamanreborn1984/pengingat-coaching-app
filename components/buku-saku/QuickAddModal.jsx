@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Lock, Send, Image as ImageIcon, Calendar, Upload } from 'lucide-react';
 import { DataService } from '../../lib/services/dataService';
 import { supabase } from '../../lib/supabaseClient';
+import { compressImageFile } from '../../lib/utils/imageCompressor';
 
 export const QuickAddModal = ({
   isOpen = true,
@@ -22,26 +23,33 @@ export const QuickAddModal = ({
   const [imageUrl, setImageUrl] = useState('');
   const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
 
-  const handleImageFileChange = (e) => {
+  const handleImageFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
+    setIsCompressingImage(true);
     const selectedFiles = files.slice(0, 2 - images.length);
-    selectedFiles.forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        alert('Mohon pilih file gambar (JPG, PNG, WebP).');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
+
+    try {
+      for (const file of selectedFiles) {
+        if (!file.type.startsWith('image/')) {
+          alert('Mohon pilih file gambar (JPG, PNG, WebP).');
+          continue;
+        }
+        const compressedDataUrl = await compressImageFile(file, 800, 800, 0.7);
         setImages((prev) => {
           if (prev.length >= 2) return prev;
-          return [...prev, event.target.result];
+          return [...prev, compressedDataUrl];
         });
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+    } catch (err) {
+      console.error('Error compressing image in QuickAddModal:', err);
+      alert('Gagal memproses gambar. Silakan coba file lain.');
+    } finally {
+      setIsCompressingImage(false);
+    }
   };
 
   const removeImage = (index) => {
