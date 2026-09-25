@@ -259,7 +259,31 @@ export default function MaterialsAdminContainer() {
       alert("✅ Materi berhasil diterbitkan langsung ke Cloud! (Bisa langsung dibuka di HP & Laptop tanpa perlu sinkronisasi manual)");
     } catch (err) {
       console.error("Supabase save error:", err);
-      alert("Gagal menyimpan ke server cloud: " + err.message);
+      // Simpan cadangan ke draft lokal browser agar ketikan tidak hilang
+      try {
+        const localDrafts = JSON.parse(localStorage.getItem("npt_materials_drafts") || "[]");
+        const existingIdx = localDrafts.findIndex((d) => d.id === (editingId || payload.title));
+        const draftItem = { ...payload, id: editingId || `draft-${Date.now()}`, local_draft: true };
+        if (existingIdx >= 0) {
+          localDrafts[existingIdx] = draftItem;
+        } else {
+          localDrafts.unshift(draftItem);
+        }
+        localStorage.setItem("npt_materials_drafts", JSON.stringify(localDrafts));
+      } catch (localErr) {
+        console.warn("Gagal simpan draft lokal:", localErr);
+      }
+
+      if (err.message && err.message.includes("Failed to fetch")) {
+        alert(
+          "⚠️ Gagal terhubung ke Server Cloud (Failed to fetch).\n\n" +
+          "Penyebab: Database Supabase Anda kemungkinan sedang dalam status 'PAUSED' (dijeda otomatis oleh Supabase karena beberapa hari tidak ada aktivitas).\n\n" +
+          "Solusi: Buka https://supabase.com/dashboard, login, lalu klik tombol 'Restore project' (hanya butuh 1-2 menit).\n\n" +
+          "✅ Jangan khawatir! Ketikan dan materi Anda aman dan telah tersimpan di draft lokal browser ini."
+        );
+      } else {
+        alert("Gagal menyimpan ke server cloud: " + err.message + "\n\n(Ketikan Anda telah diamankan di draft lokal browser)");
+      }
     }
 
     setIsLoading(false);
