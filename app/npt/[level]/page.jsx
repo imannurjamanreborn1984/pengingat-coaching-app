@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -132,7 +132,16 @@ export default function NPTLevelDetailPage() {
   const params = useParams();
   const levelNum = Number(params?.level) || 1;
 
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const authStr = localStorage.getItem("npt_user_auth");
+      if (authStr) return JSON.parse(authStr);
+      const match = document.cookie.match(/(?:^|; )npt_device_auth=([^;]*)/);
+      if (match) return JSON.parse(decodeURIComponent(match[1]));
+    } catch (e) {}
+    return null;
+  });
   const [activeLightbox, setActiveLightbox] = useState(null); // { url, title }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [materials, setMaterials] = useState([]);
@@ -154,28 +163,7 @@ export default function NPTLevelDetailPage() {
   const isApproved = access.isApproved;
   const hasLevelAccess = access.canAccessNptLevel(levelNum);
 
-  useEffect(() => {
-    try {
-      let savedUser = null;
-      const authStr = localStorage.getItem("npt_user_auth");
-      if (authStr) {
-        savedUser = JSON.parse(authStr);
-      } else {
-        const match = document.cookie.match(/(?:^|; )npt_device_auth=([^;]*)/);
-        if (match) {
-          savedUser = JSON.parse(decodeURIComponent(match[1]));
-          localStorage.setItem("npt_user_auth", JSON.stringify(savedUser));
-        }
-      }
-      if (savedUser) {
-        setCurrentUser(savedUser);
-      }
-    } catch (e) {}
-    fetchLevelMaterials();
-  }, [levelNum]);
-
-  const fetchLevelMaterials = async () => {
-    setIsLoading(true);
+  const fetchLevelMaterials = useCallback(async () => {
     try {
       if (supabase) {
         const { data, error } = await supabase
@@ -215,7 +203,12 @@ export default function NPTLevelDetailPage() {
       }
     } catch (e) {}
     setIsLoading(false);
-  };
+  }, [levelNum]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLevelMaterials();
+  }, [fetchLevelMaterials]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) => {
@@ -361,7 +354,21 @@ export default function NPTLevelDetailPage() {
     }
   };
 
-  const levelInfo = NPT_LEVEL_CONFIG[levelNum] || { name: `Level ${levelNum}` };
+  const levelInfo = NPT_LEVEL_CONFIG[levelNum] || {
+    level: levelNum,
+    name: `NPT Level ${levelNum}`,
+    subtitle: `Kurikulum Neuro Programming Training Level ${levelNum}`,
+    focus: `Pendalaman Materi Level ${levelNum}`,
+    desc: `Materi resmi, video penjelasan, dan dokumen kurikulum Level ${levelNum}.`,
+    icon: '📚'
+  };
+
+  const coreMaterials = (materials || []).filter(
+    (m) => !m?.title?.includes("[Inspirasi Sahabat]")
+  );
+  const peerInsights = (materials || []).filter(
+    (m) => m?.title?.includes("[Inspirasi Sahabat]")
+  );
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
