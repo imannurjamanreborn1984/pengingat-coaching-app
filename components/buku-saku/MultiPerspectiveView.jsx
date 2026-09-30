@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import FormattedMarkdown from './FormattedMarkdown';
+import ShareButton from '../ui/ShareButton';
 
 export const MultiPerspectiveView = ({
   root,
@@ -118,6 +119,16 @@ export const MultiPerspectiveView = ({
               </span>
             ))}
           </div>
+
+          {/* Tombol Bagikan Akar Spiritual */}
+          <ShareButton
+            title={`${root.name} (~${root.alias}~)`}
+            snippet={root.summary}
+            path="/buku-saku"
+            category="14 Akar Spiritualitas"
+            isKitabTheme={isKitabTheme}
+            className="mt-5"
+          />
         </div>
       </div>
 

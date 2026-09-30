@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
+import ShareButton from '../ui/ShareButton';
 import { 
   Play, 
   BookOpen, 
@@ -710,19 +711,28 @@ export default function HakekatCintaContainer() {
                             </h2>
                           </div>
 
-                          {/* AI Summarize Button */}
-                          <button
-                            onClick={handleProsesBabOtomatis}
-                            disabled={sedangMerangkum}
-                            className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
-                              isKitabTheme
-                                ? 'bg-gradient-to-r from-[#9e2a2b] via-[#b38b42] to-[#8f632d] hover:brightness-110 shadow-amber-900/30'
-                                : 'bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:opacity-90 shadow-rose-600/30'
-                            }`}
-                          >
-                            <Sparkles className={`w-4 h-4 ${sedangMerangkum ? 'animate-spin' : ''}`} />
-                            <span>{sedangMerangkum ? 'AI Sedang Menyusun...' : 'Rangkum Jadi Bab Kitab AI'}</span>
-                          </button>
+                          {/* Action Buttons: Bagikan & Rangkum AI */}
+                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+                            <ShareButton
+                              title={videoAktif.judul}
+                              snippet={videoAktif.deskripsi || "Kajian Hikmah Hakikat Cinta bersama NPT Centre"}
+                              path="/hakekat-cinta"
+                              category="Hakikat Cinta (Al-Hikam)"
+                              isKitabTheme={isKitabTheme}
+                            />
+                            <button
+                              onClick={handleProsesBabOtomatis}
+                              disabled={sedangMerangkum}
+                              className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
+                                isKitabTheme
+                                  ? 'bg-gradient-to-r from-[#9e2a2b] via-[#b38b42] to-[#8f632d] hover:brightness-110 shadow-amber-900/30'
+                                  : 'bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:opacity-90 shadow-rose-600/30'
+                              }`}
+                            >
+                              <Sparkles className={`w-4 h-4 ${sedangMerangkum ? 'animate-spin' : ''}`} />
+                              <span>{sedangMerangkum ? 'AI Sedang Menyusun...' : 'Rangkum Jadi Bab Kitab AI'}</span>
+                            </button>
+                          </div>
                         </div>
 
                         {/* Jika bab ini sudah pernah dirangkum */}
@@ -982,17 +992,26 @@ export default function HakekatCintaContainer() {
                               {bab.judul}
                             </h4>
                           </div>
-                          <button
-                            onClick={() => handleDeleteBab(vidId)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              isKitabTheme
-                                ? 'text-[#82613d] hover:text-[#9e2a2b] hover:bg-[#ebdcc4]'
-                                : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30'
-                            }`}
-                            title="Hapus Bab"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <ShareButton
+                              title={`Bab ${idx + 1}: ${bab.judul}`}
+                              snippet={bab.isi}
+                              path="/hakekat-cinta"
+                              category="Naskah Kitab Hakikat Cinta"
+                              isKitabTheme={isKitabTheme}
+                            />
+                            <button
+                              onClick={() => handleDeleteBab(vidId)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isKitabTheme
+                                  ? 'text-[#82613d] hover:text-[#9e2a2b] hover:bg-[#ebdcc4]'
+                                  : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                              }`}
+                              title="Hapus Bab"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className={`text-xs sm:text-sm whitespace-pre-line leading-relaxed font-serif p-5 rounded-xl border ${

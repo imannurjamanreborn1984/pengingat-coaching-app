@@ -27,6 +27,7 @@ import {
   Unlock
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
+import ShareButton from "@/components/ui/ShareButton";
 import { parseUserAccess, formatRoleLabel, NPT_LEVEL_CONFIG } from "@/lib/authHelper";
 
 function formatYouTubeEmbedUrl(url) {
@@ -864,6 +865,15 @@ export default function NPTLevelDetailPage() {
                         </div>
                       )}
 
+                      {/* Tombol Bagikan / Share Materi */}
+                      <ShareButton
+                        title={mat.title}
+                        snippet={mat.subtitle || mat.content}
+                        path={`/npt/${levelNum}`}
+                        category={`NPT Level ${levelNum}`}
+                        isKitabTheme={isKitabTheme}
+                      />
+
                       {/* Tombol Tutup / Lipat Materi */}
                       <div className="pt-2 flex justify-end border-t border-[#dfcfb0]/40">
                         <button
@@ -995,6 +1005,15 @@ export default function NPTLevelDetailPage() {
                                 </div>
                               </div>
                             )}
+
+                            {/* Tombol Bagikan Catatan Sahabat */}
+                            <ShareButton
+                              title={insight.title}
+                              snippet={insight.content}
+                              path={`/npt/${levelNum}`}
+                              category={`Refleksi Sahabat NPT Level ${levelNum}`}
+                              isKitabTheme={isKitabTheme}
+                            />
                           </div>
                         )}
                       </div>
