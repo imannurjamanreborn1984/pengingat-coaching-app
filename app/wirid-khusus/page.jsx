@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AppNavbar, AppSidebar, SUPER_ADMIN_EMAILS } from '@/components/layout/AppNavbar';
+import { getSavedDeviceUser, savePermanentDeviceUser } from '@/lib/authHelper';
 import {
   Crown,
   Shield,
@@ -50,9 +51,8 @@ export default function WiridKhususPage() {
 
   useEffect(() => {
     try {
-      const authStr = localStorage.getItem('npt_user_auth');
-      if (authStr) {
-        const user = JSON.parse(authStr);
+      const user = getSavedDeviceUser();
+      if (user) {
         setCurrentUser(user);
       }
 
@@ -269,7 +269,7 @@ export default function WiridKhususPage() {
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(true)}
         currentUser={currentUser}
-        activeTitle="Riyadhoh Khusus Kang Iman"
+        activeTitle="Klaster 4: Ruang Privat Kang Iman"
       />
       <AppSidebar 
         isOpen={isSidebarOpen}
@@ -279,6 +279,42 @@ export default function WiridKhususPage() {
       />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
+        {/* KLASTER 4 SWITCHER BAR */}
+        <div className={`p-3 rounded-2xl border flex flex-wrap items-center justify-between gap-2 ${
+          isKitabTheme ? 'bg-[#eee2cb] border-[#cbb38b]' : 'bg-slate-900 border-slate-800'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
+              👑 Klaster 4: Ruang Privat Kang Iman
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Link
+              href="/wirid-khusus"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#9e2a2b] text-white shadow-xs"
+            >
+              📿 Riyadhoh & Wirid Khusus
+            </Link>
+            <Link
+              href="/admin/maktabah"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition ${
+                isKitabTheme
+                  ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#e6d5b8]'
+                  : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+              }`}
+            >
+              📚 Dapur Ngaji & Maktabah Kitab
+            </Link>
+            <Link
+              href="/"
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                isKitabTheme ? 'text-[#634224] hover:underline' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🏠 Portal 4 Klaster
+            </Link>
+          </div>
+        </div>
         
         {/* HEADER KHUSUS KANG IMAN */}
         <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
+import { getSavedDeviceUser, syncDeviceUserApproval } from '@/lib/authHelper';
 import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
 import {
   GraduationCap,
@@ -217,16 +218,32 @@ export default function EMTContainer() {
   const [activeDayEdit, setActiveDayEdit] = useState(null);
   const [dayNoteInput, setDayNoteInput] = useState('');
 
-  // Cek Auth & Load Data Tersimpan
+  // Cek Auth Berbasis Device & Load Data Tersimpan + URL Tab
   useEffect(() => {
     try {
-      const authStr = localStorage.getItem('npt_user_auth');
-      if (authStr) {
-        const user = JSON.parse(authStr);
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam && ['overview', 'kelas', 'selfhealing', 'event'].includes(tabParam)) {
+          setActiveTab(tabParam);
+        }
+      }
+
+      const user = getSavedDeviceUser();
+      if (user) {
         setCurrentUser(user);
         if (user.name) {
           setJournalForm((prev) => ({ ...prev, nama: user.name }));
+          setFormData((prev) => ({
+            ...prev,
+            nama: user.name || prev.nama,
+            email: user.email || prev.email,
+            wa: user.phone_number || prev.wa,
+          }));
         }
+        syncDeviceUserApproval(supabase, user).then((synced) => {
+          if (synced) setCurrentUser(synced);
+        });
       }
 
       // Load Jurnal Tersimpan
@@ -236,13 +253,7 @@ export default function EMTContainer() {
       }
 
       // Load 21 Days Tracker
-      let userKey = 'default_user';
-      if (authStr) {
-        try {
-          const u = JSON.parse(authStr);
-          if (u?.email) userKey = u.email;
-        } catch (err) {}
-      }
+      let userKey = user?.email || user?.phone_number || 'default_user';
       const savedDays = localStorage.getItem(`emt_selfhealing_21_days_${userKey}`) || localStorage.getItem('emt_selfhealing_21_days_default_user');
       if (savedDays) {
         try {

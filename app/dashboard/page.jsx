@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { getSavedDeviceUser, syncDeviceUserApproval } from "@/lib/authHelper";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import { ExternalLink, Send, BookOpen, ZoomIn, X, Shield, RefreshCw } from "lucide-react";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default function ParticipantDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState({});
@@ -19,8 +21,18 @@ export default function ParticipantDashboard() {
 
   useEffect(() => {
     fetchTasks();
-    const savedName = localStorage.getItem("participant_name") || "";
+    const savedUser = getSavedDeviceUser();
+    const savedName = savedUser?.name || localStorage.getItem("participant_name") || "";
     setUserName(savedName);
+    if (savedUser) {
+      setCurrentUser(savedUser);
+      syncDeviceUserApproval(supabase, savedUser).then((synced) => {
+        if (synced) {
+          setCurrentUser(synced);
+          if (synced.name) setUserName(synced.name);
+        }
+      });
+    }
 
     // Event listener untuk tombol ESC menutup modal zoom
     const handleKeyDown = (e) => {
@@ -88,13 +100,13 @@ export default function ParticipantDashboard() {
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        currentUser={{ name: userName || "Sahabat NPT", role: "member" }}
-        activeTitle="Reminder Penugasan"
+        currentUser={currentUser || { name: userName || "Sahabat NPT", role: "member" }}
+        activeTitle="Klaster 1: Tugas & Setoran Member"
       />
       <AppSidebar 
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        currentUser={{ name: userName || "Sahabat NPT", role: "member" }}
+        currentUser={currentUser || { name: userName || "Sahabat NPT", role: "member" }}
         activePath="/dashboard"
       />
 

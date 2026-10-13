@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import FormattedMarkdown from "@/components/buku-saku/FormattedMarkdown";
 import { supabase } from "@/lib/supabaseClient";
+import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
+import { getSavedDeviceUser } from "@/lib/authHelper";
 
 const KITAB_OPTIONS = [
   {
@@ -86,6 +88,8 @@ const MAKTABAH_ASSIGNMENT_ID = "ed3dadac-dce6-4752-883c-b58b057e1001";
 const STORAGE_KEY = "maktabah_kang_iman_v1";
 
 export default function MaktabahBedahKitabPage() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedKitab, setSelectedKitab] = useState("shawi-jalalain");
   const [lokasiMajlis, setLokasiMajlis] = useState("Majlis Tafsir Shawi (4 Titik Rutinan)");
   const [teksArab, setTeksArab] = useState("");
@@ -114,6 +118,9 @@ export default function MaktabahBedahKitabPage() {
 
   // Sync Cloud on Mount
   useEffect(() => {
+    const saved = getSavedDeviceUser();
+    if (saved) setCurrentUser(saved);
+
     let localData = [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -385,8 +392,55 @@ export default function MaktabahBedahKitabPage() {
   });
 
   return (
-    <div className={`min-h-screen bg-parchment text-[#26150a] ${isMimbarMode ? "fixed inset-0 z-50 overflow-y-auto bg-[#faf4e6] p-6 lg:p-12" : "py-8 px-4 sm:px-6 lg:px-8"}`}>
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className={`min-h-screen bg-parchment text-[#26150a] flex flex-col ${isMimbarMode ? "fixed inset-0 z-50 overflow-y-auto bg-[#faf4e6] p-6 lg:p-12" : ""}`}>
+      {!isMimbarMode && (
+        <>
+          <AppNavbar
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            currentUser={currentUser}
+            activeTitle="Klaster 4: Ruang Privat Kang Iman"
+          />
+          <AppSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            currentUser={currentUser}
+            activePath="/admin/maktabah"
+          />
+        </>
+      )}
+
+      <div className={`max-w-6xl w-full mx-auto space-y-6 ${!isMimbarMode ? "py-6 px-4 sm:px-6 lg:px-8" : ""}`}>
+
+        {/* KLASTER 4 SWITCHER BAR */}
+        {!isMimbarMode && (
+          <div className="p-3 rounded-2xl border bg-[#eee2cb] border-[#cbb38b] flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
+                👑 Klaster 4: Ruang Privat Kang Iman
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Link
+                href="/wirid-khusus"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#fdfaf3] text-[#3a2211] border border-[#cbb38b] hover:bg-[#e6d5b8] transition"
+              >
+                📿 Riyadhoh & Wirid Khusus
+              </Link>
+              <Link
+                href="/admin/maktabah"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#9e2a2b] text-white shadow-xs"
+              >
+                📚 Dapur Ngaji & Maktabah Kitab
+              </Link>
+              <Link
+                href="/"
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#634224] hover:underline transition"
+              >
+                🏠 Portal 4 Klaster
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* HEADER ATAS */}
         {!isMimbarMode && (
@@ -399,7 +453,7 @@ export default function MaktabahBedahKitabPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eee2cb] text-[#634224] border border-[#d8c3a1]">
-                      PRIVAT KANG IMAN
+                      KLASTER 4 • PRIVAT KANG IMAN
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-800 border border-amber-500/30">
                       Tafsir Shawi • Kifayatul Akhyar • Al-Hikam
@@ -417,16 +471,10 @@ export default function MaktabahBedahKitabPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <Link
-                  href="/admin/dashboard"
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#ede1c7] text-[#5e3d1c] hover:bg-[#dfcdab] border border-[#cbb38b] transition"
-                >
-                  ← Ruang Kontrol
-                </Link>
-                <Link
                   href="/wirid-khusus"
                   className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#9e2a2b] text-white hover:bg-[#852324] shadow-xs transition"
                 >
-                  📿 Riyadhoh Kang Iman
+                  📿 Buka Riyadhoh & Wirid Khusus
                 </Link>
               </div>
             </div>

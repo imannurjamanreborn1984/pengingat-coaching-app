@@ -28,7 +28,14 @@ import {
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 import ShareButton from "@/components/ui/ShareButton";
-import { parseUserAccess, formatRoleLabel, NPT_LEVEL_CONFIG } from "@/lib/authHelper";
+import {
+  parseUserAccess,
+  NPT_LEVEL_CONFIG,
+  SUPER_ADMIN_EMAILS,
+  getSavedDeviceUser,
+  savePermanentDeviceUser,
+  syncDeviceUserApproval
+} from "@/lib/authHelper";
 
 function formatYouTubeEmbedUrl(url) {
   if (!url || typeof url !== "string") return "";
@@ -133,16 +140,7 @@ export default function NPTLevelDetailPage() {
   const params = useParams();
   const levelNum = Number(params?.level) || 1;
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const authStr = localStorage.getItem("npt_user_auth");
-      if (authStr) return JSON.parse(authStr);
-      const match = document.cookie.match(/(?:^|; )npt_device_auth=([^;]*)/);
-      if (match) return JSON.parse(decodeURIComponent(match[1]));
-    } catch (e) {}
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState(() => getSavedDeviceUser());
   const [activeLightbox, setActiveLightbox] = useState(null); // { url, title }
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [materials, setMaterials] = useState([]);
@@ -158,6 +156,16 @@ export default function NPTLevelDetailPage() {
   const [authProgram, setAuthProgram] = useState("npt");
   const [authLevel, setAuthLevel] = useState(levelNum);
   const [authStatus, setAuthStatus] = useState(null); // null | 'checking' | 'pending'
+
+  useEffect(() => {
+    const saved = getSavedDeviceUser();
+    if (saved) {
+      setCurrentUser(saved);
+      syncDeviceUserApproval(supabase, saved).then((synced) => {
+        if (synced) setCurrentUser(synced);
+      });
+    }
+  }, []);
 
   // Access check
   const access = parseUserAccess(currentUser);
@@ -247,6 +255,20 @@ export default function NPTLevelDetailPage() {
     }
 
     const cleanName = inputName.trim() || (cleanEmail ? cleanEmail.split("@")[0] : formattedPhone);
+    if (cleanEmail && SUPER_ADMIN_EMAILS.includes(cleanEmail)) {
+      const adminData = {
+        email: cleanEmail,
+        name: cleanName || "Kang Iman",
+        role: "super_admin",
+        status: "approved"
+      };
+      setCurrentUser(adminData);
+      savePermanentDeviceUser(adminData);
+      setIsAuthModalOpen(false);
+      setAuthStatus(null);
+      return;
+    }
+
     setAuthStatus("checking");
 
     try {
@@ -272,16 +294,13 @@ export default function NPTLevelDetailPage() {
           status: "approved"
         };
         setCurrentUser(userData);
-        const jsonStr = JSON.stringify(userData);
-        localStorage.setItem("npt_user_auth", jsonStr);
-        localStorage.setItem("participant_name", userData.name);
-        document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
+        savePermanentDeviceUser(userData);
         setIsAuthModalOpen(false);
         setAuthStatus(null);
-        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan.");
+        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan permanen.");
       } else {
+        const roleTarget = authProgram === 'emt' ? 'emt' : `npt_${authLevel}`;
         if (!profile) {
-          const roleTarget = authProgram === 'emt' ? 'emt' : `npt_${authLevel}`;
           await supabase.from("profiles").insert([
             {
               full_name: cleanName,
@@ -292,6 +311,15 @@ export default function NPTLevelDetailPage() {
             }
           ]);
         }
+        const pendingUser = {
+          email: cleanEmail || null,
+          phone_number: formattedPhone || null,
+          name: cleanName,
+          role: roleTarget,
+          status: "pending"
+        };
+        setCurrentUser(pendingUser);
+        savePermanentDeviceUser(pendingUser);
         setAuthStatus("pending");
       }
     } catch (err) {
@@ -505,6 +533,86 @@ export default function NPTLevelDetailPage() {
           }`}>
             {levelInfo.desc}
           </p>
+
+          {/* Navigasi Cepat Antar Level (1 - 6) */}
+          <div className={`pt-3 border-t flex flex-wrap items-center justify-between gap-2 ${
+            isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+          }`}>
+            <span className={`text-[11px] font-bold ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+              Pindah Cepat Kelas Level:
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[1, 2, 3, 4, 5, 6].map((lvl) => (
+                <Link
+                  key={lvl}
+                  href={`/npt/${lvl}`}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border transition ${
+                    levelNum === lvl
+                      ? isKitabTheme
+                        ? 'bg-[#9e2a2b] text-white border-[#9e2a2b]'
+                        : 'bg-rose-600 text-white border-rose-500'
+                      : isKitabTheme
+                        ? 'bg-[#fbf7ee] text-[#543516] border-[#cbb38b] hover:bg-[#ebdcc4]'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  Level {lvl}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Integrasi Khusus Level 5 & Level 6: 14 Akar Spiritual, Buku Diary, & Setoran Tugas */}
+          {levelNum >= 5 && (
+            <div className={`p-3.5 rounded-2xl border space-y-2 ${
+              isKitabTheme
+                ? 'bg-[#fdfaf3] border-[#cbb38b]'
+                : 'bg-slate-950/80 border-rose-500/30'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className={`text-[11px] font-extrabold uppercase tracking-wider ${
+                  isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'
+                }`}>
+                  🌿 Ruang Praktik Terpadu Level {levelNum} (14 Akar Spiritual & Jurnal):
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Link
+                  href="/buku-saku"
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition ${
+                    isKitabTheme
+                      ? 'bg-[#f5ebd7] hover:bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b]'
+                      : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  }`}
+                >
+                  <span>📖 14 Akar Spiritualitas</span>
+                  <span>→</span>
+                </Link>
+                <Link
+                  href="/buku-saku?tab=journal"
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition ${
+                    isKitabTheme
+                      ? 'bg-[#f5ebd7] hover:bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b]'
+                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}
+                >
+                  <span>📔 Buku Diary Harian</span>
+                  <span>→</span>
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between transition ${
+                    isKitabTheme
+                      ? 'bg-[#f5ebd7] hover:bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b]'
+                      : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  }`}
+                >
+                  <span>📋 Tugas & Setoran NPT</span>
+                  <span>→</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ========================================================================= */}

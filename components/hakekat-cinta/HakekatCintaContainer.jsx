@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
+import {
+  SUPER_ADMIN_EMAILS,
+  getSavedDeviceUser,
+  savePermanentDeviceUser,
+  clearPermanentDeviceUser,
+  syncDeviceUserApproval,
+  parseUserAccess,
+} from '@/lib/authHelper';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
 import ShareButton from '../ui/ShareButton';
@@ -36,17 +44,7 @@ import {
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
-// 👑 DAFTAR EMAIL SUPER ADMIN OTOMATIS
-export const SUPER_ADMIN_EMAILS = [
-  'imannurjamanreborn@gmail.com',
-  'imannurjaman84@gmail.com',
-  'imannnurjanan84@gmail.com',
-  'imannurjaman@gmail.com',
-  'lautanmahabbah@gmail.com',
-  'admin@nptcentre.id',
-  'admin@neuroprogrammingtraining.id',
-  'admin@npt.com'
-];
+export { SUPER_ADMIN_EMAILS };
 
 const PLAYLIST_IDS = {
   hikam: 'PLdu5HXhJxO4r1irMN1OsomtJs3AxntFca',
@@ -107,29 +105,41 @@ export default function HakekatCintaContainer() {
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
 
-  // Cek Sesi Tersimpan (Local & Supabase Auth)
+  // Cek Sesi Tersimpan Permanen Berbasis Device (Cookie 10 Tahun + LocalStorage + Auto-Sync Approval)
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Cek LocalStorage dulu untuk fast-load
-        const savedAuth = localStorage.getItem('npt_user_auth');
-        if (savedAuth) {
-          setCurrentUser(JSON.parse(savedAuth));
+        const savedDeviceUser = getSavedDeviceUser();
+        if (savedDeviceUser) {
+          setCurrentUser(savedDeviceUser);
+          if (savedDeviceUser.status === 'pending') {
+            setApprovalStatus('pending');
+          } else {
+            setApprovalStatus('approved');
+          }
+          // Sinkronisasi di latar belakang jika status di Supabase sudah di-approve Admin
+          syncDeviceUserApproval(supabase, savedDeviceUser).then((synced) => {
+            if (synced) {
+              setCurrentUser(synced);
+              setApprovalStatus(synced.status === 'pending' ? 'pending' : 'approved');
+            }
+          });
         }
 
-        // Cek Supabase Auth jika ada
+        // Cek Supabase OAuth session jika ada
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const userEmail = session.user.email?.toLowerCase();
           const isAdmin = SUPER_ADMIN_EMAILS.includes(userEmail);
-          const userData = {
+          const userData = savePermanentDeviceUser({
             email: userEmail,
             name: session.user.user_metadata?.full_name || userEmail,
             role: isAdmin ? 'super_admin' : 'member',
+            status: 'approved',
             avatar: session.user.user_metadata?.avatar_url
-          };
+          });
           setCurrentUser(userData);
-          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
+          setApprovalStatus('approved');
         }
       } catch (err) {
         console.error('Error init auth:', err);
@@ -159,7 +169,7 @@ export default function HakekatCintaContainer() {
     }
   };
 
-  // Login Mandiri (Email / No WhatsApp) & Cek Status Approval di Database Supabase
+  // Login Mandiri 1x Per Perangkat (Email / No WhatsApp) & Cek Status Approval di Database Supabase
   const [approvalStatus, setApprovalStatus] = useState(null); // null | 'approved' | 'pending' | 'checking'
 
   const handleEmailLogin = async (e) => {
@@ -179,17 +189,15 @@ export default function HakekatCintaContainer() {
     const isAdmin = cleanEmail && SUPER_ADMIN_EMAILS.includes(cleanEmail);
 
     if (isAdmin) {
-      const userData = {
+      const userData = savePermanentDeviceUser({
         email: cleanEmail,
         name: cleanName,
         role: 'super_admin',
         status: 'approved',
         loggedInAt: new Date().toISOString()
-      };
+      });
       setCurrentUser(userData);
-      localStorage.setItem('npt_user_auth', JSON.stringify(userData));
-      localStorage.setItem('participant_name', cleanName);
-      alert(`👑 Selamat datang Admin Utama NPT (${cleanEmail})! Akses Super Admin & VIP telah aktif.`);
+      setApprovalStatus('approved');
       return;
     }
 
@@ -205,37 +213,32 @@ export default function HakekatCintaContainer() {
         query = query.eq('phone_number', formattedPhone);
       }
 
-      const { data: existingProfiles, error: fetchErr } = await query;
+      const { data: existingProfiles } = await query;
       const existingProfile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null;
 
       if (existingProfile) {
-        if (existingProfile.status === 'approved') {
-          // Jika data di database belum punya email tapi sekarang diisi, update otomatis!
-          if (!existingProfile.email && cleanEmail) {
-            await supabase.from('profiles').update({ email: cleanEmail }).eq('id', existingProfile.id);
-          }
-          if (!existingProfile.phone_number && formattedPhone) {
-            await supabase.from('profiles').update({ phone_number: formattedPhone }).eq('id', existingProfile.id);
-          }
-
-          const userData = {
-            id: existingProfile.id,
-            email: cleanEmail || existingProfile.email,
-            phone_number: formattedPhone || existingProfile.phone_number,
-            name: existingProfile.full_name || cleanName,
-            role: 'member',
-            status: 'approved'
-          };
-          setCurrentUser(userData);
-          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
-          localStorage.setItem('participant_name', userData.name);
-          setApprovalStatus('approved');
-        } else {
-          setApprovalStatus('pending');
+        if (!existingProfile.email && cleanEmail) {
+          await supabase.from('profiles').update({ email: cleanEmail }).eq('id', existingProfile.id);
         }
+        if (!existingProfile.phone_number && formattedPhone) {
+          await supabase.from('profiles').update({ phone_number: formattedPhone }).eq('id', existingProfile.id);
+        }
+
+        const userData = savePermanentDeviceUser({
+          id: existingProfile.id,
+          email: cleanEmail || existingProfile.email,
+          phone_number: formattedPhone || existingProfile.phone_number,
+          name: existingProfile.full_name || cleanName,
+          role: existingProfile.role || 'member',
+          status: existingProfile.status || 'approved',
+          npt_level: existingProfile.npt_level || 6,
+          allowed_clusters: existingProfile.allowed_clusters || ['npt', 'emt', 'hakekat_cinta'],
+        });
+        setCurrentUser(userData);
+        setApprovalStatus(existingProfile.status === 'approved' ? 'approved' : 'pending');
       } else {
-        // Daftarkan pendaftaran baru otomatis (Sign Up) dengan status 'pending'
-        await supabase.from('profiles').insert([
+        // Daftarkan pendaftaran baru otomatis (Sign Up) dengan status 'pending' & simpan di device
+        const { data: inserted } = await supabase.from('profiles').insert([
           {
             full_name: cleanName,
             email: cleanEmail || null,
@@ -243,7 +246,17 @@ export default function HakekatCintaContainer() {
             role: 'member',
             status: 'pending'
           }
-        ]);
+        ]).select();
+        const newProfile = inserted && inserted[0];
+        const pendingUser = savePermanentDeviceUser({
+          id: newProfile?.id,
+          email: cleanEmail || null,
+          phone_number: formattedPhone || null,
+          name: cleanName,
+          role: 'member',
+          status: 'pending'
+        });
+        setCurrentUser(pendingUser);
         setApprovalStatus('pending');
       }
     } catch (err) {
@@ -262,19 +275,17 @@ export default function HakekatCintaContainer() {
         },
       });
       if (error) {
-        // Fallback jika provider belum ON di dashboard supabase
-        console.warn("Supabase Google Provider not active, using email prompt fallback.");
         const emailPrompt = prompt("Masukkan alamat Gmail Anda:");
         if (emailPrompt && emailPrompt.includes('@')) {
           const cleanEmail = emailPrompt.trim().toLowerCase();
           const isAdmin = SUPER_ADMIN_EMAILS.includes(cleanEmail);
-          const userData = {
+          const userData = savePermanentDeviceUser({
             email: cleanEmail,
             name: cleanEmail.split('@')[0],
-            role: isAdmin ? 'super_admin' : 'member'
-          };
+            role: isAdmin ? 'super_admin' : 'member',
+            status: isAdmin ? 'approved' : 'pending',
+          });
           setCurrentUser(userData);
-          localStorage.setItem('npt_user_auth', JSON.stringify(userData));
         }
       }
     } catch (err) {
@@ -286,8 +297,9 @@ export default function HakekatCintaContainer() {
     try {
       await supabase.auth.signOut();
     } catch {}
-    localStorage.removeItem('npt_user_auth');
+    clearPermanentDeviceUser();
     setCurrentUser(null);
+    setApprovalStatus(null);
   };
 
   const ambilDataPlaylistYouTube = async (tokenHalaman = '') => {
@@ -478,7 +490,8 @@ export default function HakekatCintaContainer() {
   });
 
   const totalDrafBab = Object.keys(koleksiBuku).length;
-  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const access = parseUserAccess(currentUser);
+  const isSuperAdmin = access.isSuperAdmin;
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
@@ -488,7 +501,7 @@ export default function HakekatCintaContainer() {
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         currentUser={currentUser}
-        activeTitle="Hakikat Cinta & Rekaman Live"
+        activeTitle="Klaster 3: Portal Video Hakikat Cinta"
       />
       <AppSidebar 
         isOpen={isSidebarOpen}
@@ -502,10 +515,10 @@ export default function HakekatCintaContainer() {
         {isAuthLoading ? (
           <div className="py-24 text-center space-y-3">
             <RefreshCw className="w-8 h-8 text-[#9e2a2b] animate-spin mx-auto" />
-            <p className="text-xs text-[#734822]">Memeriksa hak akses anggota...</p>
+            <p className="text-xs text-[#734822]">Memeriksa hak akses perangkat...</p>
           </div>
-        ) : !currentUser ? (
-          /* AUTH GATE / GEMBOK LOGIN GMAIL & AUTO ADMIN */
+        ) : (!currentUser || !access.isApproved || approvalStatus === 'pending') ? (
+          /* AUTH GATE 1X PER PERANGKAT */
           <div className={`max-w-md mx-auto my-10 rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-5 relative overflow-hidden ${
             isKitabTheme ? "card-kitab-frame" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
           }`}>
@@ -515,31 +528,49 @@ export default function HakekatCintaContainer() {
 
             <div className="space-y-1.5">
               <h2 className="text-lg sm:text-xl font-bold text-[#26150a] tracking-tight font-kitab-title">
-                Akses Eksklusif Rekaman Live NPT
+                Verifikasi Perangkat Member (Cukup 1x)
               </h2>
               <p className="text-xs text-[#734822] leading-relaxed">
-                Kajian siaran ulang Hakikat Cinta & Olah Nafas hanya diperuntukkan bagi peserta dan admin NPT terdaftar.
+                Kajian siaran ulang Hakikat Cinta & Olah Nafas terbuka otomatis di perangkat ini setelah akun Anda disetujui Admin NPT.
               </p>
             </div>
 
             {/* Tampilan Jika Menunggu Persetujuan Admin */}
-            {approvalStatus === 'pending' ? (
+            {(approvalStatus === 'pending' || currentUser?.status === 'pending') ? (
               <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-3 animate-in fade-in">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center mx-auto">
                   <Clock className="w-6 h-6 animate-pulse" />
                 </div>
                 <h3 className="text-sm font-bold text-amber-700">
-                  Permintaan Akses Sedang Ditinjau
+                  Menunggu Approval Admin NPT
                 </h3>
                 <p className="text-xs text-[#734822] leading-relaxed max-w-xs mx-auto">
-                  Email Anda <strong>{inputEmail}</strong> sudah terkirim ke <em>Ruang Persetujuan Admin NPT</em>. Silakan hubungi Admin atau coba masuk kembali setelah disetujui.
+                  Perangkat atas nama <strong>{currentUser?.name || inputName || inputEmail}</strong> sudah terdaftar. Begitu Admin menyetujui, halaman ini otomatis terbuka tanpa perlu login ulang.
                 </p>
-                <button
-                  onClick={() => setApprovalStatus(null)}
-                  className="px-4 py-2 rounded-xl bg-[#3a2211] text-[#fbf6ec] text-xs font-semibold transition cursor-pointer"
-                >
-                  Coba Email Lain
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                  <button
+                    onClick={async () => {
+                      const synced = await syncDeviceUserApproval(supabase, currentUser);
+                      if (synced && synced.status === 'approved') {
+                        setCurrentUser(synced);
+                        setApprovalStatus('approved');
+                      } else {
+                        alert('Status masih menunggu persetujuan Admin. Silakan coba sesaat lagi.');
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition cursor-pointer"
+                  >
+                    🔄 Cek Status Approval
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#3a2211] text-[#fbf6ec] text-xs font-semibold transition cursor-pointer"
+                  >
+                    Ganti Akun
+                  </button>
+                </div>
               </div>
             ) : (
               /* Form Input Email Langsung */

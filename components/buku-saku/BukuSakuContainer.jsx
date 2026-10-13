@@ -14,6 +14,12 @@ import { DataService } from '../../lib/services/dataService';
 import { GURU_PREFACE } from '../../lib/data/rootsData';
 import { AppNavbar, AppSidebar } from '../layout/AppNavbar';
 import { supabase } from '../../lib/supabaseClient';
+import {
+  getSavedDeviceUser,
+  savePermanentDeviceUser,
+  syncDeviceUserApproval,
+  SUPER_ADMIN_EMAILS
+} from '../../lib/authHelper';
 import { 
   BookOpen, 
   Compass, 
@@ -62,7 +68,7 @@ const ELEMENTS = [
 ];
 
 export default function BukuSakuContainer() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => getSavedDeviceUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [inputName, setInputName] = useState('');
   const [inputEmail, setInputEmail] = useState('');
@@ -115,19 +121,12 @@ export default function BukuSakuContainer() {
     setLoadingPeerInsights(true);
     try {
       if (supabase) {
-        const userRole = userObj?.role || '';
         let query = supabase
           .from("npt_materials")
           .select("*")
           .or("file_type.eq.draf_buku,title.ilike.%Inspirasi Sahabat%")
           .eq("is_published", true)
           .order("created_at", { ascending: false });
-
-        // Filter per level jika bukan super admin dan bukan npt_all
-        const levelMatch = userRole.match(/npt_([1-6])/);
-        if (levelMatch && userRole !== 'super_admin' && userRole !== 'npt_all') {
-          query = query.eq("level", Number(levelMatch[1]));
-        }
 
         const { data, error } = await query;
         if (!error && data) {
@@ -143,19 +142,12 @@ export default function BukuSakuContainer() {
 
   useEffect(() => {
     try {
-      let savedUser = null;
-      const authStr = localStorage.getItem('npt_user_auth');
-      if (authStr) {
-        savedUser = JSON.parse(authStr);
-      } else {
-        const match = document.cookie.match(/(?:^|; )npt_device_auth=([^;]*)/);
-        if (match) {
-          savedUser = JSON.parse(decodeURIComponent(match[1]));
-          localStorage.setItem('npt_user_auth', JSON.stringify(savedUser));
-        }
-      }
+      const savedUser = getSavedDeviceUser();
       if (savedUser) {
         setCurrentUser(savedUser);
+        syncDeviceUserApproval(supabase, savedUser).then((synced) => {
+          if (synced) setCurrentUser(synced);
+        });
       }
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
@@ -181,6 +173,20 @@ export default function BukuSakuContainer() {
     }
 
     const cleanName = inputName.trim() || (cleanEmail ? cleanEmail.split("@")[0] : formattedPhone);
+    if (cleanEmail && SUPER_ADMIN_EMAILS.includes(cleanEmail)) {
+      const adminData = {
+        email: cleanEmail,
+        name: cleanName || "Kang Iman",
+        role: "super_admin",
+        status: "approved"
+      };
+      setCurrentUser(adminData);
+      savePermanentDeviceUser(adminData);
+      setIsAuthModalOpen(false);
+      setAuthStatus(null);
+      return;
+    }
+
     setAuthStatus("checking");
 
     try {
@@ -206,13 +212,10 @@ export default function BukuSakuContainer() {
           status: "approved"
         };
         setCurrentUser(userData);
-        const jsonStr = JSON.stringify(userData);
-        localStorage.setItem("npt_user_auth", jsonStr);
-        localStorage.setItem("participant_name", userData.name);
-        document.cookie = `npt_device_auth=${encodeURIComponent(jsonStr)}; path=/; max-age=315360000; SameSite=Lax`;
+        savePermanentDeviceUser(userData);
         setIsAuthModalOpen(false);
         setAuthStatus(null);
-        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan.");
+        alert("✅ Akses Member Terverifikasi! Perangkat Anda tersimpan permanen.");
       } else {
         if (!profile) {
           await supabase.from("profiles").insert([
@@ -225,6 +228,15 @@ export default function BukuSakuContainer() {
             }
           ]);
         }
+        const pendingUser = {
+          email: cleanEmail || null,
+          phone_number: formattedPhone || null,
+          name: cleanName,
+          role: "member",
+          status: "pending"
+        };
+        setCurrentUser(pendingUser);
+        savePermanentDeviceUser(pendingUser);
         setAuthStatus("pending");
       }
     } catch (err) {
@@ -475,6 +487,66 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
             {/* TAB 1: KATALOG 14 AKAR */}
             {activeTab === 'roots' && (
               <div className="space-y-6 animate-in fade-in">
+                {/* Pengantar & Fondasi Guru NPT (Collapsible) */}
+                {GURU_PREFACE && (
+                  <div className={`rounded-3xl border overflow-hidden transition-all ${
+                    isKitabTheme ? 'card-kitab-frame border-[#cbb38b]' : 'bg-slate-900 border-slate-800'
+                  }`}>
+                    <div
+                      onClick={() => setShowPreface(!showPreface)}
+                      className="p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer select-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg ${
+                          isKitabTheme ? 'bg-[#3a2211] text-amber-300' : 'bg-rose-500/20 text-rose-300'
+                        }`}>
+                          🌳
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                              isKitabTheme ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]' : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                            }`}>
+                              Pengantar Level 5 → Level 6
+                            </span>
+                            <span className={`text-[11px] font-semibold ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                              {GURU_PREFACE.author}
+                            </span>
+                          </div>
+                          <h3 className={`text-sm sm:text-base font-black mt-0.5 ${
+                            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+                          }`}>
+                            {GURU_PREFACE.title}: {GURU_PREFACE.subtitle}
+                          </h3>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1 shrink-0 ${
+                          isKitabTheme ? 'bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b]' : 'bg-slate-800 text-slate-200 border-slate-700'
+                        }`}
+                      >
+                        <span>{showPreface ? 'Tutup' : 'Baca Pengantar'}</span>
+                        {showPreface ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {showPreface && (
+                      <div className={`px-5 pb-5 pt-2 border-t space-y-4 text-xs leading-relaxed ${
+                        isKitabTheme ? 'border-[#dfcfb0] text-[#3a2211]' : 'border-slate-800 text-slate-300'
+                      }`}>
+                        <blockquote className={`p-3.5 rounded-2xl italic font-medium border-l-4 ${
+                          isKitabTheme ? 'bg-[#fbf7ee] border-[#9e2a2b] text-[#543516]' : 'bg-slate-950 border-rose-500 text-slate-200'
+                        }`}>
+                          &ldquo;{GURU_PREFACE.quote}&rdquo;
+                        </blockquote>
+                        <p>{GURU_PREFACE.intro}</p>
+                        <p>{GURU_PREFACE.analogyTree}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Search & Element Filter */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <div className="relative flex-1">
