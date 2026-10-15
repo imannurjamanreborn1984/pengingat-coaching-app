@@ -726,35 +726,36 @@ export default function HakekatCintaContainer() {
                           ? 'card-kitab-frame' 
                           : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
                       }`}>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        {/* Title and Action Button Row */}
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                               isKitabTheme
                                 ? 'bg-[#ebdcc4] text-[#4a2e15] border-[#cbb38b]'
                                 : INFO_KATEGORI[kategoriAktif].badge
                             }`}>
                               {INFO_KATEGORI[kategoriAktif].nama}
                             </span>
-                            <h2 className={`text-base sm:text-lg font-bold mt-1.5 leading-snug ${
+                            <h2 className={`text-base sm:text-xl font-bold mt-2 leading-snug break-words ${
                               isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-900 dark:text-slate-100'
                             }`}>
                               {videoAktif.judul}
                             </h2>
+                            {videoAktif.tanggal && (
+                              <p className={`text-[11px] mt-1 font-medium ${
+                                isKitabTheme ? 'text-[#734822]' : 'text-slate-400'
+                              }`}>
+                                📅 Tayang: {videoAktif.tanggal}
+                              </p>
+                            )}
                           </div>
 
-                          {/* Action Buttons: Bagikan & Rangkum AI */}
-                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-                            <ShareButton
-                              title={videoAktif.judul}
-                              snippet={videoAktif.deskripsi || "Kajian Hikmah Hakikat Cinta bersama NPT Centre"}
-                              path="/hakekat-cinta"
-                              category="Hakikat Cinta (Al-Hikam)"
-                              isKitabTheme={isKitabTheme}
-                            />
+                          {/* Tombol Rangkum AI */}
+                          <div className="shrink-0">
                             <button
                               onClick={handleProsesBabOtomatis}
                               disabled={sedangMerangkum}
-                              className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
+                              className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                 isKitabTheme
                                   ? 'bg-gradient-to-r from-[#9e2a2b] via-[#b38b42] to-[#8f632d] hover:brightness-110 shadow-amber-900/30'
                                   : 'bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:opacity-90 shadow-rose-600/30'
@@ -765,6 +766,15 @@ export default function HakekatCintaContainer() {
                             </button>
                           </div>
                         </div>
+
+                        {/* Baris Bagikan (Share) Rapi Memanjang Penuh */}
+                        <ShareButton
+                          title={videoAktif.judul}
+                          snippet={videoAktif.deskripsi || "Kajian Hikmah Hakikat Cinta bersama NPT Centre"}
+                          path="/hakekat-cinta"
+                          category="Hakikat Cinta (Al-Hikam)"
+                          isKitabTheme={isKitabTheme}
+                        />
 
                         {/* Jika bab ini sudah pernah dirangkum */}
                         {koleksiBuku[videoAktif.id_video] && (
