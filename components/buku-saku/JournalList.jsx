@@ -305,6 +305,7 @@ export const JournalList = ({ journals, onDeleteJournal, isKitabTheme = true }) 
                           src={formatYouTubeEmbedUrl(item.youtubeUrl)}
                           title="YouTube Media"
                           className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                           allowFullScreen
                         />
                       </div>

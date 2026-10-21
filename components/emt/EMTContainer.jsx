@@ -276,6 +276,38 @@ export default function EMTContainer() {
       }
     } catch (e) {}
     fetchEmtMaterials();
+
+    // Auto-rotate ke landscape saat video di-maximize di layar HP
+    const handleFullscreenChange = async () => {
+      const isFs = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+
+      if (isFs) {
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          try {
+            await screen.orientation.lock('landscape');
+          } catch (e) {}
+        }
+      } else {
+        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+          try {
+            screen.orientation.unlock();
+          } catch (e) {}
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
   }, []);
 
   const fetchEmtMaterials = async () => {
@@ -1276,7 +1308,7 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                         src={formatYouTubeEmbedUrl(mat.youtube_url)}
                                         title={mat.title}
                                         className="w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                                         allowFullScreen
                                       />
                                     </div>

@@ -38,7 +38,10 @@ import {
   Phone,
   Clock,
   Shield,
-  UserCheck
+  UserCheck,
+  Maximize2,
+  Minimize2,
+  RotateCw
 } from 'lucide-react';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
@@ -104,6 +107,120 @@ export default function HakekatCintaContainer() {
 
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
+
+  // Fullscreen & Auto-Rotate Landscape State
+  const videoContainerRef = React.useRef(null);
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  const [isSimulatedLandscape, setIsSimulatedLandscape] = useState(false);
+
+  // Global listener untuk menangkap event maximize YouTube atau tombol fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      const isFs = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      setIsFullscreenActive(isFs);
+
+      if (isFs) {
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          try {
+            await screen.orientation.lock('landscape');
+          } catch (e) {
+            // Browser/OS mungkin membatasi jika tidak didukung
+          }
+        }
+      } else {
+        setIsSimulatedLandscape(false);
+        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+          try {
+            screen.orientation.unlock();
+          } catch (e) {}
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreenLandscape = async () => {
+    const container = videoContainerRef.current;
+    if (!container) return;
+
+    const isAlreadyFs = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement ||
+      isSimulatedLandscape
+    );
+
+    if (isAlreadyFs) {
+      if (isSimulatedLandscape) {
+        setIsSimulatedLandscape(false);
+      }
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          try { await document.exitFullscreen(); } catch (e) {}
+        } else if (document.webkitExitFullscreen) {
+          try { document.webkitExitFullscreen(); } catch (e) {}
+        }
+      }
+      if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+        try { screen.orientation.unlock(); } catch (e) {}
+      }
+      setIsFullscreenActive(false);
+      return;
+    }
+
+    // Coba native requestFullscreen
+    let enterSuccess = false;
+    try {
+      if (container.requestFullscreen) {
+        await container.requestFullscreen();
+        enterSuccess = true;
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+        enterSuccess = true;
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+        enterSuccess = true;
+      }
+    } catch (err) {
+      console.warn("requestFullscreen error:", err);
+    }
+
+    // Kunci orientasi ke landscape mendatar
+    let orientationLocked = false;
+    if (screen.orientation && typeof screen.orientation.lock === 'function') {
+      try {
+        await screen.orientation.lock('landscape');
+        orientationLocked = true;
+      } catch (err) {
+        console.warn("screen.orientation.lock error:", err);
+      }
+    }
+
+    // Fallback jika orientasi lock tidak didukung (misal iOS Safari) saat layar ponsel tegak (portrait)
+    if (!orientationLocked && typeof window !== 'undefined') {
+      const isMobilePortrait = window.innerWidth < window.innerHeight && window.innerWidth < 768;
+      if (isMobilePortrait) {
+        setIsSimulatedLandscape(true);
+      }
+    }
+  };
 
   // Cek Sesi Tersimpan Permanen Berbasis Device (Cookie 10 Tahun + LocalStorage + Auto-Sync Approval)
   useEffect(() => {
@@ -709,15 +826,67 @@ export default function HakekatCintaContainer() {
                 <div className="lg:col-span-2 space-y-4">
                   {videoAktif ? (
                     <div className="space-y-4">
-                      {/* YouTube Embed Player */}
-                      <div className="relative aspect-video w-full rounded-3xl overflow-hidden shadow-2xl bg-black border border-slate-800">
+                      {/* Video Quick Controls & Auto Rotate Button */}
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-semibold text-[#734822] dark:text-slate-400 flex items-center gap-1.5">
+                          <Film className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Pemutar Siaran Kajian</span>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={toggleFullscreenLandscape}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                            isKitabTheme
+                              ? "bg-[#3a2211] text-[#fbf6ec] hover:bg-[#543516] border border-[#8f632d]"
+                              : "bg-slate-800 text-white hover:bg-slate-700 border border-slate-700"
+                          }`}
+                          title="Putar video ke layar penuh & rotasi otomatis horizontal di HP"
+                        >
+                          {isFullscreenActive || isSimulatedLandscape ? (
+                            <>
+                              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Kecilkan Layar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Layar Penuh (Auto Rotate HP)</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* YouTube Embed Player Container */}
+                      <div
+                        ref={videoContainerRef}
+                        className={`relative overflow-hidden bg-black transition-all ${
+                          isSimulatedLandscape
+                            ? "fixed inset-0 z-[99999] w-[100vh] h-[100vw] max-w-none max-h-none rounded-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90 flex items-center justify-center"
+                            : isFullscreenActive
+                            ? "w-screen h-screen max-w-none max-h-none rounded-none border-0 flex items-center justify-center"
+                            : "aspect-video w-full rounded-3xl shadow-2xl border border-slate-800"
+                        }`}
+                      >
                         <iframe
-                          src={`https://www.youtube.com/embed/${videoAktif.id_video}?autoplay=1&rel=0`}
+                          src={`https://www.youtube.com/embed/${videoAktif.id_video}?autoplay=1&rel=0&enablejsapi=1&playsinline=1`}
                           title={videoAktif.judul}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                           allowFullScreen
                           className="absolute inset-0 w-full h-full border-0"
                         />
+
+                        {/* Tombol Tutup Layar Penuh saat mode fullscreen / simulated landscape aktif */}
+                        {(isFullscreenActive || isSimulatedLandscape) && (
+                          <button
+                            type="button"
+                            onClick={toggleFullscreenLandscape}
+                            className="absolute top-4 right-4 z-[100000] px-3.5 py-2 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-bold border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-2xl cursor-pointer"
+                          >
+                            <Minimize2 className="w-4 h-4 text-amber-400" />
+                            <span>Kembali ke Normal</span>
+                          </button>
+                        )}
                       </div>
 
                       {/* Video Metadata & AI Action Card */}
