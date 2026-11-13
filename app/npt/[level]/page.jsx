@@ -148,6 +148,22 @@ export default function NPTLevelDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
 
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [inputName, setInputName] = useState("");
@@ -468,15 +484,15 @@ export default function NPTLevelDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             {/* Theme Toggle */}
             <button
-              onClick={() => setIsKitabTheme(!isKitabTheme)}
+              onClick={toggleTheme}
               className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                 isKitabTheme
                   ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
                   : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
               }`}
-              title="Ganti Mode Tampilan (Kitab Klasik / Mode Gelap)"
+              title={isKitabTheme ? "Beralih ke Mode Gelap Sanctuary" : "Beralih ke Mode Kitab Klasik"}
             >
-              <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+              <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab Klasik"}</span>
             </button>
 
             {isApproved ? (
@@ -654,6 +670,91 @@ export default function NPTLevelDetailPage() {
           <div className={`p-12 text-center text-xs space-y-2 ${isKitabTheme ? 'text-[#8f632d]' : 'text-slate-400'}`}>
             <div className="w-6 h-6 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
             <p>Memuat kurikulum dan video pembelajaran...</p>
+          </div>
+        ) : !hasLevelAccess ? (
+          /* ======================================================================= */
+          /* TAMPILAN TERKUNCI (HANYA ALUMNI OFFLINE BERSAMA GURU YANG DAPAT AKSES)   */
+          /* ======================================================================= */
+          <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-6 shadow-xl ${
+            isKitabTheme ? 'card-kitab-frame' : 'bg-slate-900/90 border-amber-500/30'
+          }`}>
+            <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto border shadow-lg ${
+              isKitabTheme
+                ? 'bg-gradient-to-tr from-[#edd8b6] to-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
+                : 'bg-gradient-to-tr from-amber-500/20 to-rose-500/20 text-amber-400 border-amber-500/40 shadow-amber-500/10'
+            }`}>
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2 max-w-lg mx-auto">
+              <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider border inline-block ${
+                isKitabTheme ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}>
+                🔒 Jenjang Khusus Murid Offline
+              </span>
+              <h2 className={`text-xl sm:text-2xl font-black ${
+                isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
+              }`}>
+                Materi NPT Level {levelNum} Belum Terbuka
+              </h2>
+              <p className={`text-xs sm:text-sm leading-relaxed ${
+                isKitabTheme ? 'text-[#634224]' : 'text-slate-300'
+              }`}>
+                Kurikulum keilmuan <strong>Neuro Programming Training (NPT)</strong> berfokus pada transmisi batin dan pembersihan somatik langsung bersama <strong>Sang Guru</strong>. Seluruh modul, video pendalaman, dan setoran tugas Level {levelNum} ini dikhususkan bagi sahabat yang telah menyelesaikan sesi tatap muka (offline training).
+              </p>
+            </div>
+
+            {/* Kotak Info Status Jenjang User */}
+            <div className={`p-4 rounded-2xl max-w-md mx-auto border text-xs space-y-2 ${
+              isKitabTheme ? 'bg-[#fbf7ee] border-[#dfcfb0] text-[#3a2211]' : 'bg-slate-950/80 border-slate-800 text-slate-300'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className={isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}>Status Akun Perangkat:</span>
+                <span className="font-bold">{access.badgeText}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className={isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}>Level Tertinggi Terbuka:</span>
+                <span className="font-bold text-amber-500">Level {access.maxLevel}</span>
+              </div>
+              <p className={`text-[11px] pt-1.5 border-t leading-relaxed ${
+                isKitabTheme ? 'text-[#82613d] border-[#dfcfb0]' : 'text-slate-400 border-slate-800/80'
+              }`}>
+                Setelah menghadiri offline training Level {levelNum}, Admin akan memperbarui akses akun Anda dan seluruh modul otomatis terbuka di perangkat ini.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Link
+                href={`/npt/${access.maxLevel}`}
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/20"
+              >
+                ← Buka Materi Terbuka (Level {access.maxLevel})
+              </Link>
+              <a
+                href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Assalamu'alaikum Admin NPT, saya ${currentUser?.name || 'Murid'} (${currentUser?.email || ''}) ingin menanyakan jadwal Offline Training terdekat untuk Level ${levelNum}.`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                  isKitabTheme
+                    ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3] hover:bg-[#cbeae4]'
+                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Info Jadwal Offline Level {levelNum}</span>
+              </a>
+              <Link
+                href="/npt"
+                className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition ${
+                  isKitabTheme
+                    ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                Peta Kurikulum Lengkap
+              </Link>
+            </div>
           </div>
         ) : coreMaterials.length === 0 && peerInsights.length === 0 ? (
           <div className={`p-12 rounded-3xl border text-center space-y-3 shadow-xs ${

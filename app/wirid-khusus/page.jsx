@@ -34,6 +34,22 @@ export default function WiridKhususPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
   
   // Tab: 'wirid_harian' | 'afirmasi' | 'barier' | 'kasyaf'
   const [activeTab, setActiveTab] = useState('wirid_harian');
@@ -352,7 +368,7 @@ export default function WiridKhususPage() {
 
             {/* Toggle Tema */}
             <button
-              onClick={() => setIsKitabTheme(!isKitabTheme)}
+              onClick={toggleTheme}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition cursor-pointer self-start sm:self-auto ${
                 isKitabTheme
                   ? 'bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b] hover:bg-[#dfcdab]'
@@ -360,7 +376,7 @@ export default function WiridKhususPage() {
               }`}
             >
               {isKitabTheme ? <Moon className="w-4 h-4 text-amber-700" /> : <Sun className="w-4 h-4 text-amber-400" />}
-              <span>{isKitabTheme ? 'Mode Gelap' : 'Mode Kitab'}</span>
+              <span>{isKitabTheme ? '🌌 Mode Gelap' : '📜 Mode Kitab'}</span>
             </button>
           </div>
 

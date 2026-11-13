@@ -98,6 +98,22 @@ export default function BukuSakuContainer() {
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
 
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   // Modals & UI
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -405,14 +421,15 @@ ${entryData.imageUrl ? `📷 Foto: ${entryData.imageUrl}\n` : ""}${entryData.you
           <div className="flex items-center gap-2">
             {/* Theme Toggle */}
             <button
-              onClick={() => setIsKitabTheme(!isKitabTheme)}
+              onClick={toggleTheme}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                 isKitabTheme
                   ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4]'
                   : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
               }`}
+              title={isKitabTheme ? "Beralih ke Mode Gelap Sanctuary" : "Beralih ke Mode Kitab Klasik"}
             >
-              <span>{isKitabTheme ? "📜 Mode Kitab" : "🌌 Mode Dark"}</span>
+              <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab"}</span>
             </button>
 
             {currentUser?.role === 'super_admin' && (

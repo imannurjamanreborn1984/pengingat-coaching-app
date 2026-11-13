@@ -37,6 +37,22 @@ export default function MaterialsAdminContainer() {
   const [activeLightbox, setActiveLightbox] = useState(null);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
 
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   // Form State Tambah / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -361,7 +377,11 @@ export default function MaterialsAdminContainer() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6">
         {/* Admin Quick Switch Tabs */}
-        <AdminHeaderTabs activeTab="materials" />
+        <AdminHeaderTabs 
+          activeTab="materials" 
+          isKitabTheme={isKitabTheme}
+          onToggleTheme={toggleTheme}
+        />
         
         {/* Top Header Card */}
         <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">

@@ -7,8 +7,12 @@ import {
   Sparkles,
   ChevronRight,
   ArrowRight,
-  Layers
+  Layers,
+  Lock,
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
+import { parseUserAccess } from '@/lib/authHelper';
 
 const NPT_LEVELS = [
   {
@@ -134,8 +138,21 @@ export default function NPTLevelsContainer() {
       if (authStr) {
         setCurrentUser(JSON.parse(authStr));
       }
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
     } catch (e) {}
   }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
+  const access = parseUserAccess(currentUser);
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
@@ -169,15 +186,15 @@ export default function NPTLevelsContainer() {
           </div>
 
           <button
-            onClick={() => setIsKitabTheme(!isKitabTheme)}
+            onClick={toggleTheme}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
               isKitabTheme
                 ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
                 : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
-            title="Ganti Mode Tampilan"
+            title={isKitabTheme ? "Beralih ke Mode Gelap Sanctuary" : "Beralih ke Mode Kitab Klasik"}
           >
-            <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+            <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab Klasik"}</span>
           </button>
         </div>
 
@@ -207,40 +224,61 @@ export default function NPTLevelsContainer() {
           }`}>
             Kurikulum disusun bertahap mulai dari <strong>Level 1 hingga Level 6</strong> (dan terus berkembang ke level berikutnya). Pembahasan <strong>14 Akar Spiritualitas</strong> dimulai di <strong>Level 5</strong> dan dimatangkan secara utuh menuju <strong>Level 6</strong>.
           </p>
+
+          {/* User Status Bar */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+              isKitabTheme
+                ? 'bg-[#edd8b6] text-[#634224] border-[#cbb38b]'
+                : 'bg-slate-900 text-slate-300 border-slate-700'
+            }`}>
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Akses Anda: <strong>{access.badgeText}</strong> (Level Terbuka: 1 – {access.isSuperAdmin ? '6+' : access.maxLevel})</span>
+            </span>
+          </div>
         </section>
 
         {/* Level List Roadmap */}
         <section className="space-y-4">
           {NPT_LEVELS.map((lvl) => {
             const isActive = lvl.status === 'active';
+            const canAccess = access.canAccessNptLevel(lvl.level);
 
             return (
               <div
                 key={lvl.level}
                 className={`p-5 sm:p-6 rounded-3xl transition-all ${
-                  isKitabTheme
-                    ? isActive
-                      ? 'card-kitab-frame border-2 border-[#b38b42] shadow-lg'
-                      : 'bg-[#fbf7ee] border border-[#dfcfb0] hover:border-[#cbb38b]'
-                    : isActive
-                    ? 'bg-slate-900 border-2 border-rose-500/50 shadow-xl shadow-rose-950/40'
-                    : 'bg-slate-900/60 border border-slate-800/80 hover:border-slate-700'
+                  !canAccess
+                    ? isKitabTheme
+                      ? 'bg-[#fbf7ee]/60 border border-[#dfcfb0]/70 opacity-80'
+                      : 'bg-slate-900/40 border border-slate-800/50 opacity-75'
+                    : isKitabTheme
+                      ? isActive
+                        ? 'card-kitab-frame border-2 border-[#b38b42] shadow-lg'
+                        : 'bg-[#fbf7ee] border border-[#dfcfb0] hover:border-[#cbb38b]'
+                      : isActive
+                      ? 'bg-slate-900 border-2 border-rose-500/50 shadow-xl shadow-rose-950/40'
+                      : 'bg-slate-900/60 border border-slate-800/80 hover:border-slate-700'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start sm:items-center gap-3.5">
                     <div
                       className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-md ${
-                        isKitabTheme
-                          ? isActive
-                            ? 'bg-gradient-to-tr from-[#9e2a2b] via-[#b38b42] to-[#8f632d] text-white shadow-amber-900/30'
-                            : 'bg-[#ebdcc4] text-[#543516] border border-[#d8c3a1]'
-                          : isActive
-                          ? 'bg-gradient-to-tr from-rose-600 to-amber-600 text-white shadow-rose-600/30'
-                          : 'bg-slate-800 text-slate-300'
+                        !canAccess
+                          ? isKitabTheme
+                            ? 'bg-[#ebdcc4]/60 text-[#82613d] border border-[#d8c3a1]'
+                            : 'bg-slate-800/60 text-slate-500'
+                          : isKitabTheme
+                            ? isActive
+                              ? 'bg-gradient-to-tr from-[#9e2a2b] via-[#b38b42] to-[#8f632d] text-white shadow-amber-900/30'
+                              : 'bg-[#ebdcc4] text-[#543516] border border-[#d8c3a1]'
+                            : isActive
+                            ? 'bg-gradient-to-tr from-rose-600 to-amber-600 text-white shadow-rose-600/30'
+                            : 'bg-slate-800 text-slate-300'
                       }`}
                     >
-                      {lvl.level}
+                      {canAccess ? lvl.level : <Lock className="w-5 h-5" />}
                     </div>
 
                     <div>
@@ -252,16 +290,20 @@ export default function NPTLevelsContainer() {
                         </h3>
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                            isActive
+                            !canAccess
                               ? isKitabTheme
-                                ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
-                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : isKitabTheme
-                              ? 'bg-[#eee3cb] text-[#634224] border-[#d8c3a1]'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                                ? 'bg-[#edd8b6]/60 text-[#82613d] border-[#cbb38b]'
+                                : 'bg-slate-800 text-slate-500 border-slate-700'
+                              : isActive
+                                ? isKitabTheme
+                                  ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+                                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : isKitabTheme
+                                ? 'bg-[#eee3cb] text-[#634224] border-[#d8c3a1]'
+                                : 'bg-slate-800 text-slate-400 border-slate-700'
                           }`}
                         >
-                          {lvl.badge}
+                          {canAccess ? lvl.badge : `🔒 Perlu Offline Level ${lvl.level}`}
                         </span>
                       </div>
                       <p className={`text-xs font-semibold mt-0.5 ${
@@ -275,17 +317,21 @@ export default function NPTLevelsContainer() {
                   <Link
                     href={`/npt/${lvl.level}`}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 self-end sm:self-auto shrink-0 cursor-pointer ${
-                      isKitabTheme
-                        ? isActive
-                          ? 'bg-[#9e2a2b] text-white border-[#9e2a2b] hover:bg-[#7d2021]'
-                          : 'bg-[#eee3cb] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#ebdcc4]'
-                        : isActive
-                        ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-500'
-                        : 'bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-500/20'
+                      !canAccess
+                        ? isKitabTheme
+                          ? 'bg-[#ebdcc4] text-[#7d5329] border-[#d8c3a1] hover:bg-[#dfcdab]'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:text-white'
+                        : isKitabTheme
+                          ? isActive
+                            ? 'bg-[#9e2a2b] text-white border-[#9e2a2b] hover:bg-[#7d2021]'
+                            : 'bg-[#eee3cb] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#ebdcc4]'
+                          : isActive
+                          ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-500'
+                          : 'bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-500/20'
                     }`}
                   >
-                    <span>Buka Kelas Level {lvl.level}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>{canAccess ? `Buka Kelas Level ${lvl.level}` : `Lihat Syarat Level ${lvl.level}`}</span>
+                    {canAccess ? <ArrowRight className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5 text-amber-500" />}
                   </Link>
                 </div>
 

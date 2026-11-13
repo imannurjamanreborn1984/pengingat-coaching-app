@@ -68,7 +68,7 @@ export default function AdminHeaderTabs({ activeTab, isKitabTheme = false, onTog
               }`}
               title="Ganti Mode Tampilan"
             >
-              <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+              <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab Klasik"}</span>
             </button>
           )}
           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${

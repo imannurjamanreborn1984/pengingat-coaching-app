@@ -105,6 +105,22 @@ export default function HakekatCintaContainer() {
   const [activeTab, setActiveTab] = useState('video'); // 'video' | 'draft_buku'
   const [isKitabTheme, setIsKitabTheme] = useState(false);
 
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
 
@@ -793,15 +809,15 @@ export default function HakekatCintaContainer() {
               <div className="flex items-center gap-2">
                 {/* Theme Switcher Button */}
                 <button
-                  onClick={() => setIsKitabTheme(!isKitabTheme)}
+                  onClick={toggleTheme}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
                     isKitabTheme
                       ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
-                      : 'bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-amber-300'
+                      : 'bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white'
                   }`}
-                  title="Ganti Mode Tampilan (Kitab Klasik Perkamen / Mode Gelap)"
+                  title={isKitabTheme ? "Beralih ke Mode Gelap Sanctuary" : "Beralih ke Mode Kitab Klasik"}
                 >
-                  <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "📜 Mode Kitab Klasik"}</span>
+                  <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab Klasik"}</span>
                 </button>
 
                 <button

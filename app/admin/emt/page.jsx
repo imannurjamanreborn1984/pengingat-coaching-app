@@ -43,6 +43,23 @@ export const dynamic = 'force-dynamic';
 export default function AdminEMTRoom() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -543,7 +560,7 @@ export default function AdminEMTRoom() {
         <AdminHeaderTabs 
           activeTab="emt"
           isKitabTheme={isKitabTheme}
-          onToggleTheme={() => setIsKitabTheme(!isKitabTheme)}
+          onToggleTheme={toggleTheme}
         />
 
         {/* HEADER UTAMA RUANG KONTROL */}

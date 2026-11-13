@@ -171,7 +171,23 @@ const INITIAL_21_DAYS = Array.from({ length: 21 }, (_, i) => {
 export default function EMTContainer() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
   
   // Tab Utama: 'overview' | 'kelas' | 'selfhealing' | 'event'
   const [activeTab, setActiveTab] = useState('overview');
@@ -610,7 +626,7 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
 
           {/* Toggle Mode Kitab */}
           <button
-            onClick={() => setIsKitabTheme(!isKitabTheme)}
+            onClick={toggleTheme}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
               isKitabTheme
                 ? 'bg-[#ebdcc4] text-[#3a2211] border-[#cbb38b] hover:bg-[#dfcdab]'
@@ -618,7 +634,7 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
             }`}
           >
             {isKitabTheme ? <Moon className="w-3.5 h-3.5 text-amber-700" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
-            <span>{isKitabTheme ? 'Mode Gelap' : 'Mode Kitab'}</span>
+            <span>{isKitabTheme ? '🌌 Mode Gelap' : '📜 Mode Kitab'}</span>
           </button>
         </div>
 

@@ -88,6 +88,23 @@ function parseSubmissionText(text = "") {
 export default function AdminSubmissions() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
+
   const [currentUser, setCurrentUser] = useState(null);
   const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);
@@ -307,7 +324,7 @@ export default function AdminSubmissions() {
         <AdminHeaderTabs 
           activeTab="submissions" 
           isKitabTheme={isKitabTheme}
-          onToggleTheme={() => setIsKitabTheme(!isKitabTheme)}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Header */}

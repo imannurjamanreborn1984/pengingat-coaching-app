@@ -20,7 +20,10 @@ import {
   Edit3,
   X,
   Layers,
-  GraduationCap
+  GraduationCap,
+  Sparkles,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
@@ -44,6 +47,26 @@ export default function MembersAdmin() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [filterTab, setFilterTab] = useState("all"); // 'all' | 'pending' | 'approved' | 'emt' | 'npt'
+
+  // State Bulk Selection & Promotion (Opsi A)
+  const [selectedMemberIds, setSelectedMemberIds] = useState(new Set());
+  const [bulkTargetRole, setBulkTargetRole] = useState("npt_2");
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('npt_theme');
+      if (savedTheme === 'kitab') setIsKitabTheme(true);
+      else if (savedTheme === 'dark') setIsKitabTheme(false);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = !isKitabTheme;
+    setIsKitabTheme(nextTheme);
+    try {
+      localStorage.setItem('npt_theme', nextTheme ? 'kitab' : 'dark');
+    } catch (e) {}
+  };
 
   // State Edit Member
   const [editingMember, setEditingMember] = useState(null);
@@ -186,6 +209,100 @@ export default function MembersAdmin() {
     }
   };
 
+  // Selection & Bulk Promotion Handlers (Opsi A)
+  const handleToggleSelect = (id) => {
+    setSelectedMemberIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedMemberIds.size === filteredMembers.length) {
+      setSelectedMemberIds(new Set());
+    } else {
+      setSelectedMemberIds(new Set(filteredMembers.map((m) => m.id)));
+    }
+  };
+
+  const handleBulkPromote = async (targetRole) => {
+    if (selectedMemberIds.size === 0) return;
+    const roleToUse = targetRole || bulkTargetRole;
+    if (!confirm(`Promosikan ${selectedMemberIds.size} anggota terpilih ke ${formatRoleLabel(roleToUse)}?`)) return;
+    setIsLoading(true);
+    try {
+      const ids = Array.from(selectedMemberIds);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: roleToUse, status: "approved" })
+        .in("id", ids);
+
+      if (error) throw error;
+      alert(`Alhamdulillah, ${ids.length} anggota berhasil dipromosikan ke ${formatRoleLabel(roleToUse)}!`);
+      setSelectedMemberIds(new Set());
+      fetchMembers();
+    } catch (err) {
+      alert("Gagal bulk promote: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedMemberIds.size === 0) return;
+    if (!confirm(`Setujui (Approve) ${selectedMemberIds.size} anggota terpilih?`)) return;
+    setIsLoading(true);
+    try {
+      const ids = Array.from(selectedMemberIds);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "approved" })
+        .in("id", ids);
+
+      if (error) throw error;
+      alert(`Alhamdulillah, ${ids.length} anggota berhasil disetujui!`);
+      setSelectedMemberIds(new Set());
+      fetchMembers();
+    } catch (err) {
+      alert("Gagal approve: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuickUpgrade = async (member) => {
+    const currentRole = (member.role || "npt_1").toLowerCase();
+    let nextRole = "npt_2";
+    if (currentRole.startsWith("npt_")) {
+      const lvl = parseInt(currentRole.replace("npt_", ""), 10);
+      if (lvl < 6) {
+        nextRole = `npt_${lvl + 1}`;
+      } else {
+        nextRole = "npt_all";
+      }
+    } else if (currentRole === "member") {
+      nextRole = "npt_2";
+    }
+
+    if (!confirm(`Naikkan jenjang ${member.full_name || 'Member'} dari ${formatRoleLabel(currentRole)} ke ${formatRoleLabel(nextRole)}?`)) return;
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: nextRole, status: "approved" })
+        .eq("id", member.id);
+
+      if (error) throw error;
+      fetchMembers();
+    } catch (err) {
+      alert("Gagal upgrade: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Hapus Member
   const handleDelete = async (id) => {
     if (!confirm("Yakin ingin menghapus anggota ini?")) return;
@@ -294,7 +411,7 @@ export default function MembersAdmin() {
         <AdminHeaderTabs 
           activeTab="members" 
           isKitabTheme={isKitabTheme}
-          onToggleTheme={() => setIsKitabTheme(!isKitabTheme)}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Header Navigation */}
@@ -549,12 +666,113 @@ export default function MembersAdmin() {
           </div>
         </div>
 
+        {/* ========================================================================= */}
+        {/* TOOLBAR BULK PROMOTION (OPSI A: UPGRADE SERENTAK ALUMNI TRAINING OFFLINE) */}
+        {/* ========================================================================= */}
+        {selectedMemberIds.size > 0 && (
+          <div className={`sticky top-20 z-40 p-4 rounded-2xl border shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 ${
+            isKitabTheme
+              ? 'bg-[#f7eedc]/95 border-[#b38b42] text-[#26150a]'
+              : 'bg-slate-900/95 border-rose-500/50 text-white shadow-rose-950/50'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-rose-600 text-white text-xs font-black flex items-center justify-center shadow-sm">
+                {selectedMemberIds.size}
+              </span>
+              <span className="text-xs font-bold">
+                Anggota Dipilih (Siap Promosi / Approve Serentak)
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+              {/* Dropdown Target Level */}
+              <div className="flex items-center gap-1.5">
+                <label className={`text-[11px] font-semibold ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                  Target Jenjang:
+                </label>
+                <select
+                  value={bulkTargetRole}
+                  onChange={(e) => setBulkTargetRole(e.target.value)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border cursor-pointer outline-none ${
+                    isKitabTheme
+                      ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b]'
+                      : 'bg-slate-800 text-white border-slate-700'
+                  }`}
+                >
+                  <option value="npt_1">🏛️ Level 1 (Fondasi)</option>
+                  <option value="npt_2">🏛️ Level 2 (Somatik)</option>
+                  <option value="npt_3">🏛️ Level 3 (Mental Mastery)</option>
+                  <option value="npt_4">🏛️ Level 4 (Alignment)</option>
+                  <option value="npt_5">🏛️ Level 5 (14 Akar)</option>
+                  <option value="npt_6">🌟 Level 6 (Mastery)</option>
+                  <option value="npt_all">⭐ NPT Semua Level (1 - 6)</option>
+                  <option value="emt">🎓 EMT Guru & FMD42</option>
+                </select>
+              </div>
+
+              <button
+                onClick={() => handleBulkPromote(bulkTargetRole)}
+                className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-rose-600/30 transition cursor-pointer"
+                title="Promosikan seluruh anggota terpilih ke level ini"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>⚡ Promosikan Terpilih</span>
+              </button>
+
+              <button
+                onClick={handleBulkApprove}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1 cursor-pointer ${
+                  isKitabTheme
+                    ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3] hover:bg-[#cbeae4]'
+                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
+                }`}
+                title="Setujui akses semua anggota terpilih"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Setujui Semua</span>
+              </button>
+
+              <button
+                onClick={() => setSelectedMemberIds(new Set())}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
+                  isKitabTheme
+                    ? 'bg-[#eee3cb] text-[#543516] border-[#d8c3a1]'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                }`}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Daftar Anggota & Status Approval */}
         <div className={`rounded-3xl p-4 sm:p-6 space-y-3 shadow-sm ${
           isKitabTheme
             ? 'card-kitab-frame'
             : 'bg-slate-900/60 border border-slate-800'
         }`}>
+          {/* Header Bar Tabel dengan Checkbox Pilih Semua */}
+          <div className={`pb-3 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
+            isKitabTheme ? 'border-[#dfcfb0]' : 'border-slate-800'
+          }`}>
+            <label className="flex items-center gap-2 cursor-pointer font-bold select-none">
+              <input
+                type="checkbox"
+                checked={filteredMembers.length > 0 && selectedMemberIds.size === filteredMembers.length}
+                onChange={handleSelectAll}
+                className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+              />
+              <span className={isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'}>
+                Pilih Semua ({selectedMemberIds.size > 0 ? `${selectedMemberIds.size}/` : ''}{filteredMembers.length} Data)
+              </span>
+            </label>
+
+            <span className={`text-[11px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
+              💡 Tip Opsi A: Centang peserta offline lalu klik &quot;Promosikan Terpilih&quot;
+            </span>
+          </div>
+
           {isLoading ? (
             <div className={`py-12 text-center text-xs ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}`}>
               <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-amber-600" />
@@ -578,76 +796,104 @@ export default function MembersAdmin() {
                     key={member.id}
                     className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`font-bold text-sm ${
-                          isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+                    <div className="flex items-start gap-3">
+                      {!isSuperAdminRole && (
+                        <input
+                          type="checkbox"
+                          checked={selectedMemberIds.has(member.id)}
+                          onChange={() => handleToggleSelect(member.id)}
+                          className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0"
+                          title="Pilih anggota untuk aksi massal"
+                        />
+                      )}
+
+                      <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`font-bold text-sm ${
+                            isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'
+                          }`}>
+                            {member.full_name || "Tanpa Nama"}
+                          </span>
+
+                          {/* Badge Role / Program / Level */}
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                            (member.role || "").startsWith("emt")
+                              ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                              : isSuperAdminRole
+                                ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                                : isKitabTheme ? "bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]" : "bg-sky-500/20 text-sky-300 border-sky-500/30"
+                          }`}>
+                            {roleLabel}
+                          </span>
+
+                          {/* Status Badge */}
+                          {isSuperAdminRole ? (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                              isKitabTheme
+                                ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            }`}>
+                              <Crown className="w-3 h-3 text-amber-500" /> Admin Utama
+                            </span>
+                          ) : isApproved ? (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                              isKitabTheme
+                                ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            }`}>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Disetujui
+                            </span>
+                          ) : (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 animate-pulse ${
+                              isKitabTheme
+                                ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
+                              <Clock className="w-3 h-3 text-amber-600" /> Menunggu Approval
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={`flex flex-wrap items-center gap-3 text-xs ${
+                          isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
                         }`}>
-                          {member.full_name || "Tanpa Nama"}
-                        </span>
-
-                        {/* Badge Role / Program / Level */}
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                          (member.role || "").startsWith("emt")
-                            ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/30"
-                            : isSuperAdminRole
-                              ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                              : isKitabTheme ? "bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]" : "bg-sky-500/20 text-sky-300 border-sky-500/30"
-                        }`}>
-                          {roleLabel}
-                        </span>
-
-                        {/* Status Badge */}
-                        {isSuperAdminRole ? (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
-                            isKitabTheme
-                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
-                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                          }`}>
-                            <Crown className="w-3 h-3 text-amber-500" /> Admin Utama
+                          {member.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
+                              {member.email}
+                            </span>
+                          )}
+                          {member.phone_number && (
+                            <span className="flex items-center gap-1">
+                              <Phone className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
+                              +{member.phone_number}
+                            </span>
+                          )}
+                          <span className={`text-[10px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
+                            Terdaftar: {new Date(member.created_at || Date.now()).toLocaleDateString("id-ID")}
                           </span>
-                        ) : isApproved ? (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
-                            isKitabTheme
-                              ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]'
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Disetujui
-                          </span>
-                        ) : (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 animate-pulse ${
-                            isKitabTheme
-                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          }`}>
-                            <Clock className="w-3 h-3 text-amber-600" /> Menunggu Approval
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={`flex flex-wrap items-center gap-3 text-xs ${
-                        isKitabTheme ? 'text-[#634224]' : 'text-slate-400'
-                      }`}>
-                        {member.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
-                            {member.email}
-                          </span>
-                        )}
-                        {member.phone_number && (
-                          <span className="flex items-center gap-1">
-                            <Phone className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`} />
-                            +{member.phone_number}
-                          </span>
-                        )}
-                        <span className={`text-[10px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-500'}`}>
-                          Terdaftar: {new Date(member.created_at || Date.now()).toLocaleDateString("id-ID")}
-                        </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+                      {/* Tombol 1-Klik Naik Level (Khusus Opsi A: Verifikasi Kehadiran Offline) */}
+                      {!isSuperAdminRole && (member.role || '').toLowerCase() !== 'npt_all' && (
+                        <button
+                          onClick={() => handleQuickUpgrade(member)}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1 cursor-pointer ${
+                            isKitabTheme
+                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b] hover:bg-[#dfcdab]'
+                              : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          }`}
+                          title="Naikkan 1 Jenjang Level (Khusus Alumni Selesai Offline)"
+                        >
+                          <Sparkles className="w-3 h-3 text-amber-500" />
+                          <span>+ Lvl</span>
+                        </button>
+                      )}
+
                       {!isApproved ? (
                         <button
                           onClick={() => handleUpdateStatus(member.id, "approved")}
