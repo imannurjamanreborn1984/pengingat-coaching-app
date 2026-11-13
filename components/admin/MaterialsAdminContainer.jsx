@@ -35,7 +35,7 @@ export default function MaterialsAdminContainer() {
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeLightbox, setActiveLightbox] = useState(null);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   // Form State Tambah / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);

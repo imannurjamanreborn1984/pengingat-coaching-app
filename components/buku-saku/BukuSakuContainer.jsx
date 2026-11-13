@@ -96,7 +96,7 @@ export default function BukuSakuContainer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedElement, setSelectedElement] = useState('ALL');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   // Modals & UI
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

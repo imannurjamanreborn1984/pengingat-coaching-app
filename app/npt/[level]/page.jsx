@@ -88,11 +88,11 @@ function ExpandableContent({ content, isKitabTheme = true }) {
     <div className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${
       isKitabTheme
         ? 'bg-[#fbf7ee] border-[#dfcfb0]'
-        : 'bg-slate-950/60 border-slate-800/80'
+        : 'bg-slate-950 border border-slate-800'
     }`}>
       <div
         className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line p-4 sm:p-5 transition-all duration-300 font-sans ${
-          isKitabTheme ? 'text-[#2c1810]' : 'text-slate-300'
+          isKitabTheme ? 'text-[#2c1810]' : 'text-slate-100 font-medium'
         } ${!isExpanded ? "max-h-44 overflow-hidden relative" : ""}`}
       >
         {content}
@@ -100,7 +100,7 @@ function ExpandableContent({ content, isKitabTheme = true }) {
           <div className={`absolute inset-x-0 bottom-0 h-24 pointer-events-none ${
             isKitabTheme
               ? 'bg-gradient-to-t from-[#fbf7ee] via-[#fbf7ee]/90 to-transparent'
-              : 'bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent'
+              : 'bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent'
           }`} />
         )}
       </div>

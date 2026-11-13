@@ -126,7 +126,7 @@ const NPT_LEVELS = [
 export default function NPTLevelsContainer() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   useEffect(() => {
     try {

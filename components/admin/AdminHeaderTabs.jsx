@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { ShieldCheck, Users, BookOpen, Crown, ArrowLeft, GraduationCap } from "lucide-react";
 
-export default function AdminHeaderTabs({ activeTab, isKitabTheme = true, onToggleTheme }) {
+export default function AdminHeaderTabs({ activeTab, isKitabTheme = false, onToggleTheme }) {
   const tabs = [
     {
       id: "emt",

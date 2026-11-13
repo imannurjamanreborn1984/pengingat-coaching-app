@@ -8,7 +8,7 @@ export default function ShareButton({
   snippet = "",
   path = "",
   category = "Khazanah NPT",
-  isKitabTheme = true,
+  isKitabTheme = false,
   className = "",
   compact = false,
 }) {
