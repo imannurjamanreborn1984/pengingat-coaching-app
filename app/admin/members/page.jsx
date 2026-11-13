@@ -52,6 +52,10 @@ export default function MembersAdmin() {
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set());
   const [bulkTargetRole, setBulkTargetRole] = useState("npt_2");
 
+  // State Tentukan Level by Name
+  const [selectedMemberByName, setSelectedMemberByName] = useState("");
+  const [targetLevelByName, setTargetLevelByName] = useState("npt_1");
+
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('npt_theme');
@@ -298,6 +302,57 @@ export default function MembersAdmin() {
       fetchMembers();
     } catch (err) {
       alert("Gagal upgrade: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Tentukan Level Member by Name (Dropdown by Name Tool)
+  const handleApplyLevelByName = async () => {
+    if (!selectedMemberByName) {
+      alert("Silakan pilih nama member terlebih dahulu!");
+      return;
+    }
+    const targetMember = members.find((m) => m.id === selectedMemberByName);
+    if (!targetMember) return;
+
+    if (!confirm(`Tentukan jenjang ${targetMember.full_name || 'Member'} menjadi ${formatRoleLabel(targetLevelByName)}?\n\n(Catatan: Seluruh materi di level sebelumnya akan otomatis terbuka penuh)`)) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: targetLevelByName, status: "approved" })
+        .eq("id", targetMember.id);
+
+      if (error) throw error;
+      setMembers((prev) =>
+        prev.map((m) => (m.id === targetMember.id ? { ...m, role: targetLevelByName, status: "approved" } : m))
+      );
+      alert(`Alhamdulillah, jenjang ${targetMember.full_name} berhasil diatur ke ${formatRoleLabel(targetLevelByName)}!\nSemua materi di level sebelumnya otomatis terbuka.`);
+      setSelectedMemberByName("");
+    } catch (err) {
+      alert("Gagal mengubah jenjang: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Langsung Ubah Level per Baris via Dropdown Inline
+  const handleDirectChangeRole = async (memberId, memberName, newRole) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole, status: "approved" })
+        .eq("id", memberId);
+
+      if (error) throw error;
+      setMembers((prev) =>
+        prev.map((m) => (m.id === memberId ? { ...m, role: newRole, status: "approved" } : m))
+      );
+    } catch (err) {
+      alert("Gagal mengubah jenjang: " + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -667,6 +722,99 @@ export default function MembersAdmin() {
         </div>
 
         {/* ========================================================================= */}
+        {/* FITUR 1: TENTUKAN JENJANG MEMBER BY NAME (DROPDOWN BY NAME)               */}
+        {/* ========================================================================= */}
+        <div className={`p-4 sm:p-5 rounded-3xl border space-y-3.5 shadow-sm transition-all ${
+          isKitabTheme ? 'card-kitab-frame bg-[#fbf7ee]' : 'bg-slate-900/90 border-slate-800'
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2.5 border-slate-800/60">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 text-base">🎯</span>
+              <div>
+                <h3 className={`text-xs sm:text-sm font-bold ${isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-slate-100'}`}>
+                  Tentukan Jenjang Member (Pilih Berdasarkan Nama)
+                </h3>
+                <p className={`text-[11px] ${isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}`}>
+                  Admin dapat langsung memilih nama murid dan menetapkan levelnya. Seluruh materi di level sebelumnya akan <strong>otomatis terbuka penuh</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-stretch md:items-end gap-3 pt-1">
+            {/* Dropdown 1: Pilih Nama Member */}
+            <div className="flex-1 space-y-1.5">
+              <label className={`text-[11px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                1. Pilih Nama Murid ({members.length} Terdaftar):
+              </label>
+              <select
+                value={selectedMemberByName}
+                onChange={(e) => {
+                  setSelectedMemberByName(e.target.value);
+                  const found = members.find(m => m.id === e.target.value);
+                  if (found && found.role) {
+                    setTargetLevelByName(found.role);
+                  }
+                }}
+                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold border cursor-pointer outline-none transition-colors ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] focus:border-[#9e2a2b]'
+                    : 'bg-slate-800 text-white border-slate-700 focus:border-rose-500'
+                }`}
+              >
+                <option value="">-- Cari & Pilih Nama Murid ({members.length} Orang) --</option>
+                {[...members].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name || 'Tanpa Nama'} • {formatRoleLabel(m.role)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Dropdown 2: Tentukan Level Baru */}
+            <div className="w-full md:w-72 space-y-1.5">
+              <label className={`text-[11px] font-bold uppercase tracking-wider ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
+                2. Tentukan Level Saat Ini:
+              </label>
+              <select
+                value={targetLevelByName}
+                onChange={(e) => setTargetLevelByName(e.target.value)}
+                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold border cursor-pointer outline-none transition-colors ${
+                  isKitabTheme
+                    ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b]'
+                    : 'bg-slate-800 text-amber-400 border-slate-700'
+                }`}
+              >
+                <option value="npt_1">🏛️ Level 1: Nafas & Relaksasi (Dasar)</option>
+                <option value="npt_2">🏛️ Level 2: Energi & Somatik</option>
+                <option value="npt_3">🏛️ Level 3: Power & Transcendental</option>
+                <option value="npt_4">🏛️ Level 4: Self Mastery & Alignment</option>
+                <option value="npt_5">🏛️ Level 5: Higher State & 14 Akar</option>
+                <option value="npt_6">🌟 Level 6: Mastery 14 Akar Spiritualitas</option>
+                <option value="npt_all">⭐ Semua Level (1 - 6 Terbuka Penuh)</option>
+                <option value="emt">🎓 EMT Guru & FMD42</option>
+              </select>
+            </div>
+
+            {/* Tombol Terapkan */}
+            <div className="pt-1 md:pt-0">
+              <button
+                onClick={handleApplyLevelByName}
+                disabled={!selectedMemberByName}
+                className={`w-full md:w-auto px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition cursor-pointer ${
+                  !selectedMemberByName
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Terapkan Jenjang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
         {/* TOOLBAR BULK PROMOTION (OPSI A: UPGRADE SERENTAK ALUMNI TRAINING OFFLINE) */}
         {/* ========================================================================= */}
         {selectedMemberIds.size > 0 && (
@@ -815,16 +963,36 @@ export default function MembersAdmin() {
                             {member.full_name || "Tanpa Nama"}
                           </span>
 
-                          {/* Badge Role / Program / Level */}
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                            (member.role || "").startsWith("emt")
-                              ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/30"
-                              : isSuperAdminRole
-                                ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                                : isKitabTheme ? "bg-[#ebdcc4] text-[#8f632d] border-[#d8c3a1]" : "bg-sky-500/20 text-sky-300 border-sky-500/30"
-                          }`}>
-                            {roleLabel}
-                          </span>
+                          {/* Inline Dropdown Penentu Level per Member */}
+                          {!isSuperAdminRole ? (
+                            <select
+                              value={member.role || "npt_1"}
+                              onChange={(e) => handleDirectChangeRole(member.id, member.full_name, e.target.value)}
+                              className={`px-2.5 py-1 rounded-xl text-[11px] font-black border cursor-pointer outline-none transition-all shadow-xs ${
+                                (member.role || "").startsWith("emt")
+                                  ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                                  : isKitabTheme
+                                  ? "bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#f4ebd5]"
+                                  : "bg-slate-800 text-sky-300 border-sky-500/40 hover:border-sky-400 hover:bg-slate-750"
+                              }`}
+                              title={`Ubah jenjang ${member.full_name || 'Member'}. Semua materi level sebelumnya otomatis terbuka.`}
+                            >
+                              <option value="npt_1">🏛️ Level 1: Fondasi</option>
+                              <option value="npt_2">🏛️ Level 2: Somatik</option>
+                              <option value="npt_3">🏛️ Level 3: Transcendental</option>
+                              <option value="npt_4">🏛️ Level 4: Self Mastery</option>
+                              <option value="npt_5">🏛️ Level 5: 14 Akar</option>
+                              <option value="npt_6">🌟 Level 6: Mastery</option>
+                              <option value="npt_all">⭐ Semua Level (1 - 6)</option>
+                              <option value="emt">🎓 EMT Guru</option>
+                            </select>
+                          ) : (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                              isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                            }`}>
+                              {roleLabel}
+                            </span>
+                          )}
 
                           {/* Status Badge */}
                           {isSuperAdminRole ? (

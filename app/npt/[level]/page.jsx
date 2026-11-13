@@ -590,23 +590,32 @@ export default function NPTLevelDetailPage() {
               Pindah Cepat Kelas Level:
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
-              {[1, 2, 3, 4, 5, 6].map((lvl) => (
-                <Link
-                  key={lvl}
-                  href={`/npt/${lvl}`}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border transition ${
-                    levelNum === lvl
-                      ? isKitabTheme
-                        ? 'bg-[#9e2a2b] text-white border-[#9e2a2b]'
-                        : 'bg-rose-600 text-white border-rose-500'
-                      : isKitabTheme
-                        ? 'bg-[#fbf7ee] text-[#543516] border-[#cbb38b] hover:bg-[#ebdcc4]'
-                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  Level {lvl}
-                </Link>
-              ))}
+              {[1, 2, 3, 4, 5, 6].map((lvl) => {
+                const isAccessible = access.canAccessNptLevel(lvl);
+                return (
+                  <Link
+                    key={lvl}
+                    href={`/npt/${lvl}`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border transition flex items-center gap-1 ${
+                      levelNum === lvl
+                        ? isKitabTheme
+                          ? 'bg-[#9e2a2b] text-white border-[#9e2a2b] shadow-xs'
+                          : 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                        : isAccessible
+                          ? isKitabTheme
+                            ? 'bg-[#fbf7ee] text-[#543516] border-[#cbb38b] hover:bg-[#ebdcc4]'
+                            : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                          : isKitabTheme
+                            ? 'bg-[#ebdcc4]/60 text-[#82613d] border-[#d8c3a1]'
+                            : 'bg-slate-950/60 text-slate-500 border-slate-800'
+                    }`}
+                    title={isAccessible ? `Level ${lvl} Terbuka Otomatis` : `Level ${lvl} Terkunci (Butuh Training Offline)`}
+                  >
+                    <span>Level {lvl}</span>
+                    {!isAccessible && <Lock className="w-3 h-3 text-amber-500/80" />}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
