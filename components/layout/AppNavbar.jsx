@@ -19,7 +19,8 @@ import {
   Activity,
   PenTool,
   Settings,
-  Home
+  Home,
+  User
 } from 'lucide-react';
 
 export const SUPER_ADMIN_EMAILS = [
@@ -124,14 +125,26 @@ export function AppSidebar({ isOpen, onClose, currentUser, activePath = "" }) {
               )}
             </div>
 
-            <Link
-              href="/"
-              onClick={onClose}
-              className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 border border-slate-800 transition"
-            >
-              <Home className="w-3.5 h-3.5 text-rose-400" />
-              <span>Beranda Portal (4 Klaster)</span>
-            </Link>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="py-2 px-2 rounded-xl bg-rose-600/15 hover:bg-rose-600/25 text-[11px] font-bold text-rose-300 hover:text-white flex items-center justify-center gap-1.5 border border-rose-500/25 transition"
+                title="Buka Biodata & Rumah Pribadi Anda"
+              >
+                <User className="w-3.5 h-3.5 text-rose-400" />
+                <span>Biodata Saya</span>
+              </Link>
+
+              <Link
+                href="/"
+                onClick={onClose}
+                className="py-2 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-[11px] font-bold text-slate-200 hover:text-white flex items-center justify-center gap-1.5 border border-slate-800 transition"
+              >
+                <Home className="w-3.5 h-3.5 text-amber-400" />
+                <span>Beranda Portal</span>
+              </Link>
+            </div>
           </div>
 
           {/* ========================================================================= */}
@@ -620,8 +633,12 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Portal 
 
           {/* User Status Badge */}
           {currentUser ? (
-            <div className="flex items-center gap-1.5 pl-1">
-              <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-200 hidden lg:inline">
+            <Link
+              href="/profile"
+              className="flex items-center gap-1.5 pl-1 group cursor-pointer"
+              title="Buka Biodata & Rumah Pribadi Saya"
+            >
+              <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 group-hover:border-rose-500/40 text-[11px] font-bold text-slate-200 group-hover:text-rose-300 transition hidden lg:inline">
                 {currentUser.name || currentUser.email?.split('@')[0] || 'User'}
               </span>
               {isSuperAdmin ? (
@@ -631,10 +648,10 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Portal 
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
-                  VIP
+                  {currentUser?.role?.startsWith('npt_') ? `Level ${currentUser.role.replace('npt_', '')}` : 'Member'}
                 </span>
               )}
-            </div>
+            </Link>
           ) : (
             <Link
               href="/"

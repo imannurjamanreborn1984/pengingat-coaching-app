@@ -259,27 +259,31 @@ export default function CosmicGatewayPage() {
           <div className="flex items-center gap-2">
             {currentUser ? (
               <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-2xl">
-                <div className="w-6 h-6 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center justify-center">
-                  {currentUser.name?.charAt(0) || 'N'}
-                </div>
-                <div className="text-left hidden sm:block">
-                  <p className="text-xs font-bold text-white leading-none">
-                    {currentUser.name || currentUser.email?.split('@')[0]}
-                  </p>
-                  <p className="text-[10px] text-amber-400 font-semibold mt-0.5">
-                    {isSuperAdmin ? '👑 Kang Iman (Super Admin)' : '⭐ Member Terverifikasi'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setActiveModalTab('member_login');
-                    setIsAuthModalOpen(true);
-                  }}
-                  className="text-[11px] font-semibold text-slate-400 hover:text-white px-2 py-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
-                  title="Ganti Akun"
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer"
+                  title="Buka Biodata & Rumah Pribadi Saya"
                 >
-                  Ganti
-                </button>
+                  <div className="w-6 h-6 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center justify-center">
+                    {currentUser.name?.charAt(0) || 'N'}
+                  </div>
+                  <div className="text-left hidden sm:block">
+                    <p className="text-xs font-bold text-white leading-none">
+                      {currentUser.name || currentUser.email?.split('@')[0]}
+                    </p>
+                    <p className="text-[10px] text-amber-400 font-semibold mt-0.5">
+                      {isSuperAdmin ? '👑 Kang Iman (Super Admin)' : '⭐ Member Terverifikasi'}
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/profile"
+                  className="text-[11px] font-bold text-rose-400 hover:text-white px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition cursor-pointer"
+                  title="Buka Biodata Diri"
+                >
+                  Profil
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition cursor-pointer"
