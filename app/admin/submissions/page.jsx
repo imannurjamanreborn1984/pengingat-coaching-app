@@ -87,7 +87,7 @@ function parseSubmissionText(text = "") {
 
 export default function AdminSubmissions() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [groupedSubmissions, setGroupedSubmissions] = useState({});
   const [loading, setLoading] = useState(true);

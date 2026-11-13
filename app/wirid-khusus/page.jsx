@@ -33,7 +33,7 @@ import {
 export default function WiridKhususPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
   
   // Tab: 'wirid_harian' | 'afirmasi' | 'barier' | 'kasyaf'
   const [activeTab, setActiveTab] = useState('wirid_harian');

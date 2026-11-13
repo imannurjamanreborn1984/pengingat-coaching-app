@@ -103,7 +103,7 @@ export default function HakekatCintaContainer() {
   // UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('video'); // 'video' | 'draft_buku'
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   // Draft Buku
   const [koleksiBuku, setKoleksiBuku] = useState({});
@@ -612,7 +612,7 @@ export default function HakekatCintaContainer() {
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
-      isKitabTheme ? "bg-parchment text-[#231409]" : "bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100"
+      isKitabTheme ? "bg-parchment text-[#231409]" : "bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white"
     }`}>
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
@@ -767,7 +767,7 @@ export default function HakekatCintaContainer() {
           <>
             {/* Category Playlist Tabs */}
             <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${
-              isKitabTheme ? "border-[#d4b886]" : "border-slate-200 dark:border-slate-800"
+              isKitabTheme ? "border-[#d4b886]" : "border-slate-800/80"
             }`}>
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {Object.entries(INFO_KATEGORI).map(([key, info]) => (
@@ -778,10 +778,10 @@ export default function HakekatCintaContainer() {
                       kategoriAktif === key
                         ? isKitabTheme
                           ? 'bg-[#3a2211] text-[#fbf6ec] border border-[#8f632d] shadow-md'
-                          : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                          : 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 text-white shadow-lg shadow-rose-950/40 border border-rose-500/50 scale-[1.02]'
                         : isKitabTheme
                         ? 'bg-[#eee3cb] text-[#543516] border border-[#d8c3a1] hover:bg-[#dfcdab]'
-                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800/90 hover:border-slate-700'
                     }`}
                   >
                     <span>{info.icon}</span>
@@ -794,28 +794,28 @@ export default function HakekatCintaContainer() {
                 {/* Theme Switcher Button */}
                 <button
                   onClick={() => setIsKitabTheme(!isKitabTheme)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
                     isKitabTheme
                       ? 'bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      : 'bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-amber-300'
                   }`}
                   title="Ganti Mode Tampilan (Kitab Klasik Perkamen / Mode Gelap)"
                 >
-                  <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "🌌 Mode Gelap"}</span>
+                  <span>{isKitabTheme ? "📜 Mode Kitab Klasik" : "📜 Mode Kitab Klasik"}</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab(activeTab === 'video' ? 'draft_buku' : 'video')}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                     activeTab === 'draft_buku'
-                      ? 'bg-[#9e2a2b] text-white border-[#9e2a2b] shadow-xs'
+                      ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
                       : isKitabTheme
                       ? 'bg-[#fdfaf3] border-[#cbb38b] text-[#3a2211] hover:bg-[#ebdcc4]'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      : 'bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  <FileText className="w-4 h-4" />
-                  <span>Draf Kitab AI ({totalDrafBab} Bab)</span>
+                  <FileText className="w-4 h-4 text-rose-400" />
+                  <span>Draf Kitab ({totalDrafBab} Bab)</span>
                 </button>
               </div>
             </div>
@@ -890,10 +890,10 @@ export default function HakekatCintaContainer() {
                       </div>
 
                       {/* Video Metadata & AI Action Card */}
-                      <div className={`rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 ${
+                      <div className={`rounded-3xl p-5 sm:p-6 shadow-xl space-y-4 ${
                         isKitabTheme 
                           ? 'card-kitab-frame' 
-                          : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
+                          : 'bg-slate-900/90 border border-slate-800/90'
                       }`}>
                         {/* Title and Action Button Row */}
                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -1028,15 +1028,15 @@ export default function HakekatCintaContainer() {
                     />
                   </div>
 
-                  <div className={`rounded-3xl p-4 shadow-sm space-y-2 max-h-[600px] overflow-y-auto ${
+                  <div className={`rounded-3xl p-4 shadow-xl space-y-2 max-h-[600px] overflow-y-auto ${
                     isKitabTheme
                       ? 'card-kitab-frame'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800'
+                      : 'bg-slate-900/90 border border-slate-800/90'
                   }`}>
                     <div className={`flex items-center justify-between pb-2 border-b text-xs font-semibold ${
                       isKitabTheme
                         ? 'border-[#dfcfb0] text-[#543516]'
-                        : 'border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400'
+                        : 'border-slate-800 text-slate-400'
                     }`}>
                       <span>Daftar Rekaman ({filteredVideos.length})</span>
                       <span>{INFO_KATEGORI[kategoriAktif].nama}</span>
@@ -1066,16 +1066,16 @@ export default function HakekatCintaContainer() {
                               isSelected
                                 ? isKitabTheme
                                   ? 'bg-[#edd8b6] border-[#b38b42] text-[#26150a] shadow-xs'
-                                  : 'bg-rose-500/10 border-rose-500/40 text-slate-900 dark:text-slate-100'
+                                  : 'bg-rose-500/15 border-rose-500/50 text-white shadow-md'
                                 : isKitabTheme
                                 ? 'border-[#e2d2b8] hover:bg-[#f5edd7] text-[#4a2e15]'
-                                : 'border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                : 'border-slate-800/70 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-800/50 text-slate-300'
                             }`}
                           >
                             <span className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ${
                               isSelected 
-                                ? isKitabTheme ? 'bg-[#9e2a2b] text-white' : 'bg-rose-600 text-white' 
-                                : isKitabTheme ? 'bg-[#dfcfb0] text-[#4a2e15]' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                ? isKitabTheme ? 'bg-[#9e2a2b] text-white' : 'bg-rose-600 text-white shadow-xs' 
+                                : isKitabTheme ? 'bg-[#dfcfb0] text-[#4a2e15]' : 'bg-slate-800 text-slate-400'
                             }`}>
                               {idx + 1}
                             </span>
@@ -1084,7 +1084,7 @@ export default function HakekatCintaContainer() {
                               <h4 className={`text-xs font-bold line-clamp-2 leading-snug transition-colors ${
                                 isKitabTheme
                                   ? 'group-hover:text-[#9e2a2b] text-[#26150a]'
-                                  : 'group-hover:text-rose-600 dark:group-hover:text-rose-400 text-slate-900 dark:text-slate-100'
+                                  : 'group-hover:text-rose-400 text-slate-200'
                               }`}>
                                 {vid.judul}
                               </h4>

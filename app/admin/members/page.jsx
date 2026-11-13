@@ -31,7 +31,7 @@ export const dynamic = 'force-dynamic';
 
 export default function MembersAdmin() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
   
   // State Tambah Member Baru Manual
   const [fullName, setFullName] = useState("");

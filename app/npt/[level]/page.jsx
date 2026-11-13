@@ -146,7 +146,7 @@ export default function NPTLevelDetailPage() {
   const [materials, setMaterials] = useState([]);
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
-  const [isKitabTheme, setIsKitabTheme] = useState(true);
+  const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
