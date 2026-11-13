@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
 import AdminHeaderTabs from "./AdminHeaderTabs";
+import { getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
 import {
   BookOpen,
   Plus,
@@ -24,7 +26,8 @@ import {
   Image as ImageIcon,
   Copy,
   Check,
-  ZoomIn
+  ZoomIn,
+  Lock
 } from "lucide-react";
 import ImageLightboxModal from "../ui/ImageLightboxModal";
 
@@ -77,12 +80,13 @@ export default function MaterialsAdminContainer() {
   const [copiedOcr, setCopiedOcr] = useState(false);
 
   useEffect(() => {
-    try {
-      const authStr = localStorage.getItem("npt_user_auth");
-      if (authStr) {
-        setCurrentUser(JSON.parse(authStr));
-      }
-    } catch (e) {}
+    const saved = getSavedDeviceUser();
+    if (saved) {
+      setCurrentUser(saved);
+      syncDeviceUserApproval(supabase, saved).then((synced) => {
+        if (synced) setCurrentUser(synced);
+      });
+    }
     fetchMaterials();
   }, [selectedLevel]);
 
@@ -360,6 +364,31 @@ export default function MaterialsAdminContainer() {
     });
     setIsModalOpen(true);
   };
+
+  const access = parseUserAccess(currentUser);
+  if (!access.isSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+            <Lock className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Area Khusus Super Admin</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Halaman upload materi ini khusus untuk pengelola resmi NPT Centre. Akun Anda ({currentUser?.name || currentUser?.email || 'Murid'}) tidak memiliki izin akses CMS Materi.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-block px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/30"
+            >
+              ← Kembali ke Beranda
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">

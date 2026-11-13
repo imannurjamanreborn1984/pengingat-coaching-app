@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
-import { formatRoleLabel, NPT_LEVEL_CONFIG } from "@/lib/authHelper";
+import { formatRoleLabel, NPT_LEVEL_CONFIG, getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -44,6 +44,7 @@ export default function MembersAdmin() {
   const [addLevel, setAddLevel] = useState("1"); // '1'..'6' | 'all'
 
   const [members, setMembers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(() => getSavedDeviceUser());
   const [isLoading, setIsLoading] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [filterTab, setFilterTab] = useState("all"); // 'all' | 'pending' | 'approved' | 'emt' | 'npt'
@@ -100,7 +101,17 @@ export default function MembersAdmin() {
 
   useEffect(() => {
     fetchMembers();
+    const saved = getSavedDeviceUser();
+    if (saved) {
+      setCurrentUser(saved);
+      syncDeviceUserApproval(supabase, saved).then((synced) => {
+        if (synced) setCurrentUser(synced);
+      });
+    }
   }, []);
+
+  const access = parseUserAccess(currentUser);
+  const isSuperAdmin = access.isSuperAdmin;
 
   // Tambah Member / Teman Baru secara Manual oleh Admin
   const handleAddMember = async (e) => {
@@ -442,6 +453,30 @@ export default function MembersAdmin() {
     return true;
   });
 
+  if (!isSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+            <Crown className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Area Khusus Super Admin</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Halaman ini khusus untuk pengelola resmi NPT Centre. Akun Anda ({currentUser?.name || currentUser?.email || 'Murid'}) tidak memiliki izin akses ke Panel Manajemen.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-block px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/30"
+            >
+              ← Kembali ke Beranda
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
       isKitabTheme 
@@ -451,13 +486,13 @@ export default function MembersAdmin() {
       {/* Top Navbar & Sidebar Drawer */}
       <AppNavbar 
         onToggleSidebar={() => setIsSidebarOpen(true)}
-        currentUser={{ name: "Admin Utama", role: "super_admin" }}
+        currentUser={currentUser}
         activeTitle="Ruang Persetujuan"
       />
       <AppSidebar 
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        currentUser={{ name: "Admin Utama", role: "super_admin" }}
+        currentUser={currentUser}
         activePath="/admin/members"
       />
 
