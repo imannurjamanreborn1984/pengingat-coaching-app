@@ -45,6 +45,7 @@ import {
   Share2
 } from 'lucide-react';
 import ImageLightboxModal from '../ui/ImageLightboxModal';
+import { parseImageUrls } from '@/lib/utils/materialImages';
 
 function formatYouTubeEmbedUrl(url) {
   if (!url || typeof url !== "string") return "";
@@ -1283,24 +1284,58 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                   </div>
                                 )}
 
-                                {mat.image_url && (
-                                  <div
-                                    onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                                    className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-md ${
-                                      isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
-                                    }`}
-                                  >
-                                    <img
-                                      src={mat.image_url}
-                                      alt={mat.title}
-                                      className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-                                    />
-                                    <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl bg-slate-900/80 text-white">
-                                      <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
-                                      <span>Perbesar</span>
+                                {/* GAMBAR LAMPIRAN EMT (MENDUKUNG 1 - 3 GAMBAR) */}
+                                {(() => {
+                                  const images = parseImageUrls(mat.image_url);
+                                  if (!images.length) return null;
+                                  return (
+                                    <div className="space-y-2">
+                                      {images.length === 1 ? (
+                                        <div
+                                          onClick={() => setActiveLightbox({ url: images[0], title: mat.title })}
+                                          className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-md ${
+                                            isKitabTheme ? "bg-[#f4ebd5] border-[#d4b886]" : "bg-slate-950 border-slate-800"
+                                          }`}
+                                        >
+                                          <img
+                                            src={images[0]}
+                                            alt={mat.title}
+                                            className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+                                          />
+                                          <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl bg-slate-900/80 text-white">
+                                            <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                                            <span>Perbesar</span>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className={`grid gap-3 ${images.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
+                                          {images.map((imgUrl, idx) => (
+                                            <div
+                                              key={idx}
+                                              onClick={() => setActiveLightbox({ url: imgUrl, title: `${mat.title} (Gambar ${idx + 1} dari ${images.length})` })}
+                                              className={`relative w-full h-60 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-md ${
+                                                isKitabTheme ? "bg-[#f4ebd5] border-[#d4b886]" : "bg-slate-950 border-slate-800"
+                                              }`}
+                                            >
+                                              <img
+                                                src={imgUrl}
+                                                alt={`${mat.title} - ${idx + 1}`}
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                              />
+                                              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-slate-950/80 text-white text-[10px] font-bold border border-slate-700">
+                                                Gambar #{idx + 1}
+                                              </div>
+                                              <div className="absolute bottom-2 right-2 px-2 py-1 rounded-xl border text-[10px] font-bold flex items-center gap-1 shadow-lg bg-slate-900/80 text-white">
+                                                <ZoomIn className="w-3 h-3 text-amber-400" />
+                                                <span>Zoom</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
 
                                 {mat.youtube_url && (
                                   <div className="space-y-2">

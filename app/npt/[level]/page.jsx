@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 import ShareButton from "@/components/ui/ShareButton";
+import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   parseUserAccess,
   NPT_LEVEL_CONFIG,
@@ -936,32 +937,68 @@ export default function NPTLevelDetailPage() {
                     <div className="p-6 space-y-4 animate-in fade-in duration-200">
                       {mat.content && <ExpandableContent content={mat.content} isKitabTheme={isKitabTheme} />}
 
-                      {/* 1. GAMBAR LAMPIRAN */}
-                      {mat.image_url && (
-                        <div className="space-y-2">
-                          <div
-                            onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                            className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
-                              isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
-                            }`}
-                            title="Klik untuk Perbesar Gambar (Zoom In / Out)"
-                          >
-                            <img
-                              src={mat.image_url}
-                              alt={mat.title}
-                              className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-                            />
-                            <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
-                              isKitabTheme
-                                ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
-                                : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
-                            }`}>
-                              <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
-                              <span>Perbesar / Zoom</span>
-                            </div>
+                      {/* 1. GAMBAR LAMPIRAN (MENDUKUNG 1 - 3 GAMBAR) */}
+                      {(() => {
+                        const images = parseImageUrls(mat.image_url);
+                        if (!images.length) return null;
+                        return (
+                          <div className="space-y-2">
+                            {images.length === 1 ? (
+                              <div
+                                onClick={() => setActiveLightbox({ url: images[0], title: mat.title })}
+                                className={`relative w-full max-h-96 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-lg ${
+                                  isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
+                                }`}
+                                title="Klik untuk Perbesar Gambar (Zoom In / Out)"
+                              >
+                                <img
+                                  src={images[0]}
+                                  alt={mat.title}
+                                  className="w-full h-auto max-h-96 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+                                />
+                                <div className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 shadow-xl transition-all ${
+                                  isKitabTheme
+                                    ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
+                                    : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
+                                }`}>
+                                  <ZoomIn className={`w-3.5 h-3.5 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
+                                  <span>Perbesar / Zoom</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`grid gap-3 ${images.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+                                {images.map((imgUrl, idx) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => setActiveLightbox({ url: imgUrl, title: `${mat.title} (Gambar ${idx + 1} dari ${images.length})` })}
+                                    className={`relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden border flex items-center justify-center cursor-zoom-in group shadow-md ${
+                                      isKitabTheme ? 'bg-[#f4ebd5] border-[#d4b886]' : 'bg-slate-950 border-slate-800'
+                                    }`}
+                                    title={`Klik untuk Perbesar Gambar #${idx + 1}`}
+                                  >
+                                    <img
+                                      src={imgUrl}
+                                      alt={`${mat.title} - ${idx + 1}`}
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                    />
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-slate-950/80 text-white text-[10px] font-bold border border-slate-700">
+                                      Gambar #{idx + 1}
+                                    </div>
+                                    <div className={`absolute bottom-2 right-2 px-2.5 py-1 rounded-xl border text-[10px] font-bold flex items-center gap-1 shadow-lg ${
+                                      isKitabTheme
+                                        ? 'bg-[#fdfaf3]/90 text-[#3a2211] border-[#cbb38b]'
+                                        : 'bg-slate-900/85 backdrop-blur-md border-slate-700/80 text-white'
+                                    }`}>
+                                      <ZoomIn className={`w-3 h-3 ${isKitabTheme ? 'text-[#9e2a2b]' : 'text-amber-400'}`} />
+                                      <span>Zoom</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* 2. VIDEO YOUTUBE (BEBAS DIAKSES SEMUA MEMBER NPT/APPROVED) */}
                       {mat.youtube_url && (

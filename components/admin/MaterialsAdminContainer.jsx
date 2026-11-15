@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
 import AdminHeaderTabs from "./AdminHeaderTabs";
 import { getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
+import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   BookOpen,
   Plus,
@@ -73,9 +74,8 @@ export default function MaterialsAdminContainer() {
     is_published: true
   });
 
-  // State Gambar & OCR
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  // State Gambar (Maksimal 3 Gambar per Postingan) & OCR
+  const [imageSlots, setImageSlots] = useState([]); // Array of { id, file, preview, url }
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
   const [copiedOcr, setCopiedOcr] = useState(false);
 
@@ -115,8 +115,7 @@ export default function MaterialsAdminContainer() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setImageFile(null);
-    setImagePreview(null);
+    setImageSlots([]);
     setCopiedOcr(false);
     setFormData({
       level: selectedLevel,
@@ -136,8 +135,15 @@ export default function MaterialsAdminContainer() {
 
   const handleOpenEdit = (item) => {
     setEditingId(item.id);
-    setImageFile(null);
-    setImagePreview(item.image_url || null);
+    const urls = parseImageUrls(item.image_url);
+    setImageSlots(
+      urls.map((u, i) => ({
+        id: `existing-${i}-${Date.now()}`,
+        file: null,
+        preview: u,
+        url: u
+      }))
+    );
     setCopiedOcr(false);
     setFormData({
       level: item.level || selectedLevel,
@@ -155,21 +161,58 @@ export default function MaterialsAdminContainer() {
     setIsModalOpen(true);
   };
 
-  // Handle Gambar & Jalankan OCR
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // Handle Unggah Gambar (Bisa 1 sampai 3 Gambar)
+  const handleImagesChange = async (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const remainingSlots = 3 - imageSlots.length;
+    if (remainingSlots <= 0) {
+      alert("Maksimal 3 gambar per postingan materi!");
+      return;
+    }
 
-    // Ekstrak teks via OCR otomatis menggunakan Gemini API /api/ocr
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64Data = reader.result;
-      runOcr(base64Data, file.type);
-    };
-    reader.readAsDataURL(file);
+    const filesToAdd = selectedFiles.slice(0, remainingSlots);
+    if (selectedFiles.length > remainingSlots) {
+      alert(`Hanya ${remainingSlots} gambar yang ditambahkan karena batas maksimal adalah 3 gambar.`);
+    }
+
+    const newSlots = filesToAdd.map((file, idx) => ({
+      id: `new-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      file: file,
+      preview: URL.createObjectURL(file),
+      url: null
+    }));
+
+    setImageSlots((prev) => [...prev, ...newSlots]);
+
+    // Jalankan OCR otomatis pada file baru pertama jika teks OCR masih kosong
+    if (filesToAdd.length > 0 && !formData.ocr_extracted_text) {
+      const firstFile = filesToAdd[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        runOcr(reader.result, firstFile.type);
+      };
+      reader.readAsDataURL(firstFile);
+    }
+
+    e.target.value = "";
+  };
+
+  const handleRemoveSlot = (idToRemove) => {
+    setImageSlots((prev) => prev.filter((slot) => slot.id !== idToRemove));
+  };
+
+  const handleOcrSlot = (slot) => {
+    if (slot.file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        runOcr(reader.result, slot.file.type);
+      };
+      reader.readAsDataURL(slot.file);
+    } else {
+      alert("Gambar ini sudah tersimpan di Cloud. Anda bisa mengedit atau menambahkan catatan pada teks OCR di bawah.");
+    }
   };
 
   const runOcr = async (base64Data, mimeType) => {
@@ -210,39 +253,46 @@ export default function MaterialsAdminContainer() {
     setTimeout(() => setCopiedOcr(false), 2000);
   };
 
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setFormData((prev) => ({ ...prev, image_url: "" }));
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return alert("Judul materi wajib diisi!");
     setIsLoading(true);
 
-    let finalImageUrl = formData.image_url || imagePreview;
-
-    // 1. Upload Gambar ke Supabase Storage bucket 'materi-images' jika ada file baru
-    if (imageFile) {
-      try {
-        if (supabase) {
-          const fileExt = imageFile.name.split(".").pop();
-          const fileName = `material_${Date.now()}.${fileExt}`;
-          const { error: uploadErr } = await supabase.storage
-            .from("materi-images")
-            .upload(fileName, imageFile);
-
-          if (!uploadErr) {
-            const { data: publicUrlData } = supabase.storage
+    // 1. Upload semua file gambar baru ke Supabase Storage bucket 'materi-images'
+    const finalImageUrls = [];
+    for (let i = 0; i < imageSlots.length; i++) {
+      const slot = imageSlots[i];
+      if (slot.file) {
+        try {
+          if (supabase) {
+            const fileExt = slot.file.name.split(".").pop();
+            const fileName = `material_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+            const { error: uploadErr } = await supabase.storage
               .from("materi-images")
-              .getPublicUrl(fileName);
-            finalImageUrl = publicUrlData.publicUrl;
+              .upload(fileName, slot.file);
+
+            if (!uploadErr) {
+              const { data: publicUrlData } = supabase.storage
+                .from("materi-images")
+                .getPublicUrl(fileName);
+              finalImageUrls.push(publicUrlData.publicUrl);
+            } else {
+              console.warn("Storage upload warn for slot", i, uploadErr.message);
+            }
           }
+        } catch (err) {
+          console.warn("Storage upload warn:", err.message);
         }
-      } catch (err) {
-        console.warn("Storage upload warn:", err.message);
+      } else if (slot.url) {
+        finalImageUrls.push(slot.url);
       }
+    }
+
+    let finalImageUrl = null;
+    if (finalImageUrls.length === 1) {
+      finalImageUrl = finalImageUrls[0];
+    } else if (finalImageUrls.length > 1) {
+      finalImageUrl = JSON.stringify(finalImageUrls);
     }
 
     const payload = {
@@ -345,24 +395,7 @@ export default function MaterialsAdminContainer() {
   };
 
   const handleEdit = (mat) => {
-    setEditingId(mat.id);
-    setImageFile(null);
-    setImagePreview(mat.image_url || null);
-    setCopiedOcr(false);
-    setFormData({
-      level: mat.level,
-      title: mat.title || "",
-      subtitle: mat.subtitle || "",
-      content: mat.content || "",
-      youtube_url: mat.youtube_url || "",
-      file_url: mat.file_url || "",
-      file_name: mat.file_name || "",
-      file_type: mat.file_type || "pdf",
-      image_url: mat.image_url || "",
-      ocr_extracted_text: mat.ocr_extracted_text || "",
-      is_published: mat.is_published ?? true
-    });
-    setIsModalOpen(true);
+    handleOpenEdit(mat);
   };
 
   const access = parseUserAccess(currentUser);
@@ -531,9 +564,9 @@ export default function MaterialsAdminContainer() {
                           • {mat.subtitle}
                         </span>
                       )}
-                      {mat.image_url && (
+                      {parseImageUrls(mat.image_url).length > 0 && (
                         <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
-                          <ImageIcon className="w-3 h-3" /> Gambar / OCR
+                          <ImageIcon className="w-3 h-3" /> {parseImageUrls(mat.image_url).length} Gambar / OCR
                         </span>
                       )}
                       {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
@@ -544,25 +577,42 @@ export default function MaterialsAdminContainer() {
                       )}
                     </div>
 
-                    {/* Thumbnail Gambar jika ada */}
-                    {mat.image_url && (
-                      <div
-                        onClick={() => setActiveLightbox({ url: mat.image_url, title: mat.title })}
-                        className="relative w-40 h-28 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-zoom-in group shadow-md"
-                        title="Klik untuk Zoom In / Out Preview"
-                      >
-                        <img
-                          src={mat.image_url}
-                          alt={mat.title}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="px-2 py-1 rounded-lg bg-slate-900/90 text-white text-[10px] font-bold flex items-center gap-1">
-                            <ZoomIn className="w-3 h-3 text-amber-400" /> Zoom
-                          </span>
+                    {/* Thumbnail Gambar jika ada (Mendukung 1 - 3 Gambar) */}
+                    {(() => {
+                      const matImages = parseImageUrls(mat.image_url);
+                      if (!matImages.length) return null;
+                      return (
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          {matImages.map((imgUrl, i) => (
+                            <div
+                              key={i}
+                              onClick={() =>
+                                setActiveLightbox({
+                                  url: imgUrl,
+                                  title: `${mat.title} (Gambar ${i + 1}/${matImages.length})`,
+                                })
+                              }
+                              className="relative w-28 h-20 sm:w-36 sm:h-24 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-zoom-in group shadow-md"
+                              title={`Klik untuk Zoom In Gambar ${i + 1}`}
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={`${mat.title} - ${i + 1}`}
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              />
+                              <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-950/80 text-white text-[9px] font-bold border border-slate-700">
+                                #{i + 1}
+                              </div>
+                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="px-1.5 py-0.5 rounded bg-slate-900/90 text-white text-[9px] font-bold flex items-center gap-1">
+                                  <ZoomIn className="w-3 h-3 text-amber-400" /> Zoom
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {mat.content && (
                       <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed whitespace-pre-line">
@@ -681,67 +731,129 @@ export default function MaterialsAdminContainer() {
                 />
               </div>
 
-              {/* SECTION 1: UNGGAH GAMBAR & AUTO FULL OCR */}
+              {/* SECTION 1: UNGGAH GAMBAR (BISA 1 - 3 GAMBAR) & AUTO FULL OCR */}
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4" /> Unggah Gambar Materi (Poster / Slide / Catatan)
+                    <ImageIcon className="w-4 h-4" /> Unggah Gambar Materi ({imageSlots.length}/3 Gambar)
                   </label>
-                  {imagePreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="text-[10px] text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3 h-3" /> Hapus Gambar
-                    </button>
-                  )}
+                  <span className="text-[10px] text-slate-400">
+                    Mendukung 1 s/d 3 gambar per postingan
+                  </span>
                 </div>
 
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer"
-                />
+                {imageSlots.length < 3 ? (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImagesChange}
+                      className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      *Bisa pilih langsung 2-3 gambar sekaligus atau tambah satu per satu (maksimal 3 gambar).
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 font-semibold flex items-center justify-between">
+                    <span>✅ Kuota maksimal 3 gambar sudah terisi.</span>
+                    <span className="text-[10px] text-slate-400">Hapus salah satu jika ingin mengganti</span>
+                  </div>
+                )}
 
-                {imagePreview && (
-                  <div className="flex items-start gap-3 pt-1">
-                    <div className="relative w-28 h-28 rounded-xl border border-slate-800 overflow-hidden bg-slate-900 shrink-0">
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-
-                    <div className="flex-1 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
-                          <Sparkles className="w-3.5 h-3.5" /> Hasil Full OCR Otomatis:
-                        </span>
-                        {formData.ocr_extracted_text && (
+                {/* Grid Preview 1-3 Gambar */}
+                {imageSlots.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                    {imageSlots.map((slot, idx) => (
+                      <div
+                        key={slot.id}
+                        className="relative rounded-xl border border-slate-800 overflow-hidden bg-slate-900 flex flex-col group shadow-md"
+                      >
+                        <div className="relative h-28 w-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={slot.preview}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-950/80 text-white text-[9px] font-bold border border-slate-700">
+                            Gambar #{idx + 1}
+                          </span>
                           <button
                             type="button"
-                            onClick={handleCopyOcrToContent}
-                            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-400 flex items-center gap-1 transition cursor-pointer"
+                            onClick={() => handleRemoveSlot(slot.id)}
+                            className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white transition cursor-pointer shadow-md"
+                            title="Hapus gambar ini"
                           >
-                            {copiedOcr ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                            <span>{copiedOcr ? "Disalin!" : "Salin ke Isi Materi"}</span>
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveLightbox({
+                                url: slot.preview,
+                                title: `Preview Gambar #${idx + 1}`,
+                              })
+                            }
+                            className="absolute bottom-1.5 right-1.5 p-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-amber-400 transition cursor-pointer text-[10px] flex items-center gap-1"
+                            title="Perbesar"
+                          >
+                            <ZoomIn className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {slot.file && (
+                          <div className="p-1.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+                            <button
+                              type="button"
+                              onClick={() => handleOcrSlot(slot)}
+                              disabled={isProcessingOcr}
+                              className="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <Sparkles className="w-3 h-3" /> Scan OCR
+                            </button>
+                            <span className="text-[9px] text-slate-500 truncate max-w-[100px]">
+                              {slot.file.name}
+                            </span>
+                          </div>
                         )}
                       </div>
+                    ))}
+                  </div>
+                )}
 
-                      {isProcessingOcr ? (
-                        <p className="text-xs text-amber-400 animate-pulse font-mono py-2">
-                          Sedang membaca seluruh teks dari gambar via OCR Gemini AI...
-                        </p>
-                      ) : (
-                        <textarea
-                          rows={3}
-                          value={formData.ocr_extracted_text || ""}
-                          onChange={(e) => setFormData({ ...formData, ocr_extracted_text: e.target.value })}
-                          placeholder="Teks dari gambar yang terbaca OCR..."
-                          className="w-full p-2 rounded-xl border border-slate-800 text-[11px] focus:outline-hidden text-slate-300 bg-slate-900 font-mono leading-relaxed"
-                        />
+                {/* Box Hasil OCR */}
+                {imageSlots.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> Hasil Full OCR Otomatis Gemini AI:
+                      </span>
+                      {formData.ocr_extracted_text && (
+                        <button
+                          type="button"
+                          onClick={handleCopyOcrToContent}
+                          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-400 flex items-center gap-1 transition cursor-pointer"
+                        >
+                          {copiedOcr ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedOcr ? "Disalin!" : "Salin ke Isi Materi"}</span>
+                        </button>
                       )}
                     </div>
+
+                    {isProcessingOcr ? (
+                      <p className="text-xs text-amber-400 animate-pulse font-mono py-2">
+                        Sedang membaca seluruh teks dari gambar via OCR Gemini AI...
+                      </p>
+                    ) : (
+                      <textarea
+                        rows={3}
+                        value={formData.ocr_extracted_text || ""}
+                        onChange={(e) => setFormData({ ...formData, ocr_extracted_text: e.target.value })}
+                        placeholder="Teks dari gambar yang terbaca OCR..."
+                        className="w-full p-2 rounded-xl border border-slate-800 text-[11px] focus:outline-hidden text-slate-300 bg-slate-900 font-mono leading-relaxed"
+                      />
+                    )}
                   </div>
                 )}
               </div>
