@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
 import AdminHeaderTabs from "./AdminHeaderTabs";
 import { getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
-import { parseImageUrls } from "@/lib/utils/materialImages";
+import { parseImageUrls, parseYouTubeUrls } from "@/lib/utils/materialImages";
 import {
   BookOpen,
   Plus,
@@ -79,6 +79,9 @@ export default function MaterialsAdminContainer() {
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
   const [copiedOcr, setCopiedOcr] = useState(false);
 
+  // State Video YouTube (Maksimal 3 Video / Part per Postingan)
+  const [youtubeLinks, setYoutubeLinks] = useState([""]);
+
   useEffect(() => {
     const saved = getSavedDeviceUser();
     if (saved) {
@@ -116,6 +119,7 @@ export default function MaterialsAdminContainer() {
   const handleOpenAdd = () => {
     setEditingId(null);
     setImageSlots([]);
+    setYoutubeLinks([""]);
     setCopiedOcr(false);
     setFormData({
       level: selectedLevel,
@@ -144,6 +148,8 @@ export default function MaterialsAdminContainer() {
         url: u
       }))
     );
+    const yts = parseYouTubeUrls(item.youtube_url);
+    setYoutubeLinks(yts.length > 0 ? yts : [""]);
     setCopiedOcr(false);
     setFormData({
       level: item.level || selectedLevel,
@@ -159,6 +165,30 @@ export default function MaterialsAdminContainer() {
       is_published: item.is_published !== false
     });
     setIsModalOpen(true);
+  };
+
+  // Handlers untuk Video YouTube (Maksimal 3 Video / Part)
+  const handleAddYoutubeLink = () => {
+    if (youtubeLinks.length >= 3) {
+      alert("Maksimal 3 link video YouTube per postingan materi!");
+      return;
+    }
+    setYoutubeLinks((prev) => [...prev, ""]);
+  };
+
+  const handleUpdateYoutubeLink = (index, value) => {
+    setYoutubeLinks((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const handleRemoveYoutubeLink = (index) => {
+    setYoutubeLinks((prev) => {
+      if (prev.length <= 1) return [""];
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   // Handle Unggah Gambar (Bisa 1 sampai 3 Gambar)
@@ -295,12 +325,21 @@ export default function MaterialsAdminContainer() {
       finalImageUrl = JSON.stringify(finalImageUrls);
     }
 
+    // 2. Format link Video YouTube (Mendukung hingga 3 link video)
+    const validYoutube = youtubeLinks.map((u) => u.trim()).filter(Boolean);
+    let finalYoutubeUrl = "";
+    if (validYoutube.length === 1) {
+      finalYoutubeUrl = validYoutube[0];
+    } else if (validYoutube.length > 1) {
+      finalYoutubeUrl = JSON.stringify(validYoutube);
+    }
+
     const payload = {
       level: Number(formData.level),
       title: formData.title.trim(),
       subtitle: formData.subtitle.trim(),
       content: formData.content.trim(),
-      youtube_url: formData.youtube_url.trim(),
+      youtube_url: finalYoutubeUrl,
       file_url: formData.file_url.trim(),
       file_name: formData.file_name.trim() || (formData.file_url ? "Dokumen Materi" : ""),
       file_type: formData.file_type,
@@ -570,11 +609,15 @@ export default function MaterialsAdminContainer() {
                         </span>
                       )}
                       {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
-                      {mat.youtube_url && (
-                        <span className="px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
-                          <Film className="w-3 h-3" /> Video
-                        </span>
-                      )}
+                      {(() => {
+                        const yts = parseYouTubeUrls(mat.youtube_url);
+                        if (!yts.length) return null;
+                        return (
+                          <span className="px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
+                            <Film className="w-3 h-3" /> {yts.length > 1 ? `${yts.length} Video YouTube` : 'Video YouTube'}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Thumbnail Gambar jika ada (Mendukung 1 - 3 Gambar) */}
@@ -916,18 +959,52 @@ export default function MaterialsAdminContainer() {
                 </div>
               </div>
 
-              {/* SECTION 4: LINK VIDEO YOUTUBE */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Link Video YouTube Pembelajaran (Opsional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={formData.youtube_url}
-                  onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-hidden focus:border-rose-500"
-                />
+              {/* SECTION 4: LINK VIDEO YOUTUBE (BISA 1 - 3 VIDEO / PART) */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                    <Film className="w-4 h-4" /> Link Video YouTube Pembelajaran ({youtubeLinks.filter((u) => u.trim()).length}/3 Video)
+                  </label>
+                  {youtubeLinks.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={handleAddYoutubeLink}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" /> + Tambah Video (Part Lain)
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {youtubeLinks.map((link, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400 shrink-0">
+                        Part {idx + 1}
+                      </span>
+                      <input
+                        type="text"
+                        placeholder={`https://www.youtube.com/watch?v=... (Link Video Part ${idx + 1})`}
+                        value={link}
+                        onChange={(e) => handleUpdateYoutubeLink(idx, e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden focus:border-red-500 font-sans"
+                      />
+                      {youtubeLinks.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveYoutubeLink(idx)}
+                          className="p-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-800 transition cursor-pointer"
+                          title="Hapus slot video ini"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  *Mendukung link YouTube standar, Shorts, atau youtu.be. Bisa muat hingga 3 video (Part 1, Part 2, Part 3) per modul.
+                </p>
               </div>
 
               <div className="pt-2 flex items-center gap-2">

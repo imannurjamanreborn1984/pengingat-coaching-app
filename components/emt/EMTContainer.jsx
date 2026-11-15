@@ -45,6 +45,7 @@ import {
   Share2
 } from 'lucide-react';
 import ImageLightboxModal from '../ui/ImageLightboxModal';
+import MaterialVideoPlayer from '../ui/MaterialVideoPlayer';
 import { parseImageUrls } from '@/lib/utils/materialImages';
 
 function formatYouTubeEmbedUrl(url) {
@@ -1337,34 +1338,13 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                   );
                                 })()}
 
-                                {mat.youtube_url && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-700">
-                                        <Film className="w-4 h-4 text-red-500" />
-                                        <span>Video Penjelasan Sesi:</span>
-                                      </span>
-                                      <a
-                                        href={mat.youtube_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[11px] font-bold text-sky-600 flex items-center gap-1 hover:underline"
-                                      >
-                                        <span>Buka di YouTube</span>
-                                        <ExternalLink className="w-3 h-3" />
-                                      </a>
-                                    </div>
-                                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
-                                      <iframe
-                                        src={formatYouTubeEmbedUrl(mat.youtube_url)}
-                                        title={mat.title}
-                                        className="w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                                        allowFullScreen
-                                      />
-                                    </div>
-                                  </div>
-                                )}
+                                 {/* VIDEO YOUTUBE (MENDUKUNG 1 - 3 VIDEO / PART) */}
+                                 <MaterialVideoPlayer
+                                   youtubeUrl={mat.youtube_url}
+                                   title={mat.title}
+                                   isKitabTheme={isKitabTheme}
+                                   isApproved={true}
+                                 />
 
                                 {mat.file_url && (
                                   <div className="pt-1">

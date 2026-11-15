@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 import ShareButton from "@/components/ui/ShareButton";
+import MaterialVideoPlayer from "@/components/ui/MaterialVideoPlayer";
 import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   parseUserAccess,
@@ -1000,64 +1001,14 @@ export default function NPTLevelDetailPage() {
                         );
                       })()}
 
-                      {/* 2. VIDEO YOUTUBE (BEBAS DIAKSES SEMUA MEMBER NPT/APPROVED) */}
-                      {mat.youtube_url && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className={`text-xs font-bold flex items-center gap-1.5 ${
-                              isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
-                            }`}>
-                              <Film className="w-4 h-4 text-red-500" />
-                              <span>Video Siaran Ulang YouTube:</span>
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                                isKitabTheme ? 'bg-[#dbeef0] text-[#1b6b55] border-[#b0d9d3]' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                              }`}>
-                                Bebas Diakses Semua Member
-                              </span>
-                            </span>
-                            <a
-                              href={mat.youtube_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
-                                isKitabTheme ? 'text-[#9e2a2b]' : 'text-sky-400'
-                              }`}
-                            >
-                              <span>Buka di YouTube</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-
-                          {isApproved ? (
-                            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
-                              <iframe
-                                src={formatYouTubeEmbedUrl(mat.youtube_url)}
-                                title={mat.title}
-                                className="w-full h-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                                allowFullScreen
-                              />
-                            </div>
-                          ) : (
-                            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
-                              isKitabTheme ? 'bg-[#f5ebd7] border-[#d8c3a1]' : 'bg-slate-900 border-slate-800'
-                            }`}>
-                              <div className="flex items-center gap-2.5">
-                                <Lock className="w-4 h-4 text-amber-600" />
-                                <span className={`text-xs ${isKitabTheme ? 'text-[#543516]' : 'text-slate-300'}`}>
-                                  Masuk sebagai member untuk menonton video siaran ulang ini.
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => setIsAuthModalOpen(true)}
-                                className="px-3 py-1.5 rounded-xl text-white text-xs font-bold bg-[#9e2a2b] hover:bg-[#852324] shrink-0"
-                              >
-                                Masuk Member
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* 2. VIDEO YOUTUBE (MENDUKUNG 1 - 3 VIDEO / PART) */}
+                      <MaterialVideoPlayer
+                        youtubeUrl={mat.youtube_url}
+                        title={mat.title}
+                        isKitabTheme={isKitabTheme}
+                        isApproved={isApproved}
+                        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                      />
 
                       {/* 3. DOKUMEN / FILE DOWNLOAD (LEVEL-GATED) */}
                       {mat.file_url && (
