@@ -231,6 +231,32 @@ export default function EMTContainer() {
   const [expandedEmtIds, setExpandedEmtIds] = useState(new Set());
   const [activeLightbox, setActiveLightbox] = useState(null);
 
+  // State Progres Belajar EMT Selesai (Mastery Progression)
+  const [completedEmtIds, setCompletedEmtIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('emt_completed_materials');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  });
+
+  const toggleCompleteEmtMaterial = (e, matId) => {
+    e.stopPropagation();
+    setCompletedEmtIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(matId)) {
+        next.delete(matId);
+      } else {
+        next.add(matId);
+      }
+      try {
+        localStorage.setItem('emt_completed_materials', JSON.stringify(Array.from(next)));
+      } catch (err) {}
+      return next;
+    });
+  };
+
   // State 21-Day Self Healing Tracker
   const [healingDays, setHealingDays] = useState(INITIAL_21_DAYS);
   const [activeDayEdit, setActiveDayEdit] = useState(null);
@@ -1156,14 +1182,71 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                 {/* 1. DYNAMIC MATERI EMT DARI CMS ADMIN */}
                 {dynamicEmtMaterials.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold ${isKitabTheme ? 'text-[#3a2211]' : 'text-slate-200'}`}>
-                          📚 Modul & Materi Pembelajaran Tambahan ({dynamicEmtMaterials.length})
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-700 border border-emerald-500/30">
-                          Terbaru di Atas
-                        </span>
+                    {/* EMT MASTERY PROGRESS TRACKER */}
+                    <div
+                      className={`p-4 sm:p-5 rounded-3xl border transition shadow-md ${
+                        isKitabTheme
+                          ? "bg-[#f7eedc] border-[#dfcfb0]"
+                          : "bg-slate-900/90 border-slate-800"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-2xl flex items-center justify-center text-lg ${
+                            isKitabTheme ? "bg-[#ede1c7] text-[#634224]" : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                          }`}>
+                            🎓
+                          </div>
+                          <div>
+                            <h3
+                              className={`text-xs sm:text-sm font-bold ${
+                                isKitabTheme ? "text-[#26150a]" : "text-white"
+                              }`}
+                            >
+                              Progres Pembelajaran EMT (Pelatihan Emosi)
+                            </h3>
+                            <p
+                              className={`text-[11px] ${
+                                isKitabTheme ? "text-[#8f632d]" : "text-slate-400"
+                              }`}
+                            >
+                              Selesaikan dan amalkan setiap sesi untuk membangun ketahanan emosional yang kokoh.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                          <span
+                            className={`text-xs font-black px-3 py-1 rounded-xl font-mono border ${
+                              completedEmtIds.size === dynamicEmtMaterials.length && dynamicEmtMaterials.length > 0
+                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                : isKitabTheme
+                                ? "bg-[#ede1c7] text-[#634224] border-[#cbb38b]"
+                                : "bg-slate-800 text-emerald-300 border-slate-700"
+                            }`}
+                          >
+                            {completedEmtIds.size} / {dynamicEmtMaterials.length} Modul ({Math.round((completedEmtIds.size / (dynamicEmtMaterials.length || 1)) * 100)}%)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Animated Progress Bar */}
+                      <div
+                        className={`w-full h-2 rounded-full overflow-hidden ${
+                          isKitabTheme ? "bg-[#e8d8bd]" : "bg-slate-950"
+                        }`}
+                      >
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 transition-all duration-500 ease-out rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              Math.round(
+                                (completedEmtIds.size / (dynamicEmtMaterials.length || 1)) * 100
+                              )
+                            )}%`,
+                          }}
+                        />
                       </div>
                     </div>
 
@@ -1171,16 +1254,21 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                       {dynamicEmtMaterials.map((mat, idx) => {
                         const isExpanded = expandedEmtIds.has(mat.id || idx);
                         const isLatest = idx === 0;
+                        const isCompleted = completedEmtIds.has(mat.id || idx);
 
                         return (
                           <div
                             key={mat.id || idx}
                             className={`rounded-3xl transition overflow-hidden text-left ${
                               isKitabTheme
-                                ? isLatest && isExpanded
+                                ? isCompleted
+                                  ? 'card-kitab-frame shadow-md ring-1 ring-emerald-600/40'
+                                  : isLatest && isExpanded
                                   ? 'card-kitab-frame shadow-md ring-1 ring-[#8f632d]/40'
                                   : 'card-kitab-frame shadow-xs'
-                                : isLatest && isExpanded
+                                : isCompleted
+                                  ? 'bg-slate-900 border border-emerald-500/30 shadow-xl'
+                                  : isLatest && isExpanded
                                   ? 'bg-slate-900 border border-emerald-500/40 shadow-xl'
                                   : 'bg-slate-900 border border-slate-800 shadow-md'
                             }`}
@@ -1199,7 +1287,9 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                             >
                               <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg border shadow-xs ${
-                                  isLatest
+                                  isCompleted
+                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                    : isLatest
                                     ? isKitabTheme
                                       ? 'bg-[#3a2211] text-amber-300 border-[#8f632d]'
                                       : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -1207,16 +1297,27 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                       ? 'bg-[#ede1c7] text-[#634224] border-[#d8c3a1]'
                                       : 'bg-slate-800 text-slate-400 border-slate-700'
                                 }`}>
-                                  {isLatest ? '✨' : '📖'}
+                                  {isCompleted ? '✅' : isLatest ? '✨' : '📖'}
                                 </div>
 
                                 <div className="space-y-1 flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    {isLatest && (
-                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-700 text-white shadow-xs">
-                                        TERBARU / TERUPDATE
+                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider ${
+                                      isKitabTheme ? 'bg-[#ede1c7] text-[#634224]' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                    }`}>
+                                      SESI {String(dynamicEmtMaterials.length - idx).padStart(2, '0')}
+                                    </span>
+
+                                    {isCompleted ? (
+                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-xs">
+                                        <CheckCircle2 className="w-3 h-3" /> SELESAI
                                       </span>
-                                    )}
+                                    ) : isLatest ? (
+                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-700 text-white shadow-xs">
+                                        TERBARU
+                                      </span>
+                                    ) : null}
+
                                     {mat.created_at && (
                                       <span className={`text-[10px] font-medium flex items-center gap-1 ${
                                         isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
@@ -1260,7 +1361,23 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                 </div>
                               </div>
 
-                              <div className="shrink-0">
+                              <div className="shrink-0 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => toggleCompleteEmtMaterial(e, mat.id || idx)}
+                                  className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition flex items-center gap-1 border shadow-xs cursor-pointer ${
+                                    isCompleted
+                                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                      : isKitabTheme
+                                      ? 'bg-[#ede1c7] text-[#5e3d1c] border-[#cbb38b] hover:bg-[#dfcdab]'
+                                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:bg-slate-700'
+                                  }`}
+                                  title={isCompleted ? 'Klik untuk membatalkan status selesai' : 'Tandai materi ini sudah dipelajari'}
+                                >
+                                  <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-emerald-400' : 'text-slate-500'}`} />
+                                  <span className="hidden sm:inline">{isCompleted ? 'Selesai' : 'Tandai Selesai'}</span>
+                                </button>
+
                                 <div className={`p-2 rounded-xl border transition flex items-center justify-center ${
                                   isExpanded
                                     ? isKitabTheme

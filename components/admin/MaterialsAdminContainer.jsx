@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
 import AdminHeaderTabs from "./AdminHeaderTabs";
 import { getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
-import { parseImageUrls, parseYouTubeUrls } from "@/lib/utils/materialImages";
+import { parseImageUrls, parseYouTubeUrls, getYouTubeThumbnailUrl } from "@/lib/utils/materialImages";
 import {
   BookOpen,
   Plus,
@@ -588,113 +588,187 @@ export default function MaterialsAdminContainer() {
             </div>
           ) : (
             <div className="space-y-4">
-              {materials.map((mat, idx) => (
-                <div
-                  key={mat.id || idx}
-                  className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex flex-col md:flex-row items-start justify-between gap-4"
-                >
-                  <div className="space-y-2.5 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-bold text-sm text-slate-100">
-                        {mat.title}
-                      </span>
-                      {mat.subtitle && (
-                        <span className="text-xs text-amber-400 font-medium">
-                          • {mat.subtitle}
-                        </span>
-                      )}
-                      {parseImageUrls(mat.image_url).length > 0 && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
-                          <ImageIcon className="w-3 h-3" /> {parseImageUrls(mat.image_url).length} Gambar / OCR
-                        </span>
-                      )}
-                      {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
-                      {(() => {
-                        const yts = parseYouTubeUrls(mat.youtube_url);
-                        if (!yts.length) return null;
-                        return (
-                          <span className="px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
-                            <Film className="w-3 h-3" /> {yts.length > 1 ? `${yts.length} Video YouTube` : 'Video YouTube'}
-                          </span>
-                        );
-                      })()}
-                    </div>
+              {materials.map((mat, idx) => {
+                const images = parseImageUrls(mat.image_url);
+                const videos = parseYouTubeUrls(mat.youtube_url);
+                const ytThumb = videos.length > 0 ? getYouTubeThumbnailUrl(videos[0]) : null;
+                const moduleNumber = String(materials.length - idx).padStart(2, "0");
 
-                    {/* Thumbnail Gambar jika ada (Mendukung 1 - 3 Gambar) */}
-                    {(() => {
-                      const matImages = parseImageUrls(mat.image_url);
-                      if (!matImages.length) return null;
-                      return (
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          {matImages.map((imgUrl, i) => (
-                            <div
-                              key={i}
-                              onClick={() =>
-                                setActiveLightbox({
-                                  url: imgUrl,
-                                  title: `${mat.title} (Gambar ${i + 1}/${matImages.length})`,
-                                })
-                              }
-                              className="relative w-28 h-20 sm:w-36 sm:h-24 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-zoom-in group shadow-md"
-                              title={`Klik untuk Zoom In Gambar ${i + 1}`}
-                            >
-                              <img
-                                src={imgUrl}
-                                alt={`${mat.title} - ${i + 1}`}
-                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                              />
-                              <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-950/80 text-white text-[9px] font-bold border border-slate-700">
-                                #{i + 1}
-                              </div>
-                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="px-1.5 py-0.5 rounded bg-slate-900/90 text-white text-[9px] font-bold flex items-center gap-1">
-                                  <ZoomIn className="w-3 h-3 text-amber-400" /> Zoom
-                                </span>
+                return (
+                  <div
+                    key={mat.id || idx}
+                    className="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border border-slate-800/90 hover:border-slate-700/80 transition-all duration-200 shadow-xl flex flex-col lg:flex-row items-start justify-between gap-5 group"
+                  >
+                    {/* Visual Media Preview (YouTube Cinematic Thumbnail or Image Gallery) */}
+                    {(ytThumb || images.length > 0) && (
+                      <div className="w-full sm:w-56 lg:w-52 shrink-0 space-y-2">
+                        {ytThumb ? (
+                          <a
+                            href={videos[0]}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block relative aspect-video w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 group/thumb shadow-lg cursor-pointer"
+                            title="Tonton Preview di YouTube"
+                          >
+                            <img
+                              src={ytThumb}
+                              alt={mat.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                            />
+                            {/* Dark gradient & Play icon */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-full bg-red-600/90 group-hover/thumb:bg-red-500 text-white flex items-center justify-center shadow-lg transition-transform group-hover/thumb:scale-110">
+                                <span className="text-sm font-black pl-0.5">▶</span>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
+                            <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/90 text-[10px] font-bold text-red-400 border border-red-500/30 flex items-center gap-1">
+                              <Film className="w-3 h-3" />
+                              <span>{videos.length > 1 ? `${videos.length} Video` : "YouTube"}</span>
+                            </span>
+                          </a>
+                        ) : images.length > 0 ? (
+                          <div
+                            onClick={() =>
+                              setActiveLightbox({
+                                url: images[0],
+                                title: `${mat.title} (Gambar 1/${images.length})`,
+                              })
+                            }
+                            className="relative aspect-video w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 cursor-zoom-in group/img shadow-lg"
+                            title="Klik untuk Zoom In Gambar"
+                          >
+                            <img
+                              src={images[0]}
+                              alt={mat.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="px-2 py-1 rounded-xl bg-slate-900/90 text-white text-[10px] font-bold flex items-center gap-1 shadow-md">
+                                <ZoomIn className="w-3 h-3 text-amber-400" /> Zoom
+                              </span>
+                            </div>
+                            <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/90 text-[10px] font-bold text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                              <ImageIcon className="w-3 h-3" />
+                              <span>{images.length} Gambar</span>
+                            </span>
+                          </div>
+                        ) : null}
 
-                    {mat.content && (
-                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed whitespace-pre-line">
-                        {mat.content}
-                      </p>
+                        {/* Strip foto kecil jika lebih dari 1 foto */}
+                        {images.length > 1 && (
+                          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
+                            {images.map((imgUrl, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() =>
+                                  setActiveLightbox({
+                                    url: imgUrl,
+                                    title: `${mat.title} (Gambar ${i + 1}/${images.length})`,
+                                  })
+                                }
+                                className="relative w-12 h-9 rounded-lg overflow-hidden border border-slate-800 hover:border-amber-400 shrink-0 transition"
+                                title={`Zoom Foto #${i + 1}`}
+                              >
+                                <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
 
-                    {mat.file_url && (
-                      <a
-                        href={mat.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:underline pt-1"
+                    {/* Main Content Info */}
+                    <div className="space-y-2 flex-1 min-w-0">
+                      {/* Top Meta Line: Modul Number + Badges + Date */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 border border-rose-500/30 text-[10px] font-black font-mono tracking-wider">
+                          MODUL {moduleNumber}
+                        </span>
+
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Live Terbit</span>
+                        </span>
+
+                        {mat.created_at && (
+                          <span className="text-[10px] text-slate-500 flex items-center gap-1 font-mono">
+                            <Clock className="w-3 h-3" />
+                            {new Date(mat.created_at).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        )}
+
+                        {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
+                      </div>
+
+                      {/* Title & Subtitle */}
+                      <div>
+                        <h3 className="font-extrabold text-base sm:text-lg text-white group-hover:text-rose-300 transition-colors tracking-tight leading-snug">
+                          {mat.title}
+                        </h3>
+                        {mat.subtitle && (
+                          <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5 pt-0.5">
+                            <span>•</span>
+                            <span>{mat.subtitle}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Content Excerpt */}
+                      {mat.content && (
+                        <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed whitespace-pre-line pt-0.5">
+                          {mat.content}
+                        </p>
+                      )}
+
+                      {/* Footer Link / Attachments */}
+                      <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                        {mat.file_url && (
+                          <a
+                            href={mat.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 hover:underline font-semibold"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Buka Lampiran: {mat.file_name || "Dokumen"}</span>
+                          </a>
+                        )}
+
+                        {videos.length > 0 && (
+                          <span className="text-slate-500 flex items-center gap-1">
+                            <Film className="w-3.5 h-3.5 text-red-500" />
+                            <span>{videos.length} Sesi Video Terlampir</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 self-end lg:self-center shrink-0 pt-2 lg:pt-0">
+                      <button
+                        onClick={() => handleOpenEdit(mat)}
+                        className="px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white border border-sky-500/25 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold shadow-xs"
+                        title="Edit Modul Materi"
                       >
-                        <ExternalLink className="w-3 h-3" />
-                        <span>Buka Lampiran: {mat.file_name || mat.file_url}</span>
-                      </a>
-                    )}
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(mat.id)}
+                        className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/25 transition cursor-pointer shadow-xs"
+                        title="Hapus Modul Materi"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-                    <button
-                      onClick={() => handleOpenEdit(mat)}
-                      className="p-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 transition cursor-pointer"
-                      title="Edit Materi"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(mat.id)}
-                      className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer"
-                      title="Hapus Materi"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -44,45 +44,61 @@ export default function AdminHeaderTabs({ activeTab, isKitabTheme = false, onTog
   ];
 
   return (
-    <div className="w-full space-y-3">
-      {/* Top Breadcrumb & Switcher */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className={`inline-flex items-center gap-1.5 text-xs font-semibold transition ${
-            isKitabTheme ? "text-[#634224] hover:text-[#9e2a2b]" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Gerbang Depan</span>
-        </Link>
+    <div className="w-full space-y-3.5">
+      {/* Top Breadcrumb & Status Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+        <div className="flex items-center gap-2 text-xs">
+          <Link
+            href="/"
+            className={`inline-flex items-center gap-1.5 font-bold transition ${
+              isKitabTheme ? "text-[#634224] hover:text-[#9e2a2b]" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Portal NPT</span>
+          </Link>
+          <span className="text-slate-600">/</span>
+          <span className={`font-semibold ${isKitabTheme ? "text-[#8f632d]" : "text-slate-300"}`}>
+            Studio Admin
+          </span>
+          <span className="text-slate-600">/</span>
+          <span className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
+            isKitabTheme 
+              ? "bg-[#3a2211] text-amber-300" 
+              : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+          }`}>
+            {tabs.find((t) => t.id === activeTab)?.label || "Manajemen"}
+          </span>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           {onToggleTheme && (
             <button
               onClick={onToggleTheme}
-              className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
                 isKitabTheme
-                  ? "bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4] shadow-xs"
-                  : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                  ? "bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#ebdcc4]"
+                  : "bg-slate-900/90 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white"
               }`}
               title="Ganti Mode Tampilan"
             >
-              <span>{isKitabTheme ? "🌌 Mode Gelap" : "📜 Mode Kitab Klasik"}</span>
+              <span>{isKitabTheme ? "🌌 Dark Mode" : "📜 Kitab Klasik"}</span>
             </button>
           )}
-          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+
+          <div className={`px-2.5 py-1 rounded-xl text-[10px] font-black tracking-wide border flex items-center gap-1.5 shadow-xs ${
             isKitabTheme
               ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]"
-              : "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+              : "bg-amber-500/10 text-amber-300 border-amber-500/30"
           }`}>
-            👑 Panel Super Admin
-          </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>SUPER ADMIN</span>
+          </div>
         </div>
       </div>
 
-      {/* 4 Admin Quick Switch Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* 5 Admin Quick Switch Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

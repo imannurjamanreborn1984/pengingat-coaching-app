@@ -293,6 +293,35 @@ export default function NPTLevelDetailPage() {
     }
   };
 
+  // State Progres Belajar Selesai (Mastery Progression)
+  const [completedMaterialIds, setCompletedMaterialIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`npt_completed_materials_${levelNum}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  });
+
+  const toggleCompleteMaterial = (e, matId) => {
+    e.stopPropagation();
+    setCompletedMaterialIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(matId)) {
+        next.delete(matId);
+      } else {
+        next.add(matId);
+      }
+      try {
+        localStorage.setItem(
+          `npt_completed_materials_${levelNum}`,
+          JSON.stringify(Array.from(next))
+        );
+      } catch (err) {}
+      return next;
+    });
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const cleanEmail = inputEmail.trim().toLowerCase();
@@ -825,20 +854,95 @@ export default function NPTLevelDetailPage() {
               )}
             </div>
 
+            {/* MASTERY LEVEL PROGRESS TRACKER */}
+            {coreMaterials.length > 0 && (
+              <div
+                className={`p-4 sm:p-5 rounded-3xl border transition shadow-md ${
+                  isKitabTheme
+                    ? "bg-[#f7eedc] border-[#dfcfb0]"
+                    : "bg-slate-900/90 border-slate-800"
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center text-lg ${
+                      isKitabTheme ? "bg-[#ede1c7] text-[#634224]" : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                    }`}>
+                      🏆
+                    </div>
+                    <div>
+                      <h3
+                        className={`text-xs sm:text-sm font-bold ${
+                          isKitabTheme ? "text-[#26150a]" : "text-white"
+                        }`}
+                      >
+                        Progres Pembelajaran NPT Level {levelNum}
+                      </h3>
+                      <p
+                        className={`text-[11px] ${
+                          isKitabTheme ? "text-[#8f632d]" : "text-slate-400"
+                        }`}
+                      >
+                        Tandai tombol &ldquo;Selesai&rdquo; pada materi yang telah Anda kaji dan amalkan.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <span
+                      className={`text-xs font-black px-3 py-1 rounded-xl font-mono border ${
+                        completedMaterialIds.size === coreMaterials.length && coreMaterials.length > 0
+                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                          : isKitabTheme
+                          ? "bg-[#ede1c7] text-[#634224] border-[#cbb38b]"
+                          : "bg-slate-800 text-rose-300 border-slate-700"
+                      }`}
+                    >
+                      {completedMaterialIds.size} / {coreMaterials.length} Modul ({Math.round((completedMaterialIds.size / (coreMaterials.length || 1)) * 100)}%)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Animated Progress Bar */}
+                <div
+                  className={`w-full h-2 rounded-full overflow-hidden ${
+                    isKitabTheme ? "bg-[#e8d8bd]" : "bg-slate-950"
+                  }`}
+                >
+                  <div
+                    className="h-full bg-gradient-to-r from-rose-600 via-amber-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          (completedMaterialIds.size / (coreMaterials.length || 1)) * 100
+                        )
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* List Materi */}
             {coreMaterials.map((mat, idx) => {
               const isExpanded = expandedIds.has(mat.id || idx);
               const isLatest = idx === 0;
+              const isCompleted = completedMaterialIds.has(mat.id || idx);
 
               return (
                 <div
                   key={mat.id || idx}
                   className={`rounded-3xl transition duration-200 overflow-hidden text-left ${
                     isKitabTheme
-                      ? isLatest && isExpanded
+                      ? isCompleted
+                        ? 'card-kitab-frame shadow-md ring-1 ring-emerald-600/40'
+                        : isLatest && isExpanded
                         ? 'card-kitab-frame shadow-md ring-1 ring-[#8f632d]/40'
                         : 'card-kitab-frame shadow-xs'
-                      : isLatest && isExpanded
+                      : isCompleted
+                        ? 'bg-slate-900 border border-emerald-500/30 shadow-xl'
+                        : isLatest && isExpanded
                         ? 'bg-slate-900 border border-rose-500/40 shadow-xl'
                         : 'bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md'
                   }`}
@@ -858,7 +962,9 @@ export default function NPTLevelDetailPage() {
                   >
                     <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg border shadow-xs ${
-                        isLatest
+                        isCompleted
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                          : isLatest
                           ? isKitabTheme
                             ? 'bg-[#3a2211] text-amber-300 border-[#8f632d]'
                             : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
@@ -866,16 +972,27 @@ export default function NPTLevelDetailPage() {
                             ? 'bg-[#ede1c7] text-[#634224] border-[#d8c3a1]'
                             : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}>
-                        {isLatest ? '✨' : '📖'}
+                        {isCompleted ? '✅' : isLatest ? '✨' : '📖'}
                       </div>
 
                       <div className="space-y-1 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          {isLatest && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-700 text-white shadow-xs">
-                              TERBARU / TERUPDATE
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider ${
+                            isKitabTheme ? 'bg-[#ede1c7] text-[#634224]' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                          }`}>
+                            MODUL {String(coreMaterials.length - idx).padStart(2, '0')}
+                          </span>
+
+                          {isCompleted ? (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-xs">
+                              <CheckCircle2 className="w-3 h-3" /> SELESAI
                             </span>
-                          )}
+                          ) : isLatest ? (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-700 text-white shadow-xs">
+                              TERBARU
+                            </span>
+                          ) : null}
+
                           {mat.created_at && (
                             <span className={`text-[10px] font-medium flex items-center gap-1 ${
                               isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'
@@ -915,8 +1032,24 @@ export default function NPTLevelDetailPage() {
                       </div>
                     </div>
 
-                    {/* Tombol Chevron */}
+                    {/* Tombol Checklist Selesai & Chevron */}
                     <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => toggleCompleteMaterial(e, mat.id || idx)}
+                        className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition flex items-center gap-1 border shadow-xs cursor-pointer ${
+                          isCompleted
+                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                            : isKitabTheme
+                            ? 'bg-[#ede1c7] text-[#5e3d1c] border-[#cbb38b] hover:bg-[#dfcdab]'
+                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:bg-slate-700'
+                        }`}
+                        title={isCompleted ? 'Klik untuk membatalkan status selesai' : 'Tandai modul ini sudah dipelajari'}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-emerald-400' : 'text-slate-500'}`} />
+                        <span className="hidden sm:inline">{isCompleted ? 'Selesai' : 'Tandai Selesai'}</span>
+                      </button>
+
                       <div
                         className={`p-2 rounded-xl border transition flex items-center justify-center ${
                           isExpanded
