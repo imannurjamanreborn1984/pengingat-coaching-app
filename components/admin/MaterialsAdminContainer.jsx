@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppNavbar, AppSidebar } from "../layout/AppNavbar";
 import AdminHeaderTabs from "./AdminHeaderTabs";
 import { getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
-import { parseImageUrls, parseYouTubeUrls, getYouTubeThumbnailUrl } from "@/lib/utils/materialImages";
+import { parseImageUrls, parseYouTubeUrls, getYouTubeThumbnailUrl, formatDocumentEmbedUrl } from "@/lib/utils/materialImages";
 import {
   BookOpen,
   Plus,
@@ -28,7 +28,8 @@ import {
   Copy,
   Check,
   ZoomIn,
-  Lock
+  Lock,
+  Eye
 } from "lucide-react";
 import ImageLightboxModal from "../ui/ImageLightboxModal";
 
@@ -39,6 +40,7 @@ export default function MaterialsAdminContainer() {
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeLightbox, setActiveLightbox] = useState(null);
+  const [activeDocPreview, setActiveDocPreview] = useState(null);
   const [isKitabTheme, setIsKitabTheme] = useState(false);
 
   useEffect(() => {
@@ -728,15 +730,32 @@ export default function MaterialsAdminContainer() {
                       {/* Footer Link / Attachments */}
                       <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
                         {mat.file_url && (
-                          <a
-                            href={mat.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 hover:underline font-semibold"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Buka Lampiran: {mat.file_name || "Dokumen"}</span>
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveDocPreview({
+                                  url: mat.file_url,
+                                  name: mat.file_name,
+                                  type: mat.file_type
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 text-[11px] font-bold cursor-pointer transition"
+                              title="Lihat Pratinjau Dokumen Langsung di Web"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Preview: {mat.file_name || "Dokumen"}</span>
+                            </button>
+                            <a
+                              href={mat.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-slate-400 hover:text-white transition"
+                              title="Buka link asli di tab baru / unduh"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
                         )}
 
                         {videos.length > 0 && (
@@ -1098,6 +1117,50 @@ export default function MaterialsAdminContainer() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {activeDocPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 min-w-0">
+                <Eye className="w-4 h-4 text-sky-400 shrink-0" />
+                <h3 className="text-sm font-bold text-white truncate">
+                  Pratinjau Dokumen: {activeDocPreview.name || "Lampiran"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveDocPreview(null)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+                title="Tutup Pratinjau"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 w-full min-h-[500px] bg-black">
+              <iframe
+                src={formatDocumentEmbedUrl(activeDocPreview.url).embedUrl}
+                title={activeDocPreview.name}
+                className="w-full h-full border-0 min-h-[500px]"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            </div>
+            <div className="p-3 border-t border-slate-800 bg-slate-950 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+              <span>💡 Pratinjau interaktif tersemat via Google Cloud / Drive.</span>
+              <a
+                href={activeDocPreview.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 font-bold"
+              >
+                <span>Buka di Tab Baru / Unduh Asli</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           </div>
         </div>
       )}

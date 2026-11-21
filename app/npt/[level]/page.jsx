@@ -29,6 +29,7 @@ import {
 import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 import ShareButton from "@/components/ui/ShareButton";
 import MaterialVideoPlayer from "@/components/ui/MaterialVideoPlayer";
+import MaterialDocumentViewer from "@/components/ui/MaterialDocumentViewer";
 import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   parseUserAccess,
@@ -1143,96 +1144,21 @@ export default function NPTLevelDetailPage() {
                         onOpenAuthModal={() => setIsAuthModalOpen(true)}
                       />
 
-                      {/* 3. DOKUMEN / FILE DOWNLOAD (LEVEL-GATED) */}
+                      {/* 3. DOKUMEN / FILE VIEWER (INTERAKTIF & LEVEL-GATED) */}
                       {mat.file_url && (
                         <div className="pt-2">
-                          {hasLevelAccess ? (
-                            <a
-                              href={mat.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
-                                isKitabTheme
-                                  ? 'bg-[#3a2211] hover:bg-[#26150a] border border-[#8f632d]'
-                                  : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 shadow-sky-600/30'
-                              }`}
-                            >
-                              <Download className="w-4 h-4" />
-                              <span>Unduh / Buka Dokumen: {mat.file_name || "Buka Lampiran"}</span>
-                              <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
-                            </a>
-                          ) : isApproved ? (
-                            /* Member Approved tapi level belum mencukupi */
-                            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                              isKitabTheme
-                                ? 'bg-[#ebdcc4]/70 border-[#d8c3a1]'
-                                : 'bg-slate-900 border-amber-500/30'
-                            }`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                                  isKitabTheme
-                                    ? 'bg-[#fdfaf3] text-[#8f632d] border-[#cbb38b]'
-                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                }`}>
-                                  <Lock className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
-                                    Berkas Dokumen Khusus NPT Level {levelNum}
-                                  </h4>
-                                  <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-                                    Anda terdaftar di <strong>{access.badgeText}</strong>. Video YouTube di atas bebas Anda simak. Untuk mengunduh modul PDF/PPT ini, silakan ajukan upgrade jenjang level.
-                                  </p>
-                                </div>
-                              </div>
-                              <a
-                                href={`https://wa.me/628123456789?text=${encodeURIComponent(`Assalamu'alaikum Admin NPT, saya *${currentUser?.name || "Member"}* ingin konfirmasi upgrade ke NPT Level ${levelNum}.`)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={`px-4 py-2 rounded-xl text-white text-xs font-bold shrink-0 text-center transition ${
-                                  isKitabTheme ? 'bg-[#9e2a2b] hover:bg-[#852324]' : 'bg-amber-600 hover:bg-amber-500'
-                                }`}
-                              >
-                                Upgrade ke Level {levelNum}
-                              </a>
-                            </div>
-                          ) : (
-                            /* Non-member / Belum login */
-                            <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                              isKitabTheme
-                                ? 'bg-[#f5ebd7] border-[#d8c3a1]'
-                                : 'bg-gradient-to-r from-rose-950/40 via-slate-950 to-slate-950 border-rose-500/30'
-                            }`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                                  isKitabTheme
-                                    ? 'bg-[#ebdcc4] text-[#9e2a2b] border-[#cbb38b]'
-                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                                }`}>
-                                  <Lock className="w-5 h-5" />
-                                </div>
-                                <div>
-                                  <h4 className={`text-xs font-bold ${isKitabTheme ? 'text-[#26150a]' : 'text-slate-100'}`}>
-                                    Lampiran Dokumen Terkunci
-                                  </h4>
-                                  <p className={`text-[11px] ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
-                                    Khusus member terdaftar. Masuk untuk mengunduh <strong>{mat.file_name || "file dokumen"}</strong>.
-                                  </p>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => setIsAuthModalOpen(true)}
-                                className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition shrink-0 cursor-pointer ${
-                                  isKitabTheme
-                                    ? 'bg-[#9e2a2b] hover:bg-[#852324]'
-                                    : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 shadow-rose-600/30'
-                                }`}
-                              >
-                                🔓 Masuk / Buka Akses
-                              </button>
-                            </div>
-                          )}
+                          <MaterialDocumentViewer
+                            fileUrl={mat.file_url}
+                            fileName={mat.file_name || "Buka Lampiran Dokumen"}
+                            fileType={mat.file_type || "pdf"}
+                            isKitabTheme={isKitabTheme}
+                            hasLevelAccess={hasLevelAccess}
+                            isApproved={isApproved}
+                            levelNum={levelNum}
+                            badgeText={access.badgeText}
+                            currentUser={currentUser}
+                            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                          />
                         </div>
                       )}
 

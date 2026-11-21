@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import ImageLightboxModal from '../ui/ImageLightboxModal';
 import MaterialVideoPlayer from '../ui/MaterialVideoPlayer';
+import MaterialDocumentViewer from '../ui/MaterialDocumentViewer';
 import { parseImageUrls } from '@/lib/utils/materialImages';
 
 function formatYouTubeEmbedUrl(url) {
@@ -1464,21 +1465,16 @@ Mohon informasi mengenai prosedur registrasi dan pembayarannya. Terima kasih!`;
                                  />
 
                                 {mat.file_url && (
-                                  <div className="pt-1">
-                                    <a
-                                      href={mat.file_url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className={`w-full sm:w-auto px-5 py-3 rounded-2xl text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition cursor-pointer ${
-                                        isKitabTheme
-                                          ? 'bg-[#1b6b55] hover:bg-[#155644]'
-                                          : 'bg-gradient-to-r from-emerald-600 to-teal-600'
-                                      }`}
-                                    >
-                                      <Download className="w-4 h-4" />
-                                      <span>Unduh Berkas: {mat.file_name || "Buka Dokumen"}</span>
-                                      <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
-                                    </a>
+                                  <div className="pt-2">
+                                    <MaterialDocumentViewer
+                                      fileUrl={mat.file_url}
+                                      fileName={mat.file_name || "Buka Dokumen"}
+                                      fileType={mat.file_type || "pdf"}
+                                      isKitabTheme={isKitabTheme}
+                                      hasLevelAccess={true}
+                                      isApproved={true}
+                                      levelNum="EMT"
+                                    />
                                   </div>
                                 )}
                               </div>
