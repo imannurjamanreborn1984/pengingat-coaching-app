@@ -29,7 +29,8 @@ import {
   Check,
   ZoomIn,
   Lock,
-  Eye
+  Eye,
+  Music2
 } from "lucide-react";
 import ImageLightboxModal from "../ui/ImageLightboxModal";
 
@@ -759,9 +760,18 @@ export default function MaterialsAdminContainer() {
                         )}
 
                         {videos.length > 0 && (
-                          <span className="text-slate-500 flex items-center gap-1">
-                            <Film className="w-3.5 h-3.5 text-red-500" />
-                            <span>{videos.length} Sesi Video Terlampir</span>
+                          <span className="text-slate-400 flex items-center gap-1.5 font-medium">
+                            {videos.some((v) => v.includes("tiktok.com")) ? (
+                              <span className="text-cyan-400 flex items-center gap-1 font-bold">
+                                <Music2 className="w-3.5 h-3.5 text-rose-400" />
+                                <span>{videos.length} Video (Ada TikTok)</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 flex items-center gap-1">
+                                <Film className="w-3.5 h-3.5 text-red-500" />
+                                <span>{videos.length} Sesi Video Terlampir</span>
+                              </span>
+                            )}
                           </span>
                         )}
                       </div>
@@ -1052,11 +1062,12 @@ export default function MaterialsAdminContainer() {
                 </div>
               </div>
 
-              {/* SECTION 4: LINK VIDEO YOUTUBE (BISA 1 - 3 VIDEO / PART) */}
+              {/* SECTION 4: LINK VIDEO PEMBELAJARAN (YOUTUBE / TIKTOK) */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-red-400 flex items-center gap-1.5">
-                    <Film className="w-4 h-4" /> Link Video YouTube Pembelajaran ({youtubeLinks.filter((u) => u.trim()).length}/3 Video)
+                    <Film className="w-4 h-4 text-red-500" />
+                    <span>Link Video Materi (YouTube / TikTok) ({youtubeLinks.filter((u) => u.trim()).length}/3 Video)</span>
                   </label>
                   {youtubeLinks.length < 3 && (
                     <button
@@ -1070,33 +1081,42 @@ export default function MaterialsAdminContainer() {
                 </div>
 
                 <div className="space-y-2">
-                  {youtubeLinks.map((link, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400 shrink-0">
-                        Part {idx + 1}
-                      </span>
-                      <input
-                        type="text"
-                        placeholder={`https://www.youtube.com/watch?v=... (Link Video Part ${idx + 1})`}
-                        value={link}
-                        onChange={(e) => handleUpdateYoutubeLink(idx, e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden focus:border-red-500 font-sans"
-                      />
-                      {youtubeLinks.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveYoutubeLink(idx)}
-                          className="p-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-800 transition cursor-pointer"
-                          title="Hapus slot video ini"
+                  {youtubeLinks.map((link, idx) => {
+                    const isTikTok = (link || "").toLowerCase().includes("tiktok.com");
+                    return (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span
+                          className={`px-2.5 py-2 rounded-xl text-[10px] font-bold shrink-0 border transition ${
+                            isTikTok
+                              ? "bg-rose-950/60 text-cyan-300 border-rose-500/40"
+                              : "bg-slate-900 text-slate-400 border-slate-800"
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                          Part {idx + 1} {isTikTok ? "🎵 TikTok" : "▶ YouTube"}
+                        </span>
+                        <input
+                          type="url"
+                          placeholder={`Tempel link YouTube (youtu.be/...) atau TikTok (tiktok.com/@.../video/...)`}
+                          value={link}
+                          onChange={(e) => handleUpdateYoutubeLink(idx, e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-hidden focus:border-red-500 font-sans"
+                        />
+                        {youtubeLinks.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveYoutubeLink(idx)}
+                            className="p-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-800 transition cursor-pointer"
+                            title="Hapus slot video ini"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 <p className="text-[10px] text-slate-500">
-                  *Mendukung link YouTube standar, Shorts, atau youtu.be. Bisa muat hingga 3 video (Part 1, Part 2, Part 3) per modul.
+                  *Mendukung link <strong>YouTube</strong> (Layar Lebar 16:9) dan link <strong>TikTok</strong> (Vertikal 9:16). Peserta di NPT (Level 6 dll) bisa langsung menonton video tanpa keluar web.
                 </p>
               </div>
 
