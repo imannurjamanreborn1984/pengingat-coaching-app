@@ -23,11 +23,21 @@ import {
   GraduationCap,
   Sparkles,
   CheckSquare,
-  Square
+  Square,
+  Check
 } from "lucide-react";
 import { AppNavbar, AppSidebar } from "@/components/layout/AppNavbar";
 import AdminHeaderTabs from "@/components/admin/AdminHeaderTabs";
-import { formatRoleLabel, NPT_LEVEL_CONFIG, getSavedDeviceUser, parseUserAccess, syncDeviceUserApproval } from "@/lib/authHelper";
+import MemberLevelChecklistDropdown from "@/components/admin/MemberLevelChecklistDropdown";
+import {
+  formatRoleLabel,
+  NPT_LEVEL_CONFIG,
+  getSavedDeviceUser,
+  parseUserAccess,
+  syncDeviceUserApproval,
+  parseGrantedLevels,
+  serializeLevelsToRole
+} from "@/lib/authHelper";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -998,29 +1008,13 @@ export default function MembersAdmin() {
                             {member.full_name || "Tanpa Nama"}
                           </span>
 
-                          {/* Inline Dropdown Penentu Level per Member */}
+                          {/* Inline Checklist Dropdown Penentu Level per Member */}
                           {!isSuperAdminRole ? (
-                            <select
-                              value={member.role || "npt_1"}
-                              onChange={(e) => handleDirectChangeRole(member.id, member.full_name, e.target.value)}
-                              className={`px-2.5 py-1 rounded-xl text-[11px] font-black border cursor-pointer outline-none transition-all shadow-xs ${
-                                (member.role || "").startsWith("emt")
-                                  ? isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                                  : isKitabTheme
-                                  ? "bg-[#fdfaf3] text-[#3a2211] border-[#cbb38b] hover:bg-[#f4ebd5]"
-                                  : "bg-slate-800 text-sky-300 border-sky-500/40 hover:border-sky-400 hover:bg-slate-750"
-                              }`}
-                              title={`Ubah jenjang ${member.full_name || 'Member'}. Semua materi level sebelumnya otomatis terbuka.`}
-                            >
-                              <option value="npt_1">🏛️ Level 1: Fondasi</option>
-                              <option value="npt_2">🏛️ Level 2: Somatik</option>
-                              <option value="npt_3">🏛️ Level 3: Transcendental</option>
-                              <option value="npt_4">🏛️ Level 4: Self Mastery</option>
-                              <option value="npt_5">🏛️ Level 5: 14 Akar</option>
-                              <option value="npt_6">🌟 Level 6: Mastery</option>
-                              <option value="npt_all">⭐ Semua Level (1 - 6)</option>
-                              <option value="emt">🎓 EMT Guru</option>
-                            </select>
+                            <MemberLevelChecklistDropdown
+                              member={member}
+                              isKitabTheme={isKitabTheme}
+                              onRoleChange={handleDirectChangeRole}
+                            />
                           ) : (
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
                               isKitabTheme ? "bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
@@ -1238,38 +1232,76 @@ export default function MembersAdmin() {
                 />
               </div>
 
-              {/* DROPDOWN PROGRAM & LEVEL NPT */}
+              {/* CHECKLIST PROGRAM & LEVEL NPT (MULTI-LEVEL) */}
               <div>
-                <label className={`block text-xs font-semibold mb-1 ${
-                  isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className={`text-xs font-semibold ${
+                    isKitabTheme ? 'text-[#3a2211]' : 'text-slate-300'
+                  }`}>
+                    Pilihan Checklist Level Akses (Multi-Level)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const granted = parseGrantedLevels(editRole);
+                      if (granted.isAll) {
+                        setEditRole('npt_1');
+                      } else {
+                        setEditRole('npt_all');
+                      }
+                    }}
+                    className="text-[10px] text-amber-400 hover:underline font-bold"
+                  >
+                    {parseGrantedLevels(editRole).isAll ? "Reset (Lvl 1)" : "✓ Pilih Semua (1-6)"}
+                  </button>
+                </div>
+                <div className={`grid grid-cols-2 gap-2 p-3 rounded-2xl border ${
+                  isKitabTheme ? 'bg-[#f7eedc]/50 border-[#cbb38b]' : 'bg-slate-950 border-slate-800'
                 }`}>
-                  Program & Tingkat Level Akses
-                </label>
-                <select
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-hidden ${
-                    isKitabTheme
-                      ? 'bg-[#fdfaf3] text-[#26150a] border-[#cbb38b]'
-                      : 'bg-slate-950 border-slate-800 text-white focus:border-sky-500'
-                  }`}
-                >
-                  <optgroup label="🎓 Program EMT">
-                    <option value="emt">🎓 EMT (Pelatihan Emosi Guru)</option>
-                  </optgroup>
-                  <optgroup label="🏛️ Program NPT (Neuro Programming Training)">
-                    <option value="npt_1">🏛️ NPT Level 1: {NPT_LEVEL_CONFIG[1]?.name}</option>
-                    <option value="npt_2">⚡ NPT Level 2: {NPT_LEVEL_CONFIG[2]?.name}</option>
-                    <option value="npt_3">🔥 NPT Level 3: {NPT_LEVEL_CONFIG[3]?.name}</option>
-                    <option value="npt_4">🧠 NPT Level 4: {NPT_LEVEL_CONFIG[4]?.name}</option>
-                    <option value="npt_5">👁️ NPT Level 5: {NPT_LEVEL_CONFIG[5]?.name}</option>
-                    <option value="npt_6">🌿 NPT Level 6: {NPT_LEVEL_CONFIG[6]?.name}</option>
-                    <option value="npt_all">⭐ NPT Semua Level (1 – 6)</option>
-                  </optgroup>
-                  <optgroup label="👑 Hak Akses Pengelola">
-                    <option value="super_admin">👑 Super Admin VIP</option>
-                  </optgroup>
-                </select>
+                  {[
+                    { key: "npt_1", label: "Level 1 (Fondasi)", icon: "🌬️" },
+                    { key: "npt_2", label: "Level 2 (Somatik)", icon: "⚡" },
+                    { key: "npt_3", label: "Level 3 (Transcendental)", icon: "🔥" },
+                    { key: "npt_4", label: "Level 4 (Self Mastery)", icon: "🧠" },
+                    { key: "npt_5", label: "Level 5 (14 Akar)", icon: "👁️" },
+                    { key: "npt_6", label: "Level 6 (Mastery)", icon: "🌿" },
+                    { key: "emt", label: "EMT Guru & FMD42", icon: "🎓" },
+                  ].map((lvl) => {
+                    const granted = parseGrantedLevels(editRole);
+                    const isChecked = lvl.key === "emt" ? granted.hasEmt : granted.levels.includes(parseInt(lvl.key.replace("npt_", "")));
+                    return (
+                      <button
+                        key={lvl.key}
+                        type="button"
+                        onClick={() => {
+                          const keys = new Set();
+                          granted.levels.forEach((l) => keys.add(`npt_${l}`));
+                          if (granted.hasEmt) keys.add("emt");
+                          if (keys.has(lvl.key)) keys.delete(lvl.key);
+                          else keys.add(lvl.key);
+                          setEditRole(serializeLevelsToRole(Array.from(keys)));
+                        }}
+                        className={`p-2 rounded-xl text-left border transition text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
+                          isChecked
+                            ? isKitabTheme
+                              ? 'bg-[#edd8b6] text-[#9e2a2b] border-[#cbb38b]'
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : isKitabTheme
+                            ? 'bg-[#fdfaf3] text-[#543516] border-[#d8c3a1] hover:bg-[#eee3cb]'
+                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+                          isChecked ? 'bg-rose-600 border-rose-500 text-white' : 'border-slate-700'
+                        }`}>
+                          {isChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                        </div>
+                        <span className="text-xs mr-0.5">{lvl.icon}</span>
+                        <span className="truncate">{lvl.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

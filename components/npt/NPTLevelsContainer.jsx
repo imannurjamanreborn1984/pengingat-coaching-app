@@ -233,7 +233,7 @@ export default function NPTLevelsContainer() {
                 : 'bg-slate-900 text-slate-300 border-slate-700'
             }`}>
               <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
-              <span>Akses Anda: <strong>{access.badgeText}</strong> (Level Terbuka: 1 – {access.isSuperAdmin ? '6+' : access.maxLevel})</span>
+              <span>Akses Anda: <strong>{access.badgeText}</strong></span>
             </span>
           </div>
         </section>

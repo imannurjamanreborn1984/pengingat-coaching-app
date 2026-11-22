@@ -754,8 +754,10 @@ export default function NPTLevelDetailPage() {
                 <span className="font-bold">{access.badgeText}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className={isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}>Level Tertinggi Terbuka:</span>
-                <span className="font-bold text-amber-500">Level {access.maxLevel}</span>
+                <span className={isKitabTheme ? 'text-[#82613d]' : 'text-slate-400'}>Akses Level Anda:</span>
+                <span className="font-bold text-amber-500">
+                  {access.allowedLevels?.length > 0 ? `Level ${access.allowedLevels.join(', ')}` : `Level ${access.maxLevel}`}
+                </span>
               </div>
               <p className={`text-[11px] pt-1.5 border-t leading-relaxed ${
                 isKitabTheme ? 'text-[#82613d] border-[#dfcfb0]' : 'text-slate-400 border-slate-800/80'
@@ -766,12 +768,14 @@ export default function NPTLevelDetailPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <Link
-                href={`/npt/${access.maxLevel}`}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/20"
-              >
-                ← Buka Materi Terbuka (Level {access.maxLevel})
-              </Link>
+              {access.allowedLevels?.length > 0 && (
+                <Link
+                  href={`/npt/${access.allowedLevels[0]}`}
+                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-md shadow-rose-600/20"
+                >
+                  ← Buka Kelas Level Terbuka (Level {access.allowedLevels[0]})
+                </Link>
+              )}
               <a
                 href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Assalamu'alaikum Admin NPT, saya ${currentUser?.name || 'Murid'} (${currentUser?.email || ''}) ingin menanyakan jadwal Offline Training terdekat untuk Level ${levelNum}.`)}`}
                 target="_blank"
