@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Film, ExternalLink, Lock, Music2, Loader2, Play } from "lucide-react";
+import { Film, ExternalLink, Lock, Music2, Loader2, Play, Sparkles } from "lucide-react";
 import { parseYouTubeUrls, formatVideoEmbed, detectVideoPlatform } from "@/lib/utils/materialImages";
 
 export default function MaterialVideoPlayer({
@@ -13,42 +13,20 @@ export default function MaterialVideoPlayer({
 }) {
   const urls = parseYouTubeUrls(youtubeUrl);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [resolvedShortlinks, setResolvedShortlinks] = useState({});
-  const [isLoadingShortlink, setIsLoadingShortlink] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
 
   const currentUrl = urls[activeIdx] || urls[0] || "";
   const videoMeta = formatVideoEmbed(currentUrl);
   const activePlatform = videoMeta.platform;
 
-  // Resolve TikTok shortlink (vt.tiktok.com or /t/) via API if needed
+  // Reset video error and loading state on change
   useEffect(() => {
-    if (!currentUrl) return;
-    const isTikTokShort =
-      videoMeta.platform === "tiktok" &&
-      !videoMeta.embedUrl &&
-      (currentUrl.includes("vt.tiktok.com") || currentUrl.includes("/t/"));
-
-    if (isTikTokShort && !resolvedShortlinks[currentUrl]) {
-      setIsLoadingShortlink(true);
-      fetch(`/api/tiktok-resolve?url=${encodeURIComponent(currentUrl)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.embedUrl) {
-            setResolvedShortlinks((prev) => ({
-              ...prev,
-              [currentUrl]: data.embedUrl,
-            }));
-          }
-        })
-        .catch(() => {})
-        .finally(() => setIsLoadingShortlink(false));
-    }
-  }, [currentUrl, videoMeta]);
+    setVideoError(false);
+    setIsVideoLoading(true);
+  }, [currentUrl]);
 
   if (!urls.length) return null;
-
-  const effectiveEmbedUrl =
-    videoMeta.embedUrl || resolvedShortlinks[currentUrl] || null;
 
   return (
     <div className="space-y-3">
@@ -62,9 +40,9 @@ export default function MaterialVideoPlayer({
           >
             {activePlatform === "tiktok" ? (
               <span className="flex items-center gap-1 text-cyan-400 font-extrabold">
-                <Music2 className="w-4 h-4 text-rose-400 animate-pulse" />
-                <span className="bg-gradient-to-r from-cyan-400 to-rose-400 bg-clip-text text-transparent">
-                  Video TikTok Materi:
+                <Music2 className="w-4 h-4 text-rose-400" />
+                <span className="bg-gradient-to-r from-cyan-400 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+                  Video Pembelajaran TikTok:
                 </span>
               </span>
             ) : (
@@ -133,7 +111,7 @@ export default function MaterialVideoPlayer({
         >
           <span>
             {activePlatform === "tiktok"
-              ? "Buka Langsung di TikTok"
+              ? "Buka di Aplikasi TikTok"
               : `Buka di YouTube ${urls.length > 1 ? `(Part ${activeIdx + 1})` : ""}`}
           </span>
           <ExternalLink className="w-3 h-3" />
@@ -143,80 +121,91 @@ export default function MaterialVideoPlayer({
       {/* Embedded Player or Lock Screen */}
       {isApproved ? (
         activePlatform === "tiktok" ? (
-          /* TIKTOK PORTRAIT PLAYER (Rasio Vertikal 9:16) */
+          /* TIKTOK DIRECT WEB STREAM PLAYER (BEBAS DISTRAKSI, BEBAS ERROR THIRD-PARTY COOKIE) */
           <div
-            className={`w-full py-4 px-2 rounded-2xl border flex flex-col items-center justify-center transition ${
+            className={`w-full py-4 px-2 rounded-3xl border flex flex-col items-center justify-center transition ${
               isKitabTheme
                 ? "bg-[#f5ebd7] border-[#d8c3a1]"
-                : "bg-slate-950/70 border-slate-800"
+                : "bg-slate-950/80 border-slate-800/90 shadow-xl"
             }`}
           >
-            {isLoadingShortlink ? (
-              <div className="w-[325px] h-[520px] rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center gap-3 text-slate-400">
-                <Loader2 className="w-7 h-7 animate-spin text-rose-500" />
-                <span className="text-xs font-medium">Menghubungkan ke TikTok...</span>
+            <div className="w-full flex flex-col items-center gap-3">
+              {/* Badge Fokus Belajar Bebas Distraksi */}
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-[10px] text-cyan-300 font-bold shadow-xs">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Pemutar Web Fokus Materi (Bebas Distraksi & Bebas Iklan)</span>
               </div>
-            ) : effectiveEmbedUrl ? (
-              <div className="w-full flex flex-col items-center gap-3">
-                {/* Tombol Akses Cepat Buka di Aplikasi TikTok untuk Pengguna HP */}
+
+              {/* Native HTML5 Video Player Container */}
+              <div className="relative w-full max-w-[340px] sm:max-w-[360px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 ring-1 ring-rose-500/30 flex items-center justify-center">
+                {!videoError ? (
+                  <>
+                    {isVideoLoading && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-10 gap-3 text-slate-300">
+                        <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+                        <span className="text-xs font-semibold text-slate-300">Menyiapkan video materi...</span>
+                        <span className="text-[10px] text-slate-500">Bebas iklan & bebas rekomendasi distraksi</span>
+                      </div>
+                    )}
+                    <video
+                      key={currentUrl}
+                      src={`/api/tiktok-stream?url=${encodeURIComponent(currentUrl)}`}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      onLoadedData={() => setIsVideoLoading(false)}
+                      onCanPlay={() => setIsVideoLoading(false)}
+                      onError={() => {
+                        setIsVideoLoading(false);
+                        setVideoError(true);
+                      }}
+                      className="w-full h-full object-contain bg-black"
+                    />
+                  </>
+                ) : (
+                  /* Fallback jika video gagal streaming */
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-3 bg-slate-950 text-slate-300">
+                    <Music2 className="w-10 h-10 text-rose-500 animate-pulse" />
+                    <p className="text-xs font-semibold">
+                      Video TikTok sedang dalam perlindungan privasi. Anda bisa langsung memutarnya via aplikasi TikTok:
+                    </p>
+                    <a
+                      href={currentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-rose-600 to-amber-600 text-white text-xs font-black shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 hover:opacity-95 transition"
+                    >
+                      <span>Tonton Langsung di TikTok</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Option Bar */}
+              <div className="w-full max-w-[340px] flex items-center justify-between text-[11px] pt-1">
+                <span className="text-slate-500 text-[10px]">
+                  💡 Putar, jeda, atur volume, dan layar penuh langsung di sini.
+                </span>
                 <a
                   href={currentUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full max-w-[340px] px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 via-rose-600 to-amber-600 text-white text-xs font-extrabold shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
-                  title="Buka langsung di aplikasi TikTok HP Anda"
+                  className="font-bold text-rose-400 hover:text-rose-300 underline flex items-center gap-1 shrink-0 ml-2"
                 >
-                  <Music2 className="w-4 h-4 text-cyan-200 animate-pulse" />
-                  <span>Tonton Langsung di TikTok</span>
-                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                </a>
-
-                {/* Embedded Frame TikTok */}
-                <div className="relative w-full max-w-[335px] sm:max-w-[350px] h-[575px] sm:h-[620px] rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 ring-1 ring-rose-500/20">
-                  <iframe
-                    key={effectiveEmbedUrl}
-                    src={effectiveEmbedUrl}
-                    title={`${title} - TikTok Video (Part ${activeIdx + 1})`}
-                    className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="w-full max-w-[340px] p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-3">
-                <Music2 className="w-8 h-8 text-rose-500 mx-auto" />
-                <p className="text-xs text-slate-300">
-                  Video TikTok dapat langsung ditonton di aplikasi atau web TikTok:
-                </p>
-                <a
-                  href={currentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-rose-600 text-white text-xs font-bold shadow-md hover:opacity-90 transition"
-                >
-                  <span>Buka Video di TikTok</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Buka App</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-            )}
-
-            <p
-              className={`text-[10px] mt-2 flex items-center gap-1 ${
-                isKitabTheme ? "text-[#8f632d]" : "text-slate-500"
-              }`}
-            >
-              <span>💡 Video vertikal resmi TikTok disematkan langsung untuk materi ini.</span>
-            </p>
+            </div>
           </div>
         ) : (
           /* YOUTUBE WIDESCREEN PLAYER (Rasio 16:9) */
           <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-md">
-            {effectiveEmbedUrl ? (
+            {videoMeta.embedUrl ? (
               <iframe
-                key={effectiveEmbedUrl}
-                src={effectiveEmbedUrl}
+                key={videoMeta.embedUrl}
+                src={videoMeta.embedUrl}
                 title={`${title} - Part ${activeIdx + 1}`}
                 className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
