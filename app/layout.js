@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/layout/ServiceWorkerRegister";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +48,10 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegister />
-        {children}
+        <div className="flex-1 flex flex-col pb-20 md:pb-0">
+          {children}
+        </div>
+        <MobileBottomNav />
       </body>
     </html>
   );

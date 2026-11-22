@@ -9,6 +9,9 @@ export default function ServiceWorkerRegister() {
         navigator.serviceWorker
           .register("/sw.js")
           .then((registration) => {
+            try {
+              registration.update();
+            } catch (e) {}
             registration.onupdatefound = () => {
               const installingWorker = registration.installing;
               if (installingWorker) {

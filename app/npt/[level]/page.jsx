@@ -621,7 +621,7 @@ export default function NPTLevelDetailPage() {
             <span className={`text-[11px] font-bold ${isKitabTheme ? 'text-[#634224]' : 'text-slate-400'}`}>
               Pindah Cepat Kelas Level:
             </span>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none touch-pan-x -mx-1 px-1 sm:flex-wrap">
               {[1, 2, 3, 4, 5, 6].map((lvl) => {
                 const isAccessible = access.canAccessNptLevel(lvl);
                 return (

@@ -152,20 +152,37 @@ export default function MaterialVideoPlayer({
             }`}
           >
             {isLoadingShortlink ? (
-              <div className="w-[325px] h-[578px] rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center gap-3 text-slate-400">
+              <div className="w-[325px] h-[520px] rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center gap-3 text-slate-400">
                 <Loader2 className="w-7 h-7 animate-spin text-rose-500" />
                 <span className="text-xs font-medium">Menghubungkan ke TikTok...</span>
               </div>
             ) : effectiveEmbedUrl ? (
-              <div className="relative w-full max-w-[335px] sm:max-w-[350px] h-[585px] sm:h-[620px] rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 ring-1 ring-rose-500/20">
-                <iframe
-                  key={effectiveEmbedUrl}
-                  src={effectiveEmbedUrl}
-                  title={`${title} - TikTok Video (Part ${activeIdx + 1})`}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                  allowFullScreen
-                />
+              <div className="w-full flex flex-col items-center gap-3">
+                {/* Tombol Akses Cepat Buka di Aplikasi TikTok untuk Pengguna HP */}
+                <a
+                  href={currentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full max-w-[340px] px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 via-rose-600 to-amber-600 text-white text-xs font-extrabold shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+                  title="Buka langsung di aplikasi TikTok HP Anda"
+                >
+                  <Music2 className="w-4 h-4 text-cyan-200 animate-pulse" />
+                  <span>Tonton Langsung di TikTok</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+
+                {/* Embedded Frame TikTok */}
+                <div className="relative w-full max-w-[335px] sm:max-w-[350px] h-[575px] sm:h-[620px] rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800 ring-1 ring-rose-500/20">
+                  <iframe
+                    key={effectiveEmbedUrl}
+                    src={effectiveEmbedUrl}
+                    title={`${title} - TikTok Video (Part ${activeIdx + 1})`}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
               </div>
             ) : (
               <div className="w-full max-w-[340px] p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-3">
