@@ -30,6 +30,7 @@ import ImageLightboxModal from "@/components/ui/ImageLightboxModal";
 import ShareButton from "@/components/ui/ShareButton";
 import MaterialVideoPlayer from "@/components/ui/MaterialVideoPlayer";
 import MaterialDocumentViewer from "@/components/ui/MaterialDocumentViewer";
+import MaterialCommentsSection from "@/components/npt/MaterialCommentsSection";
 import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   parseUserAccess,
@@ -1175,6 +1176,19 @@ export default function NPTLevelDetailPage() {
                         isKitabTheme={isKitabTheme}
                       />
 
+                      {/* 4. RUANG KOMENTAR & TANYA JAWAB MATERI */}
+                      <div className="pt-2">
+                        <MaterialCommentsSection
+                          materialId={mat.id || `modul-${mat.order_index || idx}`}
+                          materialTitle={mat.title}
+                          levelNum={levelNum}
+                          isKitabTheme={isKitabTheme}
+                          currentUser={currentUser}
+                          isApproved={isApproved}
+                          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                        />
+                      </div>
+
                       {/* Tombol Tutup / Lipat Materi */}
                       <div className="pt-2 flex justify-end border-t border-[#dfcfb0]/40">
                         <button
@@ -1315,6 +1329,19 @@ export default function NPTLevelDetailPage() {
                               category={`Refleksi Sahabat NPT Level ${levelNum}`}
                               isKitabTheme={isKitabTheme}
                             />
+
+                            {/* Ruang Komentar Catatan Sahabat */}
+                            <div className="pt-2">
+                              <MaterialCommentsSection
+                                materialId={insight.id || `insight-${idx}`}
+                                materialTitle={insight.title}
+                                levelNum={levelNum}
+                                isKitabTheme={isKitabTheme}
+                                currentUser={currentUser}
+                                isApproved={isApproved}
+                                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

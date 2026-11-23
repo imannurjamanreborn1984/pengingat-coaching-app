@@ -29,6 +29,7 @@ export const SUPER_ADMIN_EMAILS = [
   'imannnurjanan84@gmail.com',
   'imannurjaman@gmail.com',
   'lautanmahabbah@gmail.com',
+  'anggrek1720@gmail.com',
   'admin@nptcentre.id',
   'admin@neuroprogrammingtraining.id',
   'admin@npt.com'
