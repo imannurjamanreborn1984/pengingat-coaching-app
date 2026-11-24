@@ -145,9 +145,14 @@ export default function AdminSubmissions() {
 
       if (error) throw error;
 
-      // Grouping data berdasarkan judul tugas/assignment (abaikan komentar materi)
+      // Grouping data berdasarkan judul tugas/assignment (abaikan komentar & log baca materi)
       const grouped = (data || []).reduce((acc, item) => {
-        if (item.answer_text?.startsWith("[KOMENTAR_MATERI]")) return acc;
+        if (
+          item.answer_text?.startsWith("[KOMENTAR_MATERI]") ||
+          item.answer_text?.startsWith("[LOG_BACA_MATERI]")
+        ) {
+          return acc;
+        }
         const title = item.assignments?.title || "Tugas Tanpa Judul";
         if (!acc[title]) {
           acc[title] = [];

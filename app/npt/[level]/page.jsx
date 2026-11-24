@@ -31,6 +31,12 @@ import ShareButton from "@/components/ui/ShareButton";
 import MaterialVideoPlayer from "@/components/ui/MaterialVideoPlayer";
 import MaterialDocumentViewer from "@/components/ui/MaterialDocumentViewer";
 import MaterialCommentsSection from "@/components/npt/MaterialCommentsSection";
+import MaterialViewerTracker from "@/components/npt/MaterialViewerTracker";
+import {
+  recordMaterialView,
+  fetchLevelMaterialViews,
+  fetchLevelEnrolledMembers
+} from "@/lib/utils/materialTracker";
 import { parseImageUrls } from "@/lib/utils/materialImages";
 import {
   parseUserAccess,
@@ -221,8 +227,31 @@ export default function NPTLevelDetailPage() {
 
   // Access check
   const access = parseUserAccess(currentUser);
+  const isSuperAdmin = Boolean(access.isSuperAdmin);
   const isApproved = access.isApproved;
   const hasLevelAccess = access.canAccessNptLevel(levelNum);
+
+  // Admin-only: Tracking Pembaca Materi
+  const [levelViews, setLevelViews] = useState({});
+  const [enrolledMembers, setEnrolledMembers] = useState([]);
+
+  const loadAdminTrackingData = useCallback(async () => {
+    if (!isSuperAdmin) return;
+    try {
+      const [views, members] = await Promise.all([
+        fetchLevelMaterialViews(levelNum),
+        fetchLevelEnrolledMembers(levelNum)
+      ]);
+      setLevelViews(views || {});
+      setEnrolledMembers(members || []);
+    } catch (e) {
+      console.warn("Gagal memuat tracking pembaca:", e.message);
+    }
+  }, [isSuperAdmin, levelNum]);
+
+  useEffect(() => {
+    loadAdminTrackingData();
+  }, [loadAdminTrackingData]);
 
   const fetchLevelMaterials = useCallback(async () => {
     try {
@@ -479,6 +508,34 @@ export default function NPTLevelDetailPage() {
   const peerInsights = (materials || []).filter(
     (m) => m?.title?.includes("[Inspirasi Sahabat]")
   );
+
+  // Rekam aktivitas membaca/membuka materi untuk modul yang sedang terbuka (expanded)
+  useEffect(() => {
+    if (!currentUser) return;
+    (coreMaterials || []).forEach((mat, idx) => {
+      const matKey = mat.id || idx;
+      if (expandedIds.has(matKey)) {
+        recordMaterialView({
+          materialId: mat.id || `modul-${mat.order_index || idx}`,
+          materialTitle: mat.title,
+          levelNum,
+          currentUser
+        });
+      }
+    });
+
+    (peerInsights || []).forEach((insight, idx) => {
+      const insightKey = insight.id || `peer-${idx}`;
+      if (expandedIds.has(insightKey)) {
+        recordMaterialView({
+          materialId: insight.id || `insight-${idx}`,
+          materialTitle: insight.title,
+          levelNum,
+          currentUser
+        });
+      }
+    });
+  }, [expandedIds, coreMaterials, peerInsights, currentUser, levelNum]);
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors ${
@@ -1012,6 +1069,20 @@ export default function NPTLevelDetailPage() {
                             </span>
                           )}
                           {mat.file_type && mat.file_url && getFileBadge(mat.file_type)}
+
+                          {/* BADGE PEMBACA (KHUSUS GURU & ADMIN) */}
+                          {isSuperAdmin && (
+                            <MaterialViewerTracker
+                              material={mat}
+                              levelNum={levelNum}
+                              isSuperAdmin={isSuperAdmin}
+                              viewsList={levelViews[String(mat.id || `modul-${mat.order_index || idx}`)] || []}
+                              enrolledMembers={enrolledMembers}
+                              isKitabTheme={isKitabTheme}
+                              onRefresh={loadAdminTrackingData}
+                              renderMode="badge"
+                            />
+                          )}
                         </div>
 
                         <h2 className={`text-base sm:text-lg font-black leading-snug tracking-tight ${
@@ -1176,6 +1247,22 @@ export default function NPTLevelDetailPage() {
                         isKitabTheme={isKitabTheme}
                       />
 
+                      {/* PANTAUAN PEMBACA (KHUSUS GURU & ADMIN) */}
+                      {isSuperAdmin && (
+                        <div className="pt-2">
+                          <MaterialViewerTracker
+                            material={mat}
+                            levelNum={levelNum}
+                            isSuperAdmin={isSuperAdmin}
+                            viewsList={levelViews[String(mat.id || `modul-${mat.order_index || idx}`)] || []}
+                            enrolledMembers={enrolledMembers}
+                            isKitabTheme={isKitabTheme}
+                            onRefresh={loadAdminTrackingData}
+                            renderMode="card"
+                          />
+                        </div>
+                      )}
+
                       {/* 4. RUANG KOMENTAR & TANYA JAWAB MATERI */}
                       <div className="pt-2">
                         <MaterialCommentsSection
@@ -1274,6 +1361,20 @@ export default function NPTLevelDetailPage() {
                                     {new Date(insight.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                                   </span>
                                 )}
+
+                                {/* BADGE PEMBACA (KHUSUS GURU & ADMIN) */}
+                                {isSuperAdmin && (
+                                  <MaterialViewerTracker
+                                    material={insight}
+                                    levelNum={levelNum}
+                                    isSuperAdmin={isSuperAdmin}
+                                    viewsList={levelViews[String(insight.id || `insight-${pIdx}`)] || []}
+                                    enrolledMembers={enrolledMembers}
+                                    isKitabTheme={isKitabTheme}
+                                    onRefresh={loadAdminTrackingData}
+                                    renderMode="badge"
+                                  />
+                                )}
                               </div>
                               <h4 className={`text-sm sm:text-base font-bold leading-snug ${
                                 isKitabTheme ? 'font-kitab-title text-[#26150a]' : 'text-white'
@@ -1329,6 +1430,22 @@ export default function NPTLevelDetailPage() {
                               category={`Refleksi Sahabat NPT Level ${levelNum}`}
                               isKitabTheme={isKitabTheme}
                             />
+
+                            {/* PANTAUAN PEMBACA (KHUSUS GURU & ADMIN) */}
+                            {isSuperAdmin && (
+                              <div className="pt-2">
+                                <MaterialViewerTracker
+                                  material={insight}
+                                  levelNum={levelNum}
+                                  isSuperAdmin={isSuperAdmin}
+                                  viewsList={levelViews[String(insight.id || `insight-${pIdx}`)] || []}
+                                  enrolledMembers={enrolledMembers}
+                                  isKitabTheme={isKitabTheme}
+                                  onRefresh={loadAdminTrackingData}
+                                  renderMode="card"
+                                />
+                              </div>
+                            )}
 
                             {/* Ruang Komentar Catatan Sahabat */}
                             <div className="pt-2">
