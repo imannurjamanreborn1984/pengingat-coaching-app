@@ -655,7 +655,7 @@ export function AppNavbar({ onToggleSidebar, currentUser, activeTitle = "Portal 
             </Link>
           ) : (
             <Link
-              href="/"
+              href="/login"
               className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition"
             >
               Masuk

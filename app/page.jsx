@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -49,6 +49,10 @@ export default function CosmicGatewayPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState('member_login'); // 'member_login' | 'not_registered_dialog'
   
+  // Guard timestamp untuk mencegah ghost-click menutup modal di perangkat sentuh (HP)
+  const authModalOpenedAtRef = useRef(0);
+  const secretModalOpenedAtRef = useRef(0);
+  
   // Login Form State
   const [inputName, setInputName] = useState('');
   const [inputEmail, setInputEmail] = useState('');
@@ -70,6 +74,20 @@ export default function CosmicGatewayPage() {
       syncDeviceUserApproval(supabase, saved).then((synced) => {
         if (synced) setCurrentUser(synced);
       });
+    }
+
+    // Dukungan parameter URL ?auth=login atau ?login=true
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth') === 'login' || urlParams.get('login') === 'true' || urlParams.get('login') === '1') {
+        authModalOpenedAtRef.current = Date.now();
+        setActiveModalTab('member_login');
+        setIsAuthModalOpen(true);
+      } else if (urlParams.get('auth') === 'register' || urlParams.get('register') === 'true') {
+        authModalOpenedAtRef.current = Date.now();
+        setActiveModalTab('not_registered_dialog');
+        setIsAuthModalOpen(true);
+      }
     }
   }, []);
 
@@ -229,7 +247,7 @@ export default function CosmicGatewayPage() {
       <header className="relative z-20 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-white p-1.5 shadow-md shadow-rose-950/50 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.png"
@@ -240,23 +258,23 @@ export default function CosmicGatewayPage() {
                 className="w-full h-full object-contain"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
                   NPT Centre
                 </span>
-                <span className="hidden xs:inline-block px-2 py-0.5 text-[10px] font-bold bg-rose-500/15 text-rose-300 rounded-full border border-rose-500/30">
+                <span className="hidden xs:inline-block px-2 py-0.5 text-[10px] font-bold bg-rose-500/15 text-rose-300 rounded-full border border-rose-500/30 shrink-0">
                   Portal Terpadu
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Neuro Programming Training • EMT • Hakikat Cinta
+              <p className="text-[10px] sm:text-[11px] text-slate-400 truncate max-w-[120px] xs:max-w-[170px] sm:max-w-none">
+                Neuro Programming Training • EMT
               </p>
             </div>
           </div>
 
           {/* Status Akun / Tombol Login */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {currentUser ? (
               <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-2xl">
                 <Link
@@ -285,6 +303,7 @@ export default function CosmicGatewayPage() {
                   Profil
                 </Link>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="p-1 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition cursor-pointer"
                   title="Keluar Akun"
@@ -293,22 +312,32 @@ export default function CosmicGatewayPage() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    authModalOpenedAtRef.current = Date.now();
                     setActiveModalTab('member_login');
                     setIsAuthModalOpen(true);
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/20 flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 flex items-center gap-1.5 transition-all cursor-pointer touch-manipulation select-none shrink-0 relative z-30"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Login / Daftar Member</span>
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">Login / Daftar</span>
                 </button>
 
                 <button
-                  onClick={() => setIsSecretModalOpen(true)}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    secretModalOpenedAtRef.current = Date.now();
+                    setIsSecretModalOpen(true);
+                  }}
                   title="Pintu Privat & Khadim"
-                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 hover:text-amber-400 hover:border-amber-500/30 transition cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 hover:text-amber-400 hover:border-amber-500/30 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0 relative z-30"
                 >
                   <Lock className="w-4 h-4" />
                 </button>
@@ -781,12 +810,17 @@ export default function CosmicGatewayPage() {
       {/* ===================================================================== */}
       {isAuthModalOpen && (
         <div 
-          onClick={() => setIsAuthModalOpen(false)}
-          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          onClick={(e) => {
+            if (Date.now() - authModalOpenedAtRef.current < 400) return;
+            if (e.target === e.currentTarget) {
+              setIsAuthModalOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-center relative overflow-hidden"
+            className="w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-center relative overflow-hidden my-auto max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -799,8 +833,9 @@ export default function CosmicGatewayPage() {
               </div>
 
               <button
+                type="button"
                 onClick={() => setIsAuthModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer touch-manipulation active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -869,6 +904,14 @@ export default function CosmicGatewayPage() {
                   >
                     Belum terdaftar? Daftar Member Baru
                   </button>
+
+                  <Link
+                    href="/login"
+                    onClick={() => setIsAuthModalOpen(false)}
+                    className="w-full py-1.5 text-center text-[11px] font-medium text-slate-400 hover:text-amber-400 transition block"
+                  >
+                    Buka Halaman Login Penuh (Fullscreen) ↗
+                  </Link>
                 </div>
               </form>
             )}
@@ -1014,6 +1057,14 @@ export default function CosmicGatewayPage() {
                   >
                     ← Kembali ke Login
                   </button>
+
+                  <Link
+                    href="/login"
+                    onClick={() => setIsAuthModalOpen(false)}
+                    className="w-full py-1.5 text-center text-[11px] font-medium text-slate-400 hover:text-amber-400 transition block"
+                  >
+                    Buka Halaman Pendaftaran Penuh (Fullscreen) ↗
+                  </Link>
                 </div>
               </form>
             )}
@@ -1026,12 +1077,17 @@ export default function CosmicGatewayPage() {
       {/* ===================================================================== */}
       {isSecretModalOpen && (
         <div 
-          onClick={() => setIsSecretModalOpen(false)}
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          onClick={(e) => {
+            if (Date.now() - secretModalOpenedAtRef.current < 400) return;
+            if (e.target === e.currentTarget) {
+              setIsSecretModalOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-left"
+            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-left my-auto max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -1041,8 +1097,9 @@ export default function CosmicGatewayPage() {
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setIsSecretModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer touch-manipulation active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>

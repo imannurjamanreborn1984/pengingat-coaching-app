@@ -11,7 +11,8 @@ import {
   User,
   Crown,
   Home,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from "lucide-react";
 import { getSavedDeviceUser, SUPER_ADMIN_EMAILS } from "@/lib/authHelper";
 
@@ -75,11 +76,11 @@ export default function MobileBottomNav() {
     },
     {
       id: "profile",
-      label: isSuperAdmin ? "Admin" : "Akun",
-      href: isSuperAdmin ? "/admin/members" : "/profile",
-      icon: isSuperAdmin ? Crown : User,
-      isActive: pathname.startsWith("/profile") || pathname.startsWith("/admin"),
-      badgeColor: isSuperAdmin ? "text-amber-400" : "",
+      label: isSuperAdmin ? "Admin" : (currentUser ? "Akun" : "Masuk"),
+      href: isSuperAdmin ? "/admin/members" : (currentUser ? "/profile" : "/login"),
+      icon: isSuperAdmin ? Crown : (currentUser ? User : ShieldCheck),
+      isActive: pathname.startsWith("/profile") || pathname.startsWith("/admin") || pathname === "/login",
+      badgeColor: isSuperAdmin ? "text-amber-400" : (!currentUser ? "text-amber-400" : ""),
     },
   ];
 
